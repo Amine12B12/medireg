@@ -4,35 +4,37 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-type Profile = { role: string; nom: string; etablissement_id: string | null }
 type Equipement = { id: string; reference: string; designation: string; statut: string; localisation: string; fabricant: string; modele: string; etablissement_id: string }
 
 export default function Dashboard() {
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [equipements, setEquipements] = useState<Equipement[]>([])
+  const [pannes, setPannes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [profile, setProfile] = useState<any>(null)
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(prof)
-
-      const { data: equip } = await supabase.from('equipements').select('*').order('created_at')
+      let equip
+      if (prof?.role === 'client' && prof?.etablissement_id) {
+        const { data } = await supabase.from('equipements').select('*').eq('etablissement_id', prof.etablissement_id)
+        equip = data
+      } else {
+        const { data } = await supabase.from('equipements').select('*').order('created_at')
+        equip = data
+      }
       setEquipements(equip || [])
+      const { data: p } = await supabase.from('pannes').select('*, equipements(reference, designation, localisation)').eq('statut', 'ouvert').order('created_at', { ascending: false })
+      setPannes(p || [])
       setLoading(false)
     }
     load()
   }, [])
-
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   const stats = {
     total: equipements.length,
@@ -41,80 +43,84 @@ export default function Dashboard() {
     hors_service: equipements.filter(e => e.statut === 'hors_service').length,
   }
 
-  const statutStyle = (s: string) => {
-    if (s === 'en_service') return { bg: '#E8F5EF', color: '#00875A', label: 'En service' }
-    if (s === 'maintenance') return { bg: '#FFF7E6', color: '#B45309', label: 'Maintenance' }
-    return { bg: '#FEF2F2', color: '#DC2626', label: 'Hors service' }
+  const statutDot = (s: string) => {
+    if (s === 'en_service') return { color: '#059669', label: 'En service' }
+    if (s === 'maintenance') return { color: '#B45309', label: 'Maintenance' }
+    return { color: '#DC2626', label: 'Hors service' }
   }
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#F0F4FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, -apple-system, sans-serif' }}>
-      <div style={{ color: '#6B7A99', fontSize: '14px' }}>Chargement...</div>
-    </div>
-  )
-return (
-    <div style={{ padding: '32px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ fontSize: '22px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.3px' }}>Tableau de bord</div>
-        <div style={{ fontSize: '14px', color: '#6B7A99', marginTop: '4px' }}>
-          {profile?.role === 'admin' ? 'Vue globale du parc PSDM' : 'Vos équipements médicaux'}
-        </div>
-      </div>
+  if (loading) return <div style={{ padding: '32px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
+  return (
+    <div style={{ padding: '24px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '24px' }}>
         {[
           { label: 'Total équipements', value: stats.total, color: '#1A56DB' },
-          { label: 'En service', value: stats.en_service, color: '#00875A' },
+          { label: 'En service', value: stats.en_service, color: '#059669' },
           { label: 'En maintenance', value: stats.maintenance, color: '#B45309' },
           { label: 'Hors service', value: stats.hors_service, color: '#DC2626' },
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: '14px', padding: '20px 22px', border: '0.5px solid #DDE5F0' }}>
-            <div style={{ fontSize: '12px', color: '#6B7A99', marginBottom: '10px', fontWeight: '500' }}>{s.label}</div>
-            <div style={{ fontSize: '32px', fontWeight: '600', color: s.color, lineHeight: 1 }}>{s.value}</div>
+          <div key={s.label} style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', padding: '16px' }}>
+            <div style={{ fontSize: '11px', color: '#9CA3AF', marginBottom: '8px', fontWeight: '500' }}>{s.label}</div>
+            <div style={{ fontSize: '28px', fontWeight: '500', color: s.color, lineHeight: 1 }}>{s.value}</div>
           </div>
         ))}
       </div>
 
-      {stats.hors_service > 0 && (
-        <div style={{ background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '12px', padding: '14px 18px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span style={{ fontSize: '13px', color: '#DC2626', fontWeight: '500' }}>
-            {stats.hors_service} équipement{stats.hors_service > 1 ? 's' : ''} hors service — intervention requise
-          </span>
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
-      <div style={{ background: '#fff', borderRadius: '16px', border: '0.5px solid #DDE5F0', overflow: 'hidden' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #DDE5F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#0A1628' }}>Équipements</div>
-          <div style={{ fontSize: '12px', color: '#6B7A99' }}>{equipements.length} équipement{equipements.length > 1 ? 's' : ''}</div>
+        {/* Alertes actives */}
+        <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>Alertes actives</div>
+            <button onClick={() => router.push('/dashboard/alertes')} style={{ fontSize: '11px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              Voir tout →
+            </button>
+          </div>
+          {pannes.length === 0 ? (
+            <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: '12px', color: '#9CA3AF' }}>
+              <i className="ti ti-check" style={{ fontSize: '20px', display: 'block', marginBottom: '6px', color: '#059669' }} aria-hidden="true" />
+              Aucune alerte active
+            </div>
+          ) : pannes.slice(0, 4).map(p => (
+            <div key={p.id} style={{ padding: '12px 16px', borderBottom: '0.5px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#DC2626', flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{(p.equipements as any)?.designation} — {(p.equipements as any)?.reference}</div>
+                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{p.description || 'Panne signalée'}</div>
+              </div>
+              <span style={{ fontSize: '10px', fontWeight: '500', color: '#DC2626', background: '#FEF2F2', padding: '2px 6px', borderRadius: '4px' }}>Ouvert</span>
+            </div>
+          ))}
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#F8FAFC' }}>
-              {['Référence', 'Désignation', 'Fabricant / Modèle', 'Localisation', 'Statut'].map(h => (
-                <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#6B7A99', letterSpacing: '0.3px', textTransform: 'uppercase', borderBottom: '0.5px solid #DDE5F0' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {equipements.map((eq, i) => {
-              const st = statutStyle(eq.statut)
-              return (
-                <tr key={eq.id} style={{ borderBottom: i < equipements.length - 1 ? '0.5px solid #F0F4FA' : 'none' }}>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: '600', color: '#1A56DB' }}>{eq.reference}</td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', color: '#0A1628' }}>{eq.designation}</td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', color: '#6B7A99' }}>{eq.fabricant} {eq.modele}</td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', color: '#6B7A99' }}>{eq.localisation}</td>
-                  <td style={{ padding: '14px 20px' }}>
-                    <span style={{ background: st.bg, color: st.color, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>{st.label}</span>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+
+        {/* Équipements récents */}
+        <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>Équipements</div>
+            <button onClick={() => router.push('/dashboard/materiel')} style={{ fontSize: '11px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              Voir tout →
+            </button>
+          </div>
+          {equipements.slice(0, 5).map((eq, i) => {
+            const st = statutDot(eq.statut)
+            return (
+              <div key={eq.id} style={{ padding: '11px 16px', borderBottom: i < Math.min(equipements.length, 5) - 1 ? '0.5px solid #F3F4F6' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{eq.designation}</div>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{eq.reference} · {eq.localisation}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#6B7280' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color }} />
+                  {st.label}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
-  }
+}
