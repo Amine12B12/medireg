@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import MaterielClientPage from './client-page'
 
 type Equipement = {
   id: string; reference: string; designation: string; categorie: string
@@ -24,6 +25,8 @@ const modeLabel = (m: string) => {
 }
 
 export default function MaterielPage() {
+  const [role, setRole] = useState<string | null>(null)
+  const [etablissementId, setEtablissementId] = useState<string | null>(null)
   const [equipements, setEquipements] = useState<Equipement[]>([])
   const [filtered, setFiltered] = useState<Equipement[]>([])
   const [search, setSearch] = useState('')
@@ -36,16 +39,42 @@ export default function MaterielPage() {
   const [panneSuccess, setPanneSuccess] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
   const [uploadLoading, setUploadLoading] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addSaving, setAddSaving] = useState(false)
+  const [etablissements, setEtablissements] = useState<any[]>([])
+  const [addForm, setAddForm] = useState({
+    reference: '', designation: '', categorie: '', fabricant: '',
+    modele: '', numero_serie: '', mode_dispo: 'location',
+    statut: 'en_service', localisation: '', date_achat: '',
+    date_mes: '', date_revision: '', etablissement_id: '11111111-1111-1111-1111-111111111111'
+  })
+  const [roleLoaded, setRoleLoaded] = useState(false)
   const supabase = createClient()
+
+  useEffect(() => {
+    async function checkRole() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: prof } = await supabase.from('profiles').select('role, etablissement_id').eq('id', user.id).single()
+      setRole(prof?.role || 'client')
+      setEtablissementId(prof?.etablissement_id || null)
+      setRoleLoaded(true)
+    }
+    checkRole()
+  }, [])
 
   async function load() {
     const { data } = await supabase.from('equipements').select('*').order('created_at')
+    const { data: etabs } = await supabase.from('etablissements').select('id, nom')
     setEquipements(data || [])
     setFiltered(data || [])
+    setEtablissements(etabs || [])
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (roleLoaded && role === 'admin') load()
+  }, [roleLoaded, role])
 
   useEffect(() => {
     let r = equipements
@@ -81,19 +110,42 @@ export default function MaterielPage() {
     setUploadLoading(false)
   }
 
+  async function handleAddEquip() {
+    if (!addForm.reference || !addForm.designation) return
+    setAddSaving(true)
+    await supabase.from('equipements').insert([addForm])
+    setShowAddModal(false)
+    setAddForm({
+      reference: '', designation: '', categorie: '', fabricant: '',
+      modele: '', numero_serie: '', mode_dispo: 'location',
+      statut: 'en_service', localisation: '', date_achat: '',
+      date_mes: '', date_revision: '', etablissement_id: '11111111-1111-1111-1111-111111111111'
+    })
+    setAddSaving(false)
+    load()
+  }
+
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
     <button onClick={onClick} style={{ padding: '7px 14px', borderRadius: '8px', border: '0.5px solid', borderColor: active ? '#1A56DB' : '#DDE5F0', background: active ? '#EEF2FF' : '#fff', color: active ? '#1A56DB' : '#6B7A99', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'inherit' }}>
       {label}
     </button>
   )
 
+  if (!roleLoaded) return <div style={{ padding: '32px', color: '#6B7A99', fontSize: '14px' }}>Chargement...</div>
+  if (role === 'client' && etablissementId) return <MaterielClientPage etablissementId={etablissementId} />
   if (loading) return <div style={{ padding: '32px', color: '#6B7A99', fontSize: '14px' }}>Chargement...</div>
 
   return (
     <div style={{ padding: '32px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '22px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.3px' }}>Matériel</div>
-        <div style={{ fontSize: '14px', color: '#6B7A99', marginTop: '4px' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''}</div>
+      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: '22px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.3px' }}>Matériel</div>
+          <div style={{ fontSize: '14px', color: '#6B7A99', marginTop: '4px' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''}</div>
+        </div>
+        <button onClick={() => setShowAddModal(true)}
+          style={{ padding: '10px 18px', background: '#1A56DB', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
+          + Ajouter un équipement
+        </button>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #DDE5F0', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -166,7 +218,6 @@ export default function MaterielPage() {
               <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
                 style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px' }}>✕</button>
             </div>
-
             <div style={{ padding: '24px 28px' }}>
               {[
                 { title: 'Identification', rows: [['Référence', selected.reference], ['N° de série', selected.numero_serie || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—']] },
@@ -185,7 +236,6 @@ export default function MaterielPage() {
                   </div>
                 </div>
               ))}
-
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #F0F4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Documents</span>
@@ -209,7 +259,6 @@ export default function MaterielPage() {
                   </div>
                 )}
               </div>
-
               <div>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #F0F4FA' }}>Signaler une panne</div>
                 {panneSuccess ? (
@@ -243,6 +292,84 @@ export default function MaterielPage() {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div onClick={() => setShowAddModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(10,22,40,0.15)' }}>
+            <div style={{ padding: '22px 28px', borderBottom: '0.5px solid #F0F4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff' }}>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#0A1628' }}>Ajouter un équipement</div>
+              <button onClick={() => setShowAddModal(false)} style={{ background: '#F0F4FA', border: 'none', color: '#6B7A99', width: '30px', height: '30px', borderRadius: '8px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ padding: '24px 28px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                {[
+                  { label: 'Référence *', key: 'reference', placeholder: 'LIT-2024-004' },
+                  { label: 'Désignation *', key: 'designation', placeholder: 'Lit médicalisé' },
+                  { label: 'Catégorie', key: 'categorie', placeholder: 'Lit' },
+                  { label: 'Fabricant', key: 'fabricant', placeholder: 'Invacare' },
+                  { label: 'Modèle', key: 'modele', placeholder: 'Sonata Electric' },
+                  { label: 'N° de série', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
+                  { label: 'Localisation', key: 'localisation', placeholder: 'Chambre 15' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>{f.label}</label>
+                    <input value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      placeholder={f.placeholder}
+                      style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }} />
+                  </div>
+                ))}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Mode</label>
+                  <select value={addForm.mode_dispo} onChange={e => setAddForm(p => ({ ...p, mode_dispo: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }}>
+                    <option value='location'>Location</option>
+                    <option value='achat'>Achat</option>
+                    <option value='mad'>Mise à disposition</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Statut</label>
+                  <select value={addForm.statut} onChange={e => setAddForm(p => ({ ...p, statut: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }}>
+                    <option value='en_service'>En service</option>
+                    <option value='maintenance'>Maintenance</option>
+                    <option value='hors_service'>Hors service</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Établissement</label>
+                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }}>
+                    {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Date d'achat</label>
+                  <input type='date' value={addForm.date_achat} onChange={e => setAddForm(p => ({ ...p, date_achat: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Mise en service</label>
+                  <input type='date' value={addForm.date_mes} onChange={e => setAddForm(p => ({ ...p, date_mes: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Prochaine révision</label>
+                  <input type='date' value={addForm.date_revision} onChange={e => setAddForm(p => ({ ...p, date_revision: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: '11px', background: '#F0F4FA', border: '0.5px solid #DDE5F0', borderRadius: '10px', color: '#6B7A99', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
+                <button onClick={handleAddEquip} disabled={addSaving || !addForm.reference || !addForm.designation}
+                  style={{ flex: 1, padding: '11px', background: addSaving || !addForm.reference || !addForm.designation ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {addSaving ? 'Enregistrement...' : 'Ajouter'}
+                </button>
               </div>
             </div>
           </div>
