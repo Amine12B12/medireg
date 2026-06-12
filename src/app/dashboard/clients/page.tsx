@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { exportToCSV } from '@/lib/csv'
 
 type Etablissement = {
   id: string; nom: string; type: string; ville: string
@@ -76,6 +77,42 @@ export default function ClientsPage() {
     openEquipModal(selectedEtabEquip)
     load()
   }
+
+  async function handleExportDocs(etab: Etablissement) {
+    
+  const { data: equips } = await supabase
+    .from('equipements')
+    .select('id, reference, designation')
+    .eq('etablissement_id', etab.id)
+    
+
+  if (!equips || equips.length === 0) return
+
+  const { data: docs } = await supabase
+    .from('documents')
+    .select('*')
+    .in('equipement_id', equips.map(e => e.id))
+
+  if (!docs || docs.length === 0) {
+    alert('Aucun document pour cet établissement')
+    return
+  }
+
+  const data = docs.map(d => {
+    const equip = equips.find(e => e.id === d.equipement_id)
+    return {
+      etablissement: etab.nom,
+      equipement: equip?.designation || '—',
+      reference: equip?.reference || '—',
+      document: d.nom,
+      type: d.type_doc || '—',
+      url: d.url,
+      date_upload: new Date(d.created_at).toLocaleDateString('fr-FR')
+    }
+  })
+
+  exportToCSV(data, `meditrack_documents_${etab.nom.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`)
+}
 
   async function handleAdd() {
     if (!form.nom) return
@@ -216,6 +253,13 @@ export default function ClientsPage() {
                         <i className="ti ti-key" style={{ fontSize: '11px' }} aria-hidden="true" />
                         Accès
                       </button>
+                      <button
+                       onClick={() => handleExportDocs(etab)}
+                      style={{ padding: '5px 8px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#059669', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                      <i className="ti ti-download" style={{ fontSize: '11px' }} aria-hidden="true" />
+                      Docs
+                    </button>
+                      
                     </div>
                   </td>
                 </tr>
