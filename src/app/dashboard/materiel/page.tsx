@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import MaterielClientPage from './client-page'
 import SearchableSelect from '@/components/SearchableSelect'
+import { exportToCSV, parseCSV } from '@/lib/csv'
 
 type Equipement = {
   id: string; reference: string; designation: string; categorie: string
@@ -46,6 +47,8 @@ export default function MaterielPage() {
   const [addSaving, setAddSaving] = useState(false)
   const [etablissements, setEtablissements] = useState<any[]>([])
   const [roleLoaded, setRoleLoaded] = useState(false)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null)
   const [addForm, setAddForm] = useState({
     reference: '', designation: '', categorie: '', fabricant: '',
     modele: '', numero_serie: '', mode_dispo: 'location',
@@ -133,11 +136,66 @@ export default function MaterielPage() {
     load()
   }
 
+  function handleExport() {
+    const data = equipements.map(e => ({
+      reference: e.reference,
+      designation: e.designation,
+      categorie: e.categorie || '',
+      fabricant: e.fabricant || '',
+      modele: e.modele || '',
+      numero_serie: e.numero_serie || '',
+      mode_dispo: e.mode_dispo || '',
+      statut: e.statut || '',
+      localisation: e.localisation || '',
+      date_achat: e.date_achat || '',
+      date_mes: e.date_mes || '',
+      date_revision: e.date_revision || '',
+      etablissement_id: e.etablissement_id || ''
+    }))
+    exportToCSV(data, `meditrack_equipements_${new Date().toISOString().slice(0, 10)}.csv`)
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files) return
+    const file = e.target.files[0]
+    setImportLoading(true)
+    setImportResult(null)
+    const text = await file.text()
+    const rows = parseCSV(text)
+    let success = 0
+    let errors = 0
+    for (const row of rows) {
+      if (!row.reference || !row.designation) { errors++; continue }
+      const { error } = await supabase.from('equipements').upsert([{
+        reference: row.reference,
+        designation: row.designation,
+        categorie: row.categorie || null,
+        fabricant: row.fabricant || null,
+        modele: row.modele || null,
+        numero_serie: row.numero_serie || null,
+        mode_dispo: row.mode_dispo || 'location',
+        statut: row.statut || 'en_service',
+        localisation: row.localisation || null,
+        date_achat: row.date_achat || null,
+        date_mes: row.date_mes || null,
+        date_revision: row.date_revision || null,
+        etablissement_id: row.etablissement_id || etablissements[0]?.id
+      }], { onConflict: 'reference' })
+      if (error) errors++; else success++
+    }
+    setImportResult({ success, errors })
+    setImportLoading(false)
+    load()
+    e.target.value = ''
+  }
+
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
     <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: '6px', border: '0.5px solid', borderColor: active ? '#1A56DB' : '#E5E7EB', background: active ? '#EFF6FF' : '#fff', color: active ? '#1A56DB' : '#6B7280', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'inherit' }}>
       {label}
     </button>
   )
+
+  const hasFilters = search || filterStatut !== 'tous' || filterMode !== 'tous' || filterClient || filterMois
 
   if (!roleLoaded) return <div style={{ padding: '32px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
   if (role === 'client' && etablissementId) return <MaterielClientPage etablissementId={etablissementId} />
@@ -147,13 +205,30 @@ export default function MaterielPage() {
     <div style={{ padding: '24px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '13px', color: '#6B7280' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''}</div>
-        <button onClick={() => setShowAddModal(true)}
-          style={{ padding: '8px 14px', background: '#1A56DB', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
-          Ajouter un équipement
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {importResult && (
+            <div style={{ fontSize: '12px', padding: '6px 10px', borderRadius: '6px', background: importResult.errors > 0 ? '#FFFBEB' : '#F0FDF4', color: importResult.errors > 0 ? '#B45309' : '#059669', border: `0.5px solid ${importResult.errors > 0 ? '#FDE68A' : '#BBF7D0'}` }}>
+              ✓ {importResult.success} importés {importResult.errors > 0 ? `· ${importResult.errors} erreurs` : ''}
+            </div>
+          )}
+          <button onClick={handleExport}
+            style={{ padding: '8px 14px', background: '#fff', color: '#374151', border: '0.5px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-download" style={{ fontSize: '14px' }} aria-hidden="true" />
+            Exporter CSV
+          </button>
+          <label style={{ padding: '8px 14px', background: '#fff', color: '#374151', border: '0.5px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-upload" style={{ fontSize: '14px' }} aria-hidden="true" />
+            {importLoading ? 'Import...' : 'Importer CSV'}
+            <input type='file' accept='.csv' style={{ display: 'none' }} onChange={handleImport} />
+          </label>
+          <button onClick={() => setShowAddModal(true)}
+            style={{ padding: '8px 14px', background: '#1A56DB', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
+            Ajouter
+          </button>
+        </div>
       </div>
 
       {/* Filtres */}
@@ -169,7 +244,7 @@ export default function MaterielPage() {
         </div>
         <div style={{ width: '1px', height: '20px', background: '#E5E7EB' }} />
         <div style={{ display: 'flex', gap: '4px' }}>
-          {filterBtn('Tous', filterMode === 'tous', () => setFilterMode('tous'))}
+          {filterBtn('Tous modes', filterMode === 'tous', () => setFilterMode('tous'))}
           {filterBtn('Location', filterMode === 'location', () => setFilterMode('location'))}
           {filterBtn('Achat', filterMode === 'achat', () => setFilterMode('achat'))}
           {filterBtn('MAD', filterMode === 'mad', () => setFilterMode('mad'))}
@@ -185,7 +260,7 @@ export default function MaterielPage() {
         </div>
         <input type="month" value={filterMois} onChange={e => setFilterMois(e.target.value)}
           style={{ padding: '7px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }} />
-        {(search || filterStatut !== 'tous' || filterMode !== 'tous' || filterClient || filterMois) && (
+        {hasFilters && (
           <button onClick={() => { setSearch(''); setFilterStatut('tous'); setFilterMode('tous'); setFilterClient(''); setFilterMois('') }}
             style={{ padding: '6px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#6B7280', background: '#F9FAFB', cursor: 'pointer', fontFamily: 'inherit' }}>
             ✕ Réinitialiser
@@ -244,7 +319,7 @@ export default function MaterielPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '580px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ background: '#111827', padding: '20px 24px', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0 }}>
+            <div style={{ background: '#111827', padding: '18px 22px', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0 }}>
               <div>
                 <div style={{ fontSize: '15px', fontWeight: '600', color: '#fff' }}>{selected.designation}</div>
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{selected.reference} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom}</div>
@@ -252,7 +327,7 @@ export default function MaterielPage() {
               <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
                 style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
             </div>
-            <div style={{ padding: '20px 24px' }}>
+            <div style={{ padding: '20px 22px' }}>
               {[
                 { title: 'Identification', rows: [['Référence', selected.reference], ['N° de série', selected.numero_serie || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—']] },
                 { title: 'Statut & Localisation', rows: [['Statut', statutStyle(selected.statut).label], ['Localisation', selected.localisation || '—'], ['Mode', modeLabel(selected.mode_dispo)]] },
@@ -373,13 +448,13 @@ export default function MaterielPage() {
                     <option value='hors_service'>Hors service</option>
                   </select>
                 </div>
-                <div>
+                <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Établissement</label>
                   <SearchableSelect
                     options={etablissements.map(e => ({ value: e.id, label: e.nom }))}
                     value={addForm.etablissement_id}
                     onChange={v => setAddForm(p => ({ ...p, etablissement_id: v }))}
-                    placeholder="Sélectionner..."
+                    placeholder="Sélectionner un établissement..."
                   />
                 </div>
                 <div>
