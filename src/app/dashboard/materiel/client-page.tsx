@@ -12,8 +12,8 @@ type Equipement = {
 }
 
 const statutStyle = (s: string) => {
-  if (s === 'en_service') return { bg: '#E8F5EF', color: '#00875A', label: 'En service', dot: '#00875A' }
-  if (s === 'maintenance') return { bg: '#FFF7E6', color: '#B45309', label: 'En maintenance', dot: '#B45309' }
+  if (s === 'en_service') return { bg: '#F0FDF4', color: '#059669', label: 'En service', dot: '#059669' }
+  if (s === 'maintenance') return { bg: '#FFFBEB', color: '#B45309', label: 'En maintenance', dot: '#B45309' }
   return { bg: '#FEF2F2', color: '#DC2626', label: 'Hors service', dot: '#DC2626' }
 }
 
@@ -26,6 +26,9 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
   const [panneSaving, setPanneSaving] = useState(false)
   const [panneSuccess, setPanneSuccess] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
+  const [editingLoc, setEditingLoc] = useState(false)
+  const [newLoc, setNewLoc] = useState('')
+  const [locSaving, setLocSaving] = useState(false)
   const supabase = createClient()
 
   async function load() {
@@ -49,59 +52,67 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
     setSelected(eq)
     setPannDesc('')
     setPanneSuccess(false)
+    setEditingLoc(false)
+    setNewLoc(eq.localisation || '')
     loadDocs(eq.id)
   }
 
   const filtered = filterStatut === 'tous' ? equipements : equipements.filter(e => e.statut === filterStatut)
 
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
-    <button onClick={onClick} style={{ padding: '7px 14px', borderRadius: '8px', border: '0.5px solid', borderColor: active ? '#1A56DB' : '#DDE5F0', background: active ? '#EEF2FF' : '#fff', color: active ? '#1A56DB' : '#6B7A99', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'inherit' }}>
+    <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: '6px', border: '0.5px solid', borderColor: active ? '#1A56DB' : '#E5E7EB', background: active ? '#EFF6FF' : '#fff', color: active ? '#1A56DB' : '#6B7280', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'inherit' }}>
       {label}
     </button>
   )
 
-  if (loading) return <div style={{ padding: '32px', color: '#6B7A99', fontSize: '14px' }}>Chargement...</div>
+  if (loading) return <div style={{ padding: '32px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
 
   return (
-    <div style={{ padding: '32px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '22px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.3px' }}>Mon matériel</div>
-        <div style={{ fontSize: '14px', color: '#6B7A99', marginTop: '4px' }}>{equipements.length} équipement{equipements.length > 1 ? 's' : ''}</div>
+    <div style={{ padding: '24px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', color: '#6B7280' }}>{equipements.length} équipement{equipements.length > 1 ? 's' : ''}</div>
       </div>
 
+      {/* Alerte hors service */}
       {equipements.filter(e => e.statut === 'hors_service').length > 0 && (
-        <div style={{ background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style={{ background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: '16px', color: '#DC2626', flexShrink: 0 }} aria-hidden="true" />
           <span style={{ fontSize: '13px', color: '#DC2626', fontWeight: '500' }}>
             {equipements.filter(e => e.statut === 'hors_service').length} équipement{equipements.filter(e => e.statut === 'hors_service').length > 1 ? 's' : ''} hors service — votre prestataire a été notifié
           </span>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
+      {/* Filtres */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
         {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
         {filterBtn('En service', filterStatut === 'en_service', () => setFilterStatut('en_service'))}
         {filterBtn('Maintenance', filterStatut === 'maintenance', () => setFilterStatut('maintenance'))}
         {filterBtn('Hors service', filterStatut === 'hors_service', () => setFilterStatut('hors_service'))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+      {/* Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
         {filtered.map(eq => {
           const st = statutStyle(eq.statut)
           return (
             <div key={eq.id} onClick={() => openFiche(eq)}
-              style={{ background: '#fff', borderRadius: '16px', border: '0.5px solid #DDE5F0', padding: '22px', cursor: 'pointer', transition: 'box-shadow 0.15s', borderLeft: `3px solid ${st.dot}` }}
-              onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(10,22,40,0.08)'}
+              style={{ background: '#fff', borderRadius: '8px', border: '0.5px solid #E5E7EB', padding: '18px', cursor: 'pointer', borderLeft: `3px solid ${st.dot}`, transition: 'box-shadow 0.15s' }}
+              onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)'}
               onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#0A1628' }}>{eq.designation}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7A99', marginTop: '2px' }}>{eq.reference}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{eq.designation}</div>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{eq.reference}</div>
                 </div>
-                <span style={{ background: st.bg, color: st.color, padding: '3px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '500', whiteSpace: 'nowrap' }}>{st.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.dot }} />
+                  <span style={{ fontSize: '11px', color: st.color, fontWeight: '500', whiteSpace: 'nowrap' }}>{st.label}</span>
+                </div>
               </div>
-              <div style={{ fontSize: '12px', color: '#6B7A99', lineHeight: 1.8 }}>
+              <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: 1.8 }}>
                 <div>📍 {eq.localisation || '—'}</div>
                 <div>🏭 {eq.fabricant} {eq.modele}</div>
                 {eq.date_revision && <div>🔧 Révision : {eq.date_revision}</div>}
@@ -111,59 +122,110 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
         })}
       </div>
 
+      {/* Fiche modale */}
       {selected && (
-        <div onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false); setEditingLoc(false) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()}
-            style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(10,22,40,0.15)' }}>
-            <div style={{ background: '#0A1628', padding: '22px 26px', borderRadius: '20px 20px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+
+            {/* Header */}
+            <div style={{ background: '#111827', padding: '18px 22px', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0 }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#fff' }}>{selected.designation}</div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>{selected.reference}</div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{selected.designation}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{selected.reference}</div>
               </div>
-              <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
-                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '30px', height: '30px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+              <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false); setEditingLoc(false) }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
             </div>
 
-            <div style={{ padding: '22px 26px' }}>
+            <div style={{ padding: '20px 22px' }}>
+
+              {/* Informations */}
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #F0F4FA' }}>Informations</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  {[['Statut', statutStyle(selected.statut).label], ['Localisation', selected.localisation || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—'], ['N° série', selected.numero_serie || '—'], ['Révision', selected.date_revision || '—']].map(([l, v]) => (
+                <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Informations</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    ['Statut', statutStyle(selected.statut).label],
+                    ['Fabricant', selected.fabricant || '—'],
+                    ['Modèle', selected.modele || '—'],
+                    ['N° série', selected.numero_serie || '—'],
+                    ['Mode', selected.mode_dispo === 'location' ? 'Location' : selected.mode_dispo === 'achat' ? 'Achat' : 'MAD'],
+                    ['Révision', selected.date_revision || '—'],
+                  ].map(([l, v]) => (
                     <div key={l}>
-                      <div style={{ fontSize: '11px', color: '#6B7A99', marginBottom: '2px' }}>{l}</div>
-                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#0A1628' }}>{v}</div>
+                      <div style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '2px' }}>{l}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{v}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* Localisation éditable */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Localisation</span>
+                  {!editingLoc && (
+                    <button onClick={() => { setEditingLoc(true); setNewLoc(selected.localisation || '') }}
+                      style={{ fontSize: '11px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'none', letterSpacing: 0, fontWeight: '500' }}>
+                      ✏️ Modifier
+                    </button>
+                  )}
+                </div>
+                {editingLoc ? (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input value={newLoc} onChange={e => setNewLoc(e.target.value)}
+                      placeholder="Ex: Chambre 17"
+                      autoFocus
+                      style={{ flex: 1, padding: '8px 10px', border: '0.5px solid #1A56DB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }} />
+                    <button onClick={async () => {
+                      setLocSaving(true)
+                      await supabase.from('equipements').update({ localisation: newLoc }).eq('id', selected.id)
+                      setSelected({ ...selected, localisation: newLoc })
+                      setEquipements(prev => prev.map(e => e.id === selected.id ? { ...e, localisation: newLoc } : e))
+                      setEditingLoc(false)
+                      setLocSaving(false)
+                    }} disabled={locSaving}
+                      style={{ padding: '8px 12px', background: '#1A56DB', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                      {locSaving ? '...' : 'Sauver'}
+                    </button>
+                    <button onClick={() => setEditingLoc(false)}
+                      style={{ padding: '8px 10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '6px', color: '#6B7280', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>📍 {selected.localisation || '—'}</div>
+                )}
+              </div>
+
+              {/* Documents */}
               {documents.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #F0F4FA' }}>Documents</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Documents</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {documents.map(doc => (
                       <a key={doc.id} href={doc.url} target='_blank' rel='noreferrer'
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#F8FAFC', borderRadius: '8px', border: '0.5px solid #DDE5F0', textDecoration: 'none' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span style={{ fontSize: '13px', color: '#0A1628', fontWeight: '500' }}>{doc.nom}</span>
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F9FAFB', borderRadius: '6px', border: '0.5px solid #E5E7EB', textDecoration: 'none' }}>
+                        <i className="ti ti-file-description" style={{ fontSize: '14px', color: '#1A56DB' }} aria-hidden="true" />
+                        <span style={{ fontSize: '12px', color: '#111827', fontWeight: '500', flex: 1 }}>{doc.nom}</span>
+                        <i className="ti ti-external-link" style={{ fontSize: '12px', color: '#9CA3AF' }} aria-hidden="true" />
                       </a>
                     ))}
                   </div>
                 </div>
               )}
 
+              {/* Signalement panne */}
               <div>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '0.5px solid #F0F4FA' }}>Signaler une panne</div>
+                <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Signaler une panne</div>
                 {panneSuccess ? (
-                  <div style={{ padding: '12px', background: '#E8F5EF', border: '0.5px solid #BBF7D0', borderRadius: '10px', color: '#00875A', fontSize: '13px', fontWeight: '500', textAlign: 'center' }}>
+                  <div style={{ padding: '12px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '8px', color: '#059669', fontSize: '13px', fontWeight: '500', textAlign: 'center' }}>
                     ✓ Panne signalée — Votre prestataire interviendra sous 24h
                   </div>
                 ) : (
                   <>
                     <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={2}
                       placeholder="Décrivez le problème..."
-                      style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #DDE5F0', borderRadius: '8px', fontSize: '13px', color: '#0A1628', fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: '10px' }} />
+                      style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: '8px' }} />
                     <button
                       onClick={async () => {
                         if (!pannDesc) return
@@ -176,7 +238,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                         setTimeout(() => { setSelected(null); setPanneSuccess(false); setPannDesc('') }, 2500)
                       }}
                       disabled={panneSaving || !pannDesc}
-                      style={{ width: '100%', padding: '11px', background: panneSaving || !pannDesc ? '#F8FAFC' : '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '10px', color: '#DC2626', fontSize: '13px', fontWeight: '500', cursor: panneSaving || !pannDesc ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                      style={{ width: '100%', padding: '10px', background: panneSaving || !pannDesc ? '#F9FAFB' : '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '6px', color: '#DC2626', fontSize: '13px', fontWeight: '500', cursor: panneSaving || !pannDesc ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                       {panneSaving ? 'Envoi...' : '🚨 Signaler la panne'}
                     </button>
                   </>
