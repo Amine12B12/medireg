@@ -19,6 +19,7 @@ const statutStyle = (s: string) => {
 
 export default function MaterielClientPage({ etablissementId }: { etablissementId: string }) {
   const [equipements, setEquipements] = useState<Equipement[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [selected, setSelected] = useState<Equipement | null>(null)
   const [loading, setLoading] = useState(true)
   const [filterStatut, setFilterStatut] = useState('tous')
@@ -35,12 +36,10 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
   const supabase = createClient()
 
   async function load() {
-    const { data } = await supabase
-      .from('equipements')
-      .select('*')
-      .eq('etablissement_id', etablissementId)
-      .order('created_at')
+    const { data } = await supabase.from('equipements').select('*').eq('etablissement_id', etablissementId).order('created_at')
+    const { data: cats } = await supabase.from('categories_materiel').select('nom').order('nom')
     setEquipements(data || [])
+    setCategories(cats?.map(c => c.nom) || [])
     setLoading(false)
   }
 
@@ -62,7 +61,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
 
   const filtered = equipements
     .filter(e => filterStatut === 'tous' || e.statut === filterStatut)
-    .filter(e => filterType === 'tous' || e.categorie?.toLowerCase() === filterType)
+    .filter(e => filterType === 'tous' || e.categorie?.toLowerCase() === filterType.toLowerCase())
     .filter(e => filterContrat === 'tous' || e.mode_dispo === filterContrat)
     .filter(e => {
       if (filterMaintenance === 'tous') return true
@@ -89,7 +88,6 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
         <div style={{ fontSize: '13px', color: '#6B7280' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''} {hasFilters ? `(sur ${equipements.length})` : ''}</div>
       </div>
 
-      {/* Alerte hors service */}
       {equipements.filter(e => e.statut === 'hors_service').length > 0 && (
         <div style={{ background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <i className="ti ti-alert-circle" style={{ fontSize: '16px', color: '#DC2626', flexShrink: 0 }} aria-hidden="true" />
@@ -111,10 +109,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
         <select value={filterType} onChange={e => setFilterType(e.target.value)}
           style={{ padding: '6px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}>
           <option value='tous'>Tous les types</option>
-          <option value='lit'>Lit</option>
-          <option value='fauteuil'>Fauteuil</option>
-          <option value='oxygène'>Oxygène</option>
-          <option value='autre'>Autre</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select value={filterContrat} onChange={e => setFilterContrat(e.target.value)}
           style={{ padding: '6px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}>
@@ -181,7 +176,6 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-
             <div style={{ background: '#111827', padding: '18px 22px', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0 }}>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{selected.designation}</div>
@@ -190,10 +184,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
               <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false); setEditingLoc(false) }}
                 style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
             </div>
-
             <div style={{ padding: '20px 22px' }}>
-
-              {/* Informations */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Informations</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -228,16 +219,14 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                 </div>
                 {editingLoc ? (
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input value={newLoc} onChange={e => setNewLoc(e.target.value)}
-                      placeholder="Ex: Chambre 17" autoFocus
+                    <input value={newLoc} onChange={e => setNewLoc(e.target.value)} placeholder="Ex: Chambre 17" autoFocus
                       style={{ flex: 1, padding: '8px 10px', border: '0.5px solid #1A56DB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }} />
                     <button onClick={async () => {
                       setLocSaving(true)
                       await supabase.from('equipements').update({ localisation: newLoc }).eq('id', selected.id)
                       setSelected({ ...selected, localisation: newLoc })
                       setEquipements(prev => prev.map(e => e.id === selected.id ? { ...e, localisation: newLoc } : e))
-                      setEditingLoc(false)
-                      setLocSaving(false)
+                      setEditingLoc(false); setLocSaving(false)
                     }} disabled={locSaving}
                       style={{ padding: '8px 12px', background: '#1A56DB', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                       {locSaving ? '...' : 'Sauver'}
@@ -250,7 +239,6 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                 )}
               </div>
 
-              {/* Documents */}
               {documents.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Documents</div>
@@ -267,7 +255,6 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                 </div>
               )}
 
-              {/* Signalement panne */}
               <div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Signaler une panne</div>
                 {panneSuccess ? (
@@ -276,17 +263,14 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                   </div>
                 ) : (
                   <>
-                    <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={2}
-                      placeholder="Décrivez le problème..."
+                    <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={2} placeholder="Décrivez le problème..."
                       style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: '8px' }} />
                     <button onClick={async () => {
                       if (!pannDesc) return
                       setPanneSaving(true)
                       await supabase.from('pannes').insert([{ equipement_id: selected.id, description: pannDesc, statut: 'ouvert' }])
                       await supabase.from('equipements').update({ statut: 'hors_service' }).eq('id', selected.id)
-                      setPanneSaving(false)
-                      setPanneSuccess(true)
-                      load()
+                      setPanneSaving(false); setPanneSuccess(true); load()
                       setTimeout(() => { setSelected(null); setPanneSuccess(false); setPannDesc('') }, 2500)
                     }} disabled={panneSaving || !pannDesc}
                       style={{ width: '100%', padding: '10px', background: panneSaving || !pannDesc ? '#F9FAFB' : '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '6px', color: '#DC2626', fontSize: '13px', fontWeight: '500', cursor: panneSaving || !pannDesc ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>

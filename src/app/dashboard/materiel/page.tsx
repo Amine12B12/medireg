@@ -31,6 +31,7 @@ export default function MaterielPage() {
   const [etablissementId, setEtablissementId] = useState<string | null>(null)
   const [equipements, setEquipements] = useState<Equipement[]>([])
   const [filtered, setFiltered] = useState<Equipement[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [filterStatut, setFilterStatut] = useState('tous')
   const [filterMode, setFilterMode] = useState('tous')
@@ -72,9 +73,11 @@ export default function MaterielPage() {
   async function load() {
     const { data } = await supabase.from('equipements').select('*').order('created_at')
     const { data: etabs } = await supabase.from('etablissements').select('id, nom').order('nom')
+    const { data: cats } = await supabase.from('categories_materiel').select('nom').order('nom')
     setEquipements(data || [])
     setFiltered(data || [])
     setEtablissements(etabs || [])
+    setCategories(cats?.map(c => c.nom) || [])
     if (etabs && etabs.length > 0 && !addForm.etablissement_id) {
       setAddForm(p => ({ ...p, etablissement_id: etabs[0].id }))
     }
@@ -138,18 +141,12 @@ export default function MaterielPage() {
 
   function handleExport() {
     const data = equipements.map(e => ({
-      reference: e.reference,
-      designation: e.designation,
-      categorie: e.categorie || '',
-      fabricant: e.fabricant || '',
-      modele: e.modele || '',
-      numero_serie: e.numero_serie || '',
-      mode_dispo: e.mode_dispo || '',
-      statut: e.statut || '',
-      localisation: e.localisation || '',
-      date_achat: e.date_achat || '',
-      date_mes: e.date_mes || '',
-      date_revision: e.date_revision || '',
+      reference: e.reference, designation: e.designation,
+      categorie: e.categorie || '', fabricant: e.fabricant || '',
+      modele: e.modele || '', numero_serie: e.numero_serie || '',
+      mode_dispo: e.mode_dispo || '', statut: e.statut || '',
+      localisation: e.localisation || '', date_achat: e.date_achat || '',
+      date_mes: e.date_mes || '', date_revision: e.date_revision || '',
       etablissement_id: e.etablissement_id || ''
     }))
     exportToCSV(data, `meditrack_equipements_${new Date().toISOString().slice(0, 10)}.csv`)
@@ -162,23 +159,16 @@ export default function MaterielPage() {
     setImportResult(null)
     const text = await file.text()
     const rows = parseCSV(text)
-    let success = 0
-    let errors = 0
+    let success = 0; let errors = 0
     for (const row of rows) {
       if (!row.reference || !row.designation) { errors++; continue }
       const { error } = await supabase.from('equipements').upsert([{
-        reference: row.reference,
-        designation: row.designation,
-        categorie: row.categorie || null,
-        fabricant: row.fabricant || null,
-        modele: row.modele || null,
-        numero_serie: row.numero_serie || null,
-        mode_dispo: row.mode_dispo || 'location',
-        statut: row.statut || 'en_service',
-        localisation: row.localisation || null,
-        date_achat: row.date_achat || null,
-        date_mes: row.date_mes || null,
-        date_revision: row.date_revision || null,
+        reference: row.reference, designation: row.designation,
+        categorie: row.categorie || null, fabricant: row.fabricant || null,
+        modele: row.modele || null, numero_serie: row.numero_serie || null,
+        mode_dispo: row.mode_dispo || 'location', statut: row.statut || 'en_service',
+        localisation: row.localisation || null, date_achat: row.date_achat || null,
+        date_mes: row.date_mes || null, date_revision: row.date_revision || null,
         etablissement_id: row.etablissement_id || etablissements[0]?.id
       }], { onConflict: 'reference' })
       if (error) errors++; else success++
@@ -195,7 +185,7 @@ export default function MaterielPage() {
     </button>
   )
 
-  const hasFilters = search || filterStatut !== 'tous' || filterMode !== 'tous' || filterClient || filterMois
+  const hasFilters = !!(search || filterStatut !== 'tous' || filterMode !== 'tous' || filterClient || filterMois)
 
   if (!roleLoaded) return <div style={{ padding: '32px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
   if (role === 'client' && etablissementId) return <MaterielClientPage etablissementId={etablissementId} />
@@ -273,14 +263,14 @@ export default function MaterielPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#F9FAFB' }}>
-              {['Référence', 'Désignation', 'Fabricant / Modèle', 'N° Série', 'Client', 'Localisation', 'Mode', 'MES', 'Statut'].map(h => (
+              {['Référence', 'Désignation', 'Catégorie', 'Fabricant / Modèle', 'N° Série', 'Client', 'Localisation', 'Mode', 'MES', 'Statut'].map(h => (
                 <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#9CA3AF', letterSpacing: '0.3px', textTransform: 'uppercase', borderBottom: '0.5px solid #E5E7EB', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>Aucun équipement trouvé</td></tr>
+              <tr><td colSpan={10} style={{ padding: '32px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>Aucun équipement trouvé</td></tr>
             ) : filtered.map((eq, i) => {
               const st = statutStyle(eq.statut)
               const etab = etablissements.find(e => e.id === eq.etablissement_id)
@@ -292,6 +282,7 @@ export default function MaterielPage() {
                 >
                   <td style={{ padding: '11px 12px', fontSize: '12px', fontWeight: '600', color: '#1A56DB', whiteSpace: 'nowrap' }}>{eq.reference}</td>
                   <td style={{ padding: '11px 12px', fontSize: '12px', color: '#111827' }}>{eq.designation}</td>
+                  <td style={{ padding: '11px 12px', fontSize: '12px', color: '#6B7280' }}>{eq.categorie || '—'}</td>
                   <td style={{ padding: '11px 12px', fontSize: '12px', color: '#6B7280' }}>{eq.fabricant} {eq.modele}</td>
                   <td style={{ padding: '11px 12px', fontSize: '11px', color: '#6B7280', fontFamily: 'monospace' }}>{eq.numero_serie || '—'}</td>
                   <td style={{ padding: '11px 12px', fontSize: '12px', color: '#6B7280' }}>{etab?.nom || '—'}</td>
@@ -329,7 +320,7 @@ export default function MaterielPage() {
             </div>
             <div style={{ padding: '20px 22px' }}>
               {[
-                { title: 'Identification', rows: [['Référence', selected.reference], ['N° de série', selected.numero_serie || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—']] },
+                { title: 'Identification', rows: [['Référence', selected.reference], ['Catégorie', selected.categorie || '—'], ['N° de série', selected.numero_serie || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—']] },
                 { title: 'Statut & Localisation', rows: [['Statut', statutStyle(selected.statut).label], ['Localisation', selected.localisation || '—'], ['Mode', modeLabel(selected.mode_dispo)]] },
                 { title: 'Dates', rows: [['Date achat', selected.date_achat || '—'], ['Mise en service', selected.date_mes || '—'], ['Prochaine révision', selected.date_revision || '—']] },
               ].map(section => (
@@ -346,7 +337,6 @@ export default function MaterielPage() {
                 </div>
               ))}
 
-              {/* Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Documents</span>
@@ -367,17 +357,13 @@ export default function MaterielPage() {
                 ))}
               </div>
 
-              {/* Panne */}
               <div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Signaler une panne</div>
                 {panneSuccess ? (
-                  <div style={{ padding: '12px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '8px', color: '#059669', fontSize: '13px', fontWeight: '500', textAlign: 'center' }}>
-                    ✓ Panne signalée
-                  </div>
+                  <div style={{ padding: '12px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '8px', color: '#059669', fontSize: '13px', fontWeight: '500', textAlign: 'center' }}>✓ Panne signalée</div>
                 ) : (
                   <>
-                    <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={2}
-                      placeholder="Décrivez le problème..."
+                    <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={2} placeholder="Décrivez le problème..."
                       style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: '8px' }} />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={async () => {
@@ -417,7 +403,6 @@ export default function MaterielPage() {
                 {[
                   { label: 'Référence *', key: 'reference', placeholder: 'LIT-2024-004' },
                   { label: 'Désignation *', key: 'designation', placeholder: 'Lit médicalisé' },
-                  { label: 'Catégorie', key: 'categorie', placeholder: 'Lit' },
                   { label: 'Fabricant', key: 'fabricant', placeholder: 'Invacare' },
                   { label: 'Modèle', key: 'modele', placeholder: 'Sonata Electric' },
                   { label: 'N° de série', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
@@ -430,6 +415,14 @@ export default function MaterielPage() {
                       style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }} />
                   </div>
                 ))}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Catégorie</label>
+                  <select value={addForm.categorie} onChange={e => setAddForm(p => ({ ...p, categorie: e.target.value }))}
+                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
+                    <option value=''>Sélectionner...</option>
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Mode</label>
                   <select value={addForm.mode_dispo} onChange={e => setAddForm(p => ({ ...p, mode_dispo: e.target.value }))}

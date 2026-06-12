@@ -13,6 +13,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/livraisons': { title: 'Livraisons', sub: 'Installations planifiées' },
   '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements nécessitant une action' },
   '/dashboard/devis': { title: 'Devis', sub: 'Demandes en cours' },
+  '/dashboard/categories': { title: 'Catégories', sub: 'Types de matériel' },
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
