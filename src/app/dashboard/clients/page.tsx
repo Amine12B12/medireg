@@ -18,7 +18,14 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showAccessModal, setShowAccessModal] = useState(false)
+  const [showEquipModal, setShowEquipModal] = useState(false)
   const [selectedEtab, setSelectedEtab] = useState<Etablissement | null>(null)
+  const [selectedEtabEquip, setSelectedEtabEquip] = useState<Etablissement | null>(null)
+  const [etabEquipements, setEtabEquipements] = useState<any[]>([])
+  const [allEquipements, setAllEquipements] = useState<any[]>([])
+  const [equipLoading, setEquipLoading] = useState(false)
+  const [affectForm, setAffectForm] = useState({ equipement_id: '' })
+  const [affectSaving, setAffectSaving] = useState(false)
   const [saving, setSaving] = useState(false)
   const [accessSaving, setAccessSaving] = useState(false)
   const [accessSuccess, setAccessSuccess] = useState(false)
@@ -33,16 +40,13 @@ export default function ClientsPage() {
     const { data: etabs } = await supabase.from('etablissements').select('*').order('nom')
     const { data: equips } = await supabase.from('equipements').select('etablissement_id')
     const { data: pannes } = await supabase.from('pannes').select('equipements(etablissement_id)').eq('statut', 'ouvert')
-
     const counts: Record<string, number> = {}
     equips?.forEach(e => { counts[e.etablissement_id] = (counts[e.etablissement_id] || 0) + 1 })
-
     const alerts: Record<string, number> = {}
     pannes?.forEach((p: any) => {
       const etabId = p.equipements?.etablissement_id
       if (etabId) alerts[etabId] = (alerts[etabId] || 0) + 1
     })
-
     setEtablissements(etabs || [])
     setEquipCount(counts)
     setAlertCount(alerts)
@@ -50,6 +54,28 @@ export default function ClientsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function openEquipModal(etab: Etablissement) {
+    setSelectedEtabEquip(etab)
+    setShowEquipModal(true)
+    setEquipLoading(true)
+    setAffectForm({ equipement_id: '' })
+    const { data: etabEquips } = await supabase.from('equipements').select('*').eq('etablissement_id', etab.id)
+    const { data: all } = await supabase.from('equipements').select('id, reference, designation').neq('etablissement_id', etab.id)
+    setEtabEquipements(etabEquips || [])
+    setAllEquipements(all || [])
+    setEquipLoading(false)
+  }
+
+  async function handleAffectEquip() {
+    if (!affectForm.equipement_id || !selectedEtabEquip) return
+    setAffectSaving(true)
+    await supabase.from('equipements').update({ etablissement_id: selectedEtabEquip.id }).eq('id', affectForm.equipement_id)
+    setAffectForm({ equipement_id: '' })
+    setAffectSaving(false)
+    openEquipModal(selectedEtabEquip)
+    load()
+  }
 
   async function handleAdd() {
     if (!form.nom) return
@@ -86,6 +112,11 @@ export default function ClientsPage() {
     if (f === 'Privilège') return { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' }
     return { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' }
   }
+
+  const statutEquip = (s: string) => s === 'en_service'
+    ? { color: '#059669', label: 'En service' }
+    : s === 'maintenance' ? { color: '#B45309', label: 'Maintenance' }
+    : { color: '#DC2626', label: 'Hors service' }
 
   const filtered = etablissements
     .filter(e => filterStatut === 'tous' || e.statut === filterStatut)
@@ -132,7 +163,7 @@ export default function ClientsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#F9FAFB' }}>
-              {['Établissement', 'Type', 'Ville', 'Contact', 'Formule', 'Équipements', 'Alertes', 'Statut', 'Accès'].map(h => (
+              {['Établissement', 'Type', 'Ville', 'Contact', 'Formule', 'Équipements', 'Alertes', 'Statut', 'Actions'].map(h => (
                 <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#9CA3AF', letterSpacing: '0.3px', textTransform: 'uppercase', borderBottom: '0.5px solid #E5E7EB', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -157,9 +188,7 @@ export default function ClientsPage() {
                   </td>
                   <td style={{ padding: '11px 12px' }}>
                     {etab.formule ? (
-                      <span style={{ background: fb.bg, color: fb.color, border: `0.5px solid ${fb.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>
-                        {etab.formule}
-                      </span>
+                      <span style={{ background: fb.bg, color: fb.color, border: `0.5px solid ${fb.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>{etab.formule}</span>
                     ) : <span style={{ color: '#9CA3AF', fontSize: '12px' }}>—</span>}
                   </td>
                   <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: '500', color: '#1A56DB' }}>{equipCount[etab.id] || 0}</td>
@@ -173,16 +202,21 @@ export default function ClientsPage() {
                     )}
                   </td>
                   <td style={{ padding: '11px 12px' }}>
-                    <span style={{ background: st.bg, color: st.color, border: `0.5px solid ${st.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>
-                      {st.label}
-                    </span>
+                    <span style={{ background: st.bg, color: st.color, border: `0.5px solid ${st.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>{st.label}</span>
                   </td>
                   <td style={{ padding: '11px 12px' }}>
-                    <button onClick={() => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) }}
-                      style={{ padding: '5px 10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-                      <i className="ti ti-key" style={{ fontSize: '12px' }} aria-hidden="true" />
-                      Créer accès
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => openEquipModal(etab)}
+                        style={{ padding: '5px 8px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#1A56DB', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                        <i className="ti ti-device-heart-monitor" style={{ fontSize: '11px' }} aria-hidden="true" />
+                        Équip.
+                      </button>
+                      <button onClick={() => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) }}
+                        style={{ padding: '5px 8px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                        <i className="ti ti-key" style={{ fontSize: '11px' }} aria-hidden="true" />
+                        Accès
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )
@@ -190,6 +224,66 @@ export default function ClientsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal équipements établissement */}
+      {showEquipModal && selectedEtabEquip && (
+        <div onClick={() => setShowEquipModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff' }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Équipements — {selectedEtabEquip.nom}</div>
+                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{etabEquipements.length} équipement{etabEquipements.length > 1 ? 's' : ''} affecté{etabEquipements.length > 1 ? 's' : ''}</div>
+              </div>
+              <button onClick={() => setShowEquipModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+            </div>
+            <div style={{ padding: '20px 22px' }}>
+
+              {/* Affecter */}
+              <div style={{ marginBottom: '20px', padding: '14px', background: '#F9FAFB', borderRadius: '8px', border: '0.5px solid #E5E7EB' }}>
+                <div style={{ fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>Affecter un équipement existant</div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select value={affectForm.equipement_id} onChange={e => setAffectForm({ equipement_id: e.target.value })}
+                    style={{ flex: 1, padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
+                    <option value=''>Sélectionner un équipement...</option>
+                    {allEquipements.map(e => (
+                      <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>
+                    ))}
+                  </select>
+                  <button onClick={handleAffectEquip} disabled={affectSaving || !affectForm.equipement_id}
+                    style={{ padding: '8px 14px', background: affectSaving || !affectForm.equipement_id ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                    {affectSaving ? '...' : 'Affecter'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Liste */}
+              {equipLoading ? (
+                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Chargement...</div>
+              ) : etabEquipements.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Aucun équipement affecté</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {etabEquipements.map(eq => {
+                    const st = statutEquip(eq.statut)
+                    return (
+                      <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#F9FAFB', borderRadius: '6px', border: '0.5px solid #E5E7EB' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{eq.designation}</div>
+                          <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{eq.reference} · {eq.localisation || '—'}</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color }} />
+                          <span style={{ fontSize: '11px', color: st.color, fontWeight: '500' }}>{st.label}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal ajout établissement */}
       {showAddModal && (
@@ -275,9 +369,7 @@ export default function ClientsPage() {
                     </div>
                   ))}
                   {accessError && (
-                    <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '6px', fontSize: '12px', color: '#DC2626', marginBottom: '12px' }}>
-                      {accessError}
-                    </div>
+                    <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '6px', fontSize: '12px', color: '#DC2626', marginBottom: '12px' }}>{accessError}</div>
                   )}
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setShowAccessModal(false)} style={{ flex: 1, padding: '10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
