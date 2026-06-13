@@ -2,8 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-
-type Props = { role: string }
+import { useFormule } from '@/lib/useFormule'
 
 const navAdmin = [
   { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard' },
@@ -11,20 +10,27 @@ const navAdmin = [
   { label: 'Matériel', path: '/dashboard/materiel', icon: 'ti-device-heart-monitor' },
   { label: 'Maintenance', path: '/dashboard/maintenance', icon: 'ti-tool' },
   { label: 'Livraisons', path: '/dashboard/livraisons', icon: 'ti-truck' },
+  { label: 'Alertes', path: '/dashboard/alertes', icon: 'ti-bell' },
   { label: 'Devis', path: '/dashboard/devis', icon: 'ti-file-invoice' },
+  { label: 'Conformité', path: '/dashboard/conformite', icon: 'ti-shield-check' },
 ]
 
 const navClient = [
-  { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard' },
-  { label: 'Mon matériel', path: '/dashboard/materiel', icon: 'ti-device-heart-monitor' },
-  { label: 'Maintenance', path: '/dashboard/maintenance', icon: 'ti-tool' },
-  { label: 'Devis', path: '/dashboard/devis', icon: 'ti-file-invoice' },
+  { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard', feature: null },
+  { label: 'Mon matériel', path: '/dashboard/materiel', icon: 'ti-device-heart-monitor', feature: 'parc' },
+  { label: 'Maintenance', path: '/dashboard/maintenance', icon: 'ti-tool', feature: 'alertes_maintenance' },
+  { label: 'Devis', path: '/dashboard/devis', icon: 'ti-file-invoice', feature: 'intervention' },
+  { label: 'Conformité', path: '/dashboard/conformite', icon: 'ti-shield-check', feature: 'conformite' },
 ]
+
+type Props = { role: string }
 
 export default function Sidebar({ role }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+  const { can, formule } = useFormule()
+
   const nav = role === 'admin' ? navAdmin : navClient
 
   async function logout() {
@@ -33,23 +39,12 @@ export default function Sidebar({ role }: Props) {
   }
 
   return (
-    <div style={{
-      width: '220px', minHeight: '100vh',
-      background: 'var(--surface)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column',
-      flexShrink: 0, fontFamily: 'var(--font)'
-    }}>
+    <div style={{ width: '220px', minHeight: '100vh', background: 'var(--surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0, fontFamily: 'var(--font)' }}>
+
       {/* Logo */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '32px', height: '32px',
-            background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)',
-            borderRadius: '8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(26,86,219,0.3)'
-          }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(26,86,219,0.3)' }}>
             <i className="ti ti-activity-heartbeat" style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
           </div>
           <div>
@@ -64,67 +59,66 @@ export default function Sidebar({ role }: Props) {
       </div>
 
       {/* Nav */}
-      <div style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
+      <div style={{ flex: 1, padding: '8px', overflowY: 'auto' }}>
         <div style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.8px', padding: '8px 8px 4px' }}>
           {role === 'admin' ? 'Gestion' : 'Mon espace'}
         </div>
-        {nav.map(item => {
+        {nav.map((item: any) => {
           const active = pathname === item.path
+          const locked = role === 'client' && item.feature && !can(item.feature)
           return (
-            <button key={item.path} onClick={() => router.push(item.path)}
+            <button key={item.path}
+              onClick={() => router.push(item.path)}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '9px',
                 padding: '8px 10px', border: 'none', borderRadius: 'var(--radius-sm)',
                 background: active ? 'var(--accent-light)' : 'transparent',
-                color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                color: locked ? 'var(--text-tertiary)' : active ? 'var(--accent)' : 'var(--text-secondary)',
                 fontSize: '13px', fontWeight: active ? '500' : '400',
                 cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left',
-                marginBottom: '1px', transition: 'all 0.1s'
+                marginBottom: '1px', transition: 'all 0.1s',
+                opacity: locked ? 0.6 : 1
               }}
               onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)' }}
               onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
             >
               <i className={`ti ${item.icon}`} style={{ fontSize: '16px', flexShrink: 0 }} aria-hidden="true" />
-              {item.label}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {locked && <i className="ti ti-lock" style={{ fontSize: '11px', opacity: 0.5 }} aria-hidden="true" />}
             </button>
           )
         })}
+
+        {/* Badge formule client */}
+        {role === 'client' && formule && (
+          <div style={{ margin: '12px 8px 0', padding: '8px 10px', background: formule === 'Privilège' ? 'var(--purple-light)' : formule === 'Premium' ? 'var(--accent-light)' : 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: `1px solid ${formule === 'Privilège' ? 'rgba(110,86,207,0.2)' : formule === 'Premium' ? 'rgba(26,86,219,0.2)' : 'var(--border)'}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i className="ti ti-star" style={{ fontSize: '13px', color: formule === 'Privilège' ? 'var(--purple)' : formule === 'Premium' ? 'var(--accent)' : 'var(--text-tertiary)' }} aria-hidden="true" />
+              <span style={{ fontSize: '11px', fontWeight: '600', color: formule === 'Privilège' ? 'var(--purple)' : formule === 'Premium' ? 'var(--accent)' : 'var(--text-tertiary)' }}>
+                Formule {formule}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '8px 10px', borderRadius: 'var(--radius-sm)',
-          marginBottom: '4px'
-        }}>
-          <div style={{
-            width: '30px', height: '30px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--accent-light) 0%, #DBEAFE 100%)',
-            border: '1px solid rgba(26,86,219,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0
-          }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', marginBottom: '4px' }}>
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-light) 0%, #DBEAFE 100%)', border: '1px solid rgba(26,86,219,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0 }}>
             {role === 'admin' ? 'AD' : 'EP'}
           </div>
           <div style={{ overflow: 'hidden' }}>
             <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {role === 'admin' ? 'Admin PSDM' : 'EHPAD Les Pins'}
+              {role === 'admin' ? 'Admin PSDM' : 'Mon établissement'}
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
-              {role === 'admin' ? 'Administrateur' : 'Établissement'}
+              {role === 'admin' ? 'Administrateur' : formule || 'Essentiel'}
             </div>
           </div>
         </div>
         <button onClick={logout}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '7px 10px', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)', background: 'transparent',
-            color: 'var(--text-secondary)', fontSize: '12px',
-            cursor: 'pointer', fontFamily: 'var(--font)',
-            transition: 'all 0.1s'
-          }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}
           onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
           onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}
         >

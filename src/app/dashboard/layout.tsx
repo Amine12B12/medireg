@@ -7,6 +7,7 @@ import Sidebar from '@/components/sidebar'
 
 const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale du parc' },
+  '/dashboard/conformite': { title: 'Conformité', sub: 'Score de préparation contrôle' },
   '/dashboard/clients': { title: 'Clients', sub: 'Établissements pilotés' },
   '/dashboard/materiel': { title: 'Matériel', sub: 'Parc d\'équipements' },
   '/dashboard/maintenance': { title: 'Maintenance', sub: 'Planning des interventions' },
