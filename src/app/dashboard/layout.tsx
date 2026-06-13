@@ -15,6 +15,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements hors service' },
   '/dashboard/devis': { title: 'Devis', sub: 'Demandes en cours' },
   '/dashboard/categories': { title: 'Catégories', sub: 'Types de matériel' },
+  '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert en gestion PSDM' },
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
