@@ -4,13 +4,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import SearchableSelect from '@/components/SearchableSelect'
 
-type Devis = {
-  id: string; description: string; statut: string; created_at: string
-  etablissements: { nom: string }
-}
-
 export default function DevisPage() {
-  const [devis, setDevis] = useState<Devis[]>([])
+  const [devis, setDevis] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
   const [etablissements, setEtablissements] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,7 +13,11 @@ export default function DevisPage() {
   const [description, setDescription] = useState('')
   const [selectedEtab, setSelectedEtab] = useState('')
   const [saving, setSaving] = useState(false)
+  const [filterStatut, setFilterStatut] = useState('tous')
   const supabase = createClient()
+
+  const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }
+  const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as const, color: 'var(--text-secondary)', marginBottom: '5px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -57,90 +56,115 @@ export default function DevisPage() {
   }
 
   const statutStyle = (s: string) => {
-    if (s === 'en_attente') return { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A', label: 'En attente' }
-    if (s === 'en_cours') return { bg: '#EFF6FF', color: '#1A56DB', border: '#BFDBFE', label: 'En cours' }
-    return { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0', label: 'Traité' }
+    if (s === 'en_attente') return { color: 'var(--warning)', bg: 'var(--warning-light)', label: 'En attente', icon: 'ti-clock' }
+    if (s === 'en_cours') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'En cours', icon: 'ti-refresh' }
+    return { color: 'var(--success)', bg: 'var(--success-light)', label: 'Traité', icon: 'ti-check' }
   }
 
-  if (loading) return <div style={{ padding: '24px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
+  const filterBtn = (label: string, active: boolean, onClick: () => void) => (
+    <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+      {label}
+    </button>
+  )
+
+  const filtered = devis.filter(d => filterStatut === 'tous' || d.statut === filterStatut)
+
+  if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
   return (
-    <div style={{ padding: '24px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '13px', color: '#6B7280' }}>{devis.length} demande{devis.length > 1 ? 's' : ''}</div>
+      {/* Header */}
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} demande{filtered.length > 1 ? 's' : ''}</div>
         <button onClick={() => setShowModal(true)}
-          style={{ padding: '8px 14px', background: '#1A56DB', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Nouvelle demande
         </button>
       </div>
 
-      {devis.length === 0 ? (
-        <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', padding: '48px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>
-          Aucune demande de devis
+      {/* Filtres */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {filterBtn('Toutes', filterStatut === 'tous', () => setFilterStatut('tous'))}
+        {filterBtn('En attente', filterStatut === 'en_attente', () => setFilterStatut('en_attente'))}
+        {filterBtn('En cours', filterStatut === 'en_cours', () => setFilterStatut('en_cours'))}
+        {filterBtn('Traité', filterStatut === 'traite', () => setFilterStatut('traite'))}
+      </div>
+
+      {/* Liste */}
+      {filtered.length === 0 ? (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '48px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <i className="ti ti-file-invoice" style={{ fontSize: '24px', color: 'var(--accent)' }} aria-hidden="true" />
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>Aucune demande</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Les demandes de devis apparaîtront ici</div>
         </div>
       ) : (
-        <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#F9FAFB' }}>
-                {['Établissement', 'Description', 'Date', 'Statut', profile?.role === 'admin' ? 'Action' : ''].filter(Boolean).map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#9CA3AF', letterSpacing: '0.3px', textTransform: 'uppercase', borderBottom: '0.5px solid #E5E7EB' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {devis.map((d, i) => {
-                const st = statutStyle(d.statut)
-                return (
-                  <tr key={d.id} style={{ borderBottom: i < devis.length - 1 ? '0.5px solid #F3F4F6' : 'none' }}>
-                    <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
-                      {(d.etablissements as any)?.nom || '—'}
-                    </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: '#6B7280', maxWidth: '300px' }}>
-                      {d.description}
-                    </td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: '#9CA3AF', whiteSpace: 'nowrap' }}>
-                      {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{ background: st.bg, color: st.color, border: `0.5px solid ${st.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>
-                        {st.label}
-                      </span>
-                    </td>
-                    {profile?.role === 'admin' && (
-                      <td style={{ padding: '12px 14px' }}>
-                        <select value={d.statut} onChange={e => updateStatut(d.id, e.target.value)}
-                          style={{ padding: '5px 8px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}>
-                          <option value='en_attente'>En attente</option>
-                          <option value='en_cours'>En cours</option>
-                          <option value='traite'>Traité</option>
-                        </select>
-                      </td>
-                    )}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {filtered.map(d => {
+            const st = statutStyle(d.statut)
+            return (
+              <div key={d.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: 'var(--shadow-sm)', borderLeft: `3px solid ${st.color}` }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: st.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className={`ti ${st.icon}`} style={{ fontSize: '20px', color: st.color }} aria-hidden="true" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+                        {(d.etablissements as any)?.nom || '—'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="ti ti-clock" style={{ fontSize: '12px' }} aria-hidden="true" />
+                        {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', flexShrink: 0 }}>{st.label}</span>
+                  </div>
+
+                  <div style={{ padding: '12px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: profile?.role === 'admin' ? '12px' : '0', lineHeight: 1.6 }}>
+                    {d.description}
+                  </div>
+
+                  {profile?.role === 'admin' && (
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Statut :</span>
+                      {['en_attente', 'en_cours', 'traite'].map(s => {
+                        const ss = statutStyle(s)
+                        const isActive = d.statut === s
+                        return (
+                          <button key={s} onClick={() => updateStatut(d.id, s)}
+                            style={{ padding: '5px 12px', background: isActive ? ss.bg : 'transparent', border: `1px solid ${isActive ? ss.color : 'var(--border)'}`, borderRadius: '20px', fontSize: '11px', fontWeight: isActive ? '600' : '400', color: isActive ? ss.color : 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {isActive && <i className="ti ti-check" style={{ fontSize: '11px' }} aria-hidden="true" />}
+                            {ss.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Nouvelle demande de devis</div>
-              <button onClick={() => setShowModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+        <div onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Nouvelle demande de devis</div>
+              <button onClick={() => setShowModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+              </button>
             </div>
-            <div style={{ padding: '20px 22px' }}>
-
-              {/* Sélection établissement si admin */}
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {profile?.role === 'admin' && (
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Établissement</label>
+                <div>
+                  <label style={labelStyle}>Établissement</label>
                   <SearchableSelect
                     options={etablissements.map(e => ({ value: e.id, label: e.nom }))}
                     value={selectedEtab}
@@ -149,19 +173,20 @@ export default function DevisPage() {
                   />
                 </div>
               )}
-
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Description *</label>
+              <div>
+                <label style={labelStyle}>Description *</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={5}
                   placeholder="Décrivez le matériel souhaité, la quantité, le contexte d'utilisation..."
-                  style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'inherit', outline: 'none', resize: 'vertical' }} />
+                  style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
               </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setShowModal(false)}
+                  style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                  Annuler
+                </button>
                 <button onClick={handleSend} disabled={saving || !description}
-                  style={{ flex: 1, padding: '10px', background: saving || !description ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {saving ? 'Envoi...' : 'Envoyer'}
+                  style={{ flex: 1, padding: '11px', background: saving || !description ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !description ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                  {saving ? 'Envoi...' : 'Envoyer la demande'}
                 </button>
               </div>
             </div>

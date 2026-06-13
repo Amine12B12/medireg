@@ -3,110 +3,114 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 
-type Panne = {
-  id: string; description: string; statut: string; created_at: string
-  equipements: { reference: string; designation: string; localisation: string; statut: string }
-}
-
 export default function AlertesPage() {
-  const [pannes, setPannes] = useState<Panne[]>([])
-  const [horsService, setHorsService] = useState<any[]>([])
+  const [pannes, setPannes] = useState<any[]>([])
+  const [resolues, setResolues] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [resolving, setResolving] = useState<string | null>(null)
   const supabase = createClient()
 
   async function load() {
-    const { data: p } = await supabase
+    const { data: ouvertes } = await supabase
       .from('pannes')
-      .select('*, equipements(reference, designation, localisation, statut)')
+      .select('*, equipements(reference, designation, localisation, etablissements(nom))')
+      .eq('statut', 'ouvert')
       .order('created_at', { ascending: false })
-
-    const { data: hs } = await supabase
-      .from('equipements')
-      .select('*')
-      .eq('statut', 'hors_service')
-
-    setPannes((p || []) as any)
-    setHorsService(hs || [])
+    const { data: closed } = await supabase
+      .from('pannes')
+      .select('*, equipements(reference, designation, localisation, etablissements(nom))')
+      .eq('statut', 'resolu')
+      .order('updated_at', { ascending: false })
+      .limit(5)
+    setPannes(ouvertes || [])
+    setResolues(closed || [])
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
 
-  async function resoldrePanne(id: string) {
+  async function handleResoudre(id: string, equipId: string) {
+    setResolving(id)
     await supabase.from('pannes').update({ statut: 'resolu' }).eq('id', id)
+    await supabase.from('equipements').update({ statut: 'en_service' }).eq('id', equipId)
+    setResolving(null)
     load()
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
-
-  if (loading) return <div style={{ padding: '32px', color: '#6B7A99', fontSize: '14px' }}>Chargement...</div>
-
-  const alertesActives = pannes.filter(p => p.statut !== 'resolu')
-  const totalAlertes = alertesActives.length + horsService.length
+  if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
   return (
-    <div style={{ padding: '32px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '22px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.3px' }}>Alertes</div>
-        <div style={{ fontSize: '14px', color: '#6B7A99', marginTop: '4px' }}>
-          {totalAlertes === 0 ? 'Aucune alerte active' : `${totalAlertes} alerte${totalAlertes > 1 ? 's' : ''} active${totalAlertes > 1 ? 's' : ''}`}
-        </div>
-      </div>
-
-      {/* Équipements hors service */}
-      {horsService.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px' }}>
-            Hors service — Intervention requise
+      {/* Alertes ouvertes */}
+      <div style={{ marginBottom: '28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-md)', background: 'var(--danger-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i className="ti ti-bell-ringing" style={{ fontSize: '16px', color: 'var(--danger)' }} aria-hidden="true" />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {horsService.map(eq => (
-              <div key={eq.id} style={{ background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '14px', padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#DC2626', boxShadow: '0 0 0 3px rgba(220,38,38,0.15)', flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#0A1628' }}>{eq.designation} — {eq.reference}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7A99', marginTop: '2px' }}>{eq.localisation}</div>
-                </div>
-                <span style={{ background: '#FEF2F2', color: '#DC2626', border: '0.5px solid #FECACA', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-                  URGENT
-                </span>
-              </div>
-            ))}
+          <div>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Alertes actives</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{pannes.length} panne{pannes.length > 1 ? 's' : ''} en attente d'intervention</div>
           </div>
-        </div>
-      )}
-
-      {/* Pannes signalées */}
-      <div style={{ marginBottom: '12px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px' }}>
-          Pannes signalées
+          {pannes.length > 0 && (
+            <span style={{ marginLeft: 'auto', background: 'var(--danger)', color: '#fff', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px' }}>{pannes.length}</span>
+          )}
         </div>
 
-        {alertesActives.length === 0 ? (
-          <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #DDE5F0', padding: '32px', textAlign: 'center', color: '#6B7A99', fontSize: '13px' }}>
-            Aucune panne signalée
+        {pannes.length === 0 ? (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '48px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <i className="ti ti-check" style={{ fontSize: '24px', color: 'var(--success)' }} aria-hidden="true" />
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>Aucune alerte active</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Tous vos équipements fonctionnent normalement</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {alertesActives.map(p => (
-              <div key={p.id} style={{ background: '#fff', border: '0.5px solid #DDE5F0', borderRadius: '14px', padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#F59E0B', flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#0A1628' }}>
-                    {p.equipements?.designation} — {p.equipements?.reference}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6B7A99', marginTop: '2px' }}>{p.equipements?.localisation}</div>
-                  {p.description && <div style={{ fontSize: '12px', color: '#6B7A99', marginTop: '4px', fontStyle: 'italic' }}>{p.description}</div>}
-                  <div style={{ fontSize: '11px', color: '#B0BCCE', marginTop: '4px' }}>Signalé le {formatDate(p.created_at)}</div>
+            {pannes.map(p => (
+              <div key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: 'var(--shadow-sm)', borderLeft: '3px solid var(--danger)' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--danger-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-alert-circle" style={{ fontSize: '20px', color: 'var(--danger)' }} aria-hidden="true" />
                 </div>
-                <button
-                  onClick={() => resoldrePanne(p.id)}
-                  style={{ padding: '7px 14px', background: '#E8F5EF', border: '0.5px solid #BBF7D0', borderRadius: '8px', color: '#00875A', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
-                >
-                  ✓ Résoudre
-                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+                        {(p.equipements as any)?.designation}
+                        <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--text-tertiary)', marginLeft: '8px' }}>{(p.equipements as any)?.reference}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="ti ti-building-hospital" style={{ fontSize: '13px' }} aria-hidden="true" />
+                          {(p.equipements as any)?.etablissements?.nom || '—'}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="ti ti-map-pin" style={{ fontSize: '13px' }} aria-hidden="true" />
+                          {(p.equipements as any)?.localisation || '—'}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="ti ti-clock" style={{ fontSize: '13px' }} aria-hidden="true" />
+                          {new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{ background: 'var(--danger-light)', color: 'var(--danger)', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', flexShrink: 0 }}>Urgent</span>
+                  </div>
+                  {p.description && (
+                    <div style={{ marginTop: '10px', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                      "{p.description}"
+                    </div>
+                  )}
+                  <div style={{ marginTop: '12px' }}>
+                    <button
+                      onClick={() => handleResoudre(p.id, p.equipement_id)}
+                      disabled={resolving === p.id}
+                      style={{ padding: '8px 18px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-md)', color: 'var(--success)', fontSize: '12px', fontWeight: '600', cursor: resolving === p.id ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.1s' }}>
+                      <i className="ti ti-check" style={{ fontSize: '14px' }} aria-hidden="true" />
+                      {resolving === p.id ? 'Résolution...' : 'Marquer comme résolu'}
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -114,20 +118,32 @@ export default function AlertesPage() {
       </div>
 
       {/* Historique */}
-      {pannes.filter(p => p.statut === 'resolu').length > 0 && (
-        <div style={{ marginTop: '28px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px' }}>
-            Historique résolu
+      {resolues.length > 0 && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-md)', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="ti ti-history" style={{ fontSize: '16px', color: 'var(--success)' }} aria-hidden="true" />
+            </div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Historique</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Dernières pannes résolues</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {pannes.filter(p => p.statut === 'resolu').map(p => (
-              <div key={p.id} style={{ background: '#F8FAFC', border: '0.5px solid #F0F4FA', borderRadius: '12px', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', opacity: 0.7 }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00875A', flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#0A1628' }}>{p.equipements?.designation} — {p.equipements?.reference}</div>
-                  <div style={{ fontSize: '11px', color: '#B0BCCE', marginTop: '2px' }}>{formatDate(p.created_at)}</div>
+
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+            {resolues.map((p, i) => (
+              <div key={p.id} style={{ padding: '14px 20px', borderBottom: i < resolues.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-sm)', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-check" style={{ fontSize: '16px', color: 'var(--success)' }} aria-hidden="true" />
                 </div>
-                <span style={{ fontSize: '11px', color: '#00875A', fontWeight: '500' }}>Résolu</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{(p.equipements as any)?.designation}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{(p.equipements as any)?.reference} · {(p.equipements as any)?.etablissements?.nom}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <span style={{ background: 'var(--success-light)', color: 'var(--success)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>Résolu</span>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{new Date(p.updated_at || p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
+                </div>
               </div>
             ))}
           </div>

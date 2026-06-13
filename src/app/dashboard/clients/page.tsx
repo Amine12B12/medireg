@@ -40,6 +40,9 @@ export default function ClientsPage() {
   const [accessForm, setAccessForm] = useState({ email: '', password: '', confirmPassword: '' })
   const supabase = createClient()
 
+  const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }
+  const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as const, color: 'var(--text-secondary)', marginBottom: '5px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
+
   async function load() {
     const { data: etabs } = await supabase.from('etablissements').select('*').order('nom')
     const { data: equips } = await supabase.from('equipements').select('etablissement_id')
@@ -76,17 +79,9 @@ export default function ClientsPage() {
     setShowDocsModal(true)
     setDocsLoading(true)
     const { data: equips } = await supabase.from('equipements').select('id, reference, designation').eq('etablissement_id', etab.id)
-    if (!equips || equips.length === 0) {
-      setEtabDocs([])
-      setDocsLoading(false)
-      return
-    }
+    if (!equips || equips.length === 0) { setEtabDocs([]); setDocsLoading(false); return }
     const { data: docs } = await supabase.from('documents').select('*').in('equipement_id', equips.map(e => e.id))
-    const docsWithEquip = (docs || []).map(d => ({
-      ...d,
-      equip: equips.find(e => e.id === d.equipement_id)
-    }))
-    setEtabDocs(docsWithEquip)
+    setEtabDocs((docs || []).map(d => ({ ...d, equip: equips.find(e => e.id === d.equipement_id) })))
     setDocsLoading(false)
   }
 
@@ -116,8 +111,7 @@ export default function ClientsPage() {
     if (accessForm.password.length < 6) { setAccessError('Minimum 6 caractères'); return }
     setAccessSaving(true); setAccessError('')
     const res = await fetch('/api/create-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: accessForm.email, password: accessForm.password, etablissement_id: selectedEtab?.id, nom: selectedEtab?.nom })
     })
     const data = await res.json()
@@ -126,124 +120,141 @@ export default function ClientsPage() {
     setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false); setAccessForm({ email: '', password: '', confirmPassword: '' }) }, 2000)
   }
 
-  const statutBadge = (s: string) => s === 'actif'
-    ? { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0', label: 'Actif' }
-    : { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A', label: 'En attente' }
-
   const formuleBadge = (f: string) => {
-    if (f === 'Premium') return { bg: '#EFF6FF', color: '#1A56DB', border: '#BFDBFE' }
-    if (f === 'Privilège') return { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' }
-    return { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' }
+    if (f === 'Premium') return { color: 'var(--accent)', bg: 'var(--accent-light)' }
+    if (f === 'Privilège') return { color: 'var(--purple)', bg: 'var(--purple-light)' }
+    return { color: 'var(--text-secondary)', bg: 'var(--surface-hover)' }
   }
 
   const statutEquip = (s: string) => s === 'en_service'
-    ? { color: '#059669', label: 'En service' }
-    : s === 'maintenance' ? { color: '#B45309', label: 'Maintenance' }
-    : { color: '#DC2626', label: 'Hors service' }
+    ? { color: 'var(--success)', label: 'En service' }
+    : s === 'maintenance' ? { color: 'var(--warning)', label: 'Maintenance' }
+    : { color: 'var(--danger)', label: 'Hors service' }
 
   const filtered = etablissements
     .filter(e => filterStatut === 'tous' || e.statut === filterStatut)
     .filter(e => filterType === 'tous' || e.type === filterType)
 
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
-    <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: '6px', border: '0.5px solid', borderColor: active ? '#1A56DB' : '#E5E7EB', background: active ? '#EFF6FF' : '#fff', color: active ? '#1A56DB' : '#6B7280', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'inherit' }}>
+    <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
       {label}
     </button>
   )
 
-  if (loading) return <div style={{ padding: '24px', color: '#6B7280', fontSize: '13px' }}>Chargement...</div>
+  const Modal = ({ onClose, children, maxWidth = '480px' }: any) => (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+      <div onClick={(e: any) => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+        {children}
+      </div>
+    </div>
+  )
+
+  const ModalHeader = ({ title, sub, onClose }: any) => (
+    <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
+      <div>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{title}</div>
+        {sub && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{sub}</div>}
+      </div>
+      <button onClick={onClose} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+        <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+      </button>
+    </div>
+  )
+
+  if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
   return (
-    <div style={{ padding: '24px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '13px', color: '#6B7280' }}>{filtered.length} établissement{filtered.length > 1 ? 's' : ''}</div>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} établissement{filtered.length > 1 ? 's' : ''}</div>
         <button onClick={() => setShowAddModal(true)}
-          style={{ padding: '8px 14px', background: '#1A56DB', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Ajouter un client
         </button>
       </div>
 
       {/* Filtres */}
-      <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
           {filterBtn('Actif', filterStatut === 'actif', () => setFilterStatut('actif'))}
           {filterBtn('En attente', filterStatut === 'en_attente', () => setFilterStatut('en_attente'))}
         </div>
-        <div style={{ width: '1px', height: '20px', background: '#E5E7EB' }} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
         <select value={filterType} onChange={e => setFilterType(e.target.value)}
-          style={{ padding: '6px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}>
+          style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
           <option value='tous'>Tous les types</option>
           {TYPES_CLIENT.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
 
       {/* Table */}
-      <div style={{ background: '#fff', border: '0.5px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: '#F9FAFB' }}>
-              {['Établissement', 'Type', 'Ville', 'Contact', 'Formule', 'Équipements', 'Alertes', 'Statut', 'Actions'].map(h => (
-                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: '#9CA3AF', letterSpacing: '0.3px', textTransform: 'uppercase', borderBottom: '0.5px solid #E5E7EB', whiteSpace: 'nowrap' }}>{h}</th>
+            <tr style={{ background: 'var(--surface-hover)' }}>
+              {['Établissement', 'Type', 'Contact', 'Formule', 'Équip.', 'Alertes', 'Statut', 'Actions'].map(h => (
+                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', letterSpacing: '0.4px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>Aucun établissement</td></tr>
+              <tr><td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>Aucun établissement</td></tr>
             ) : filtered.map((etab, i) => {
-              const st = statutBadge(etab.statut)
               const fb = formuleBadge(etab.formule)
               const alerts = alertCount[etab.id] || 0
               return (
-                <tr key={etab.id} style={{ borderBottom: i < filtered.length - 1 ? '0.5px solid #F3F4F6' : 'none' }}>
-                  <td style={{ padding: '11px 12px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{etab.nom}</div>
+                <tr key={etab.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <td style={{ padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0 }}>
+                        {etab.nom.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{etab.nom}</div>
+                        {etab.ville && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{etab.ville}</div>}
+                      </div>
+                    </div>
                   </td>
-                  <td style={{ padding: '11px 12px', fontSize: '12px', color: '#6B7280' }}>{etab.type}</td>
-                  <td style={{ padding: '11px 12px', fontSize: '12px', color: '#6B7280' }}>{etab.ville || '—'}</td>
-                  <td style={{ padding: '11px 12px' }}>
-                    <div style={{ fontSize: '12px', color: '#111827' }}>{etab.contact_nom || '—'}</div>
-                    {etab.contact_email && <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{etab.contact_email}</div>}
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{etab.type}</td>
+                  <td style={{ padding: '12px 14px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{etab.contact_nom || '—'}</div>
+                    {etab.contact_email && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{etab.contact_email}</div>}
                   </td>
-                  <td style={{ padding: '11px 12px' }}>
-                    {etab.formule ? (
-                      <span style={{ background: fb.bg, color: fb.color, border: `0.5px solid ${fb.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>{etab.formule}</span>
-                    ) : <span style={{ color: '#9CA3AF', fontSize: '12px' }}>—</span>}
+                  <td style={{ padding: '12px 14px' }}>
+                    <span style={{ background: fb.bg, color: fb.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>{etab.formule || 'Essentiel'}</span>
                   </td>
-                  <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: '500', color: '#1A56DB' }}>{equipCount[etab.id] || 0}</td>
-                  <td style={{ padding: '11px 12px' }}>
+                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: 'var(--accent)' }}>{equipCount[etab.id] || 0}</td>
+                  <td style={{ padding: '12px 14px' }}>
                     {alerts > 0 ? (
-                      <span style={{ background: '#FEF2F2', color: '#DC2626', border: '0.5px solid #FECACA', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>
-                        {alerts} alerte{alerts > 1 ? 's' : ''}
-                      </span>
+                      <span style={{ background: 'var(--danger-light)', color: 'var(--danger)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>{alerts} alerte{alerts > 1 ? 's' : ''}</span>
                     ) : (
-                      <span style={{ background: '#F0FDF4', color: '#059669', border: '0.5px solid #BBF7D0', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>OK</span>
+                      <span style={{ background: 'var(--success-light)', color: 'var(--success)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>OK</span>
                     )}
                   </td>
-                  <td style={{ padding: '11px 12px' }}>
-                    <span style={{ background: st.bg, color: st.color, border: `0.5px solid ${st.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>{st.label}</span>
+                  <td style={{ padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: etab.statut === 'actif' ? 'var(--success)' : 'var(--border-strong)' }} />
+                      <span style={{ fontSize: '12px', color: etab.statut === 'actif' ? 'var(--success)' : 'var(--text-tertiary)', fontWeight: '500' }}>{etab.statut === 'actif' ? 'Actif' : 'En attente'}</span>
+                    </div>
                   </td>
-                  <td style={{ padding: '11px 12px' }}>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      <button onClick={() => openEquipModal(etab)}
-                        style={{ padding: '5px 8px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#1A56DB', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                        <i className="ti ti-device-heart-monitor" style={{ fontSize: '11px' }} aria-hidden="true" />
-                        Équip.
-                      </button>
-                      <button onClick={() => openDocsModal(etab)}
-                        style={{ padding: '5px 8px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#059669', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                        <i className="ti ti-files" style={{ fontSize: '11px' }} aria-hidden="true" />
-                        Docs
-                      </button>
-                      <button onClick={() => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) }}
-                        style={{ padding: '5px 8px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                        <i className="ti ti-key" style={{ fontSize: '11px' }} aria-hidden="true" />
-                        Accès
-                      </button>
+                  <td style={{ padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {[
+                        { icon: 'ti-device-heart-monitor', label: 'Équip.', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => openEquipModal(etab) },
+                        { icon: 'ti-files', label: 'Docs', color: 'var(--success)', bg: 'var(--success-light)', onClick: () => openDocsModal(etab) },
+                        { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) } },
+                      ].map(btn => (
+                        <button key={btn.label} onClick={btn.onClick}
+                          style={{ padding: '5px 8px', background: btn.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: btn.color, cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                          <i className={`ti ${btn.icon}`} style={{ fontSize: '12px' }} aria-hidden="true" />
+                          {btn.label}
+                        </button>
+                      ))}
                     </div>
                   </td>
                 </tr>
@@ -253,203 +264,167 @@ export default function ClientsPage() {
         </table>
       </div>
 
-      {/* Modal documents */}
+      {/* Modal Documents */}
       {showDocsModal && selectedEtabDocs && (
-        <div onClick={() => setShowDocsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Documents — {selectedEtabDocs.nom}</div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{etabDocs.length} document{etabDocs.length > 1 ? 's' : ''}</div>
+        <Modal onClose={() => setShowDocsModal(false)} maxWidth="540px">
+          <ModalHeader title={`Documents — ${selectedEtabDocs.nom}`} sub={`${etabDocs.length} document${etabDocs.length > 1 ? 's' : ''}`} onClose={() => setShowDocsModal(false)} />
+          <div style={{ padding: '20px 24px' }}>
+            {docsLoading ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-tertiary)', fontSize: '13px' }}>Chargement...</div>
+            ) : etabDocs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <i className="ti ti-folder-open" style={{ fontSize: '36px', display: 'block', marginBottom: '10px', color: 'var(--text-tertiary)', opacity: 0.4 }} aria-hidden="true" />
+                <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Aucun document pour cet établissement</div>
               </div>
-              <button onClick={() => setShowDocsModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-            </div>
-            <div style={{ padding: '20px 22px' }}>
-              {docsLoading ? (
-                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Chargement...</div>
-              ) : etabDocs.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '32px' }}>
-                  <i className="ti ti-folder-open" style={{ fontSize: '32px', display: 'block', marginBottom: '8px', opacity: 0.4 }} aria-hidden="true" />
-                  Aucun document pour cet établissement
+            ) : etabDocs.map(doc => (
+              <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '8px' }}>
+                <i className={`ti ${doc.type_doc?.includes('pdf') ? 'ti-file-type-pdf' : doc.type_doc?.includes('image') ? 'ti-photo' : 'ti-file-description'}`}
+                  style={{ fontSize: '22px', color: doc.type_doc?.includes('pdf') ? 'var(--danger)' : doc.type_doc?.includes('image') ? 'var(--purple)' : 'var(--accent)', flexShrink: 0 }} aria-hidden="true" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{doc.equip?.designation} · {doc.equip?.reference}</div>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {etabDocs.map(doc => (
-                    <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#F9FAFB', borderRadius: '8px', border: '0.5px solid #E5E7EB' }}>
-                      <i className={`ti ${doc.type_doc?.includes('pdf') ? 'ti-file-type-pdf' : doc.type_doc?.includes('image') ? 'ti-photo' : 'ti-file-description'}`}
-                        style={{ fontSize: '20px', color: doc.type_doc?.includes('pdf') ? '#DC2626' : doc.type_doc?.includes('image') ? '#7C3AED' : '#1A56DB', flexShrink: 0 }} aria-hidden="true" />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom}</div>
-                        <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>
-                          {doc.equip?.designation} · {doc.equip?.reference}
-                        </div>
-                      </div>
-                      <a href={doc.url} target='_blank' rel='noreferrer'
-                        style={{ padding: '6px 12px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#1A56DB', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        <i className="ti ti-download" style={{ fontSize: '12px' }} aria-hidden="true" />
-                        Ouvrir
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                <a href={doc.url} target='_blank' rel='noreferrer'
+                  style={{ padding: '6px 14px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontWeight: '500', color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <i className="ti ti-download" style={{ fontSize: '13px' }} aria-hidden="true" />
+                  Ouvrir
+                </a>
+              </div>
+            ))}
           </div>
-        </div>
+        </Modal>
       )}
 
-      {/* Modal équipements */}
+      {/* Modal Équipements */}
       {showEquipModal && selectedEtabEquip && (
-        <div onClick={() => setShowEquipModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Équipements — {selectedEtabEquip.nom}</div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{etabEquipements.length} équipement{etabEquipements.length > 1 ? 's' : ''} affecté{etabEquipements.length > 1 ? 's' : ''}</div>
-              </div>
-              <button onClick={() => setShowEquipModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-            </div>
-            <div style={{ padding: '20px 22px' }}>
-              <div style={{ marginBottom: '20px', padding: '14px', background: '#F9FAFB', borderRadius: '8px', border: '0.5px solid #E5E7EB' }}>
-                <div style={{ fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>Affecter un équipement existant</div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <select value={affectForm.equipement_id} onChange={e => setAffectForm({ equipement_id: e.target.value })}
-                    style={{ flex: 1, padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
-                    <option value=''>Sélectionner un équipement...</option>
-                    {allEquipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
-                  </select>
-                  <button onClick={handleAffectEquip} disabled={affectSaving || !affectForm.equipement_id}
-                    style={{ padding: '8px 14px', background: affectSaving || !affectForm.equipement_id ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-                    {affectSaving ? '...' : 'Affecter'}
-                  </button>
-                </div>
-              </div>
-              {equipLoading ? (
-                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Chargement...</div>
-              ) : etabEquipements.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Aucun équipement affecté</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {etabEquipements.map(eq => {
-                    const st = statutEquip(eq.statut)
-                    return (
-                      <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#F9FAFB', borderRadius: '6px', border: '0.5px solid #E5E7EB' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '12px', fontWeight: '500', color: '#111827' }}>{eq.designation}</div>
-                          <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{eq.reference} · {eq.localisation || '—'}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color }} />
-                          <span style={{ fontSize: '11px', color: st.color, fontWeight: '500' }}>{st.label}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal ajout établissement */}
-      {showAddModal && (
-        <div onClick={() => setShowAddModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Ajouter un établissement</div>
-              <button onClick={() => setShowAddModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-            </div>
-            <div style={{ padding: '20px 22px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {[
-                  { label: 'Nom *', key: 'nom', placeholder: 'EHPAD Les Pins', full: true },
-                  { label: 'Ville', key: 'ville', placeholder: 'Paris' },
-                  { label: 'Contact', key: 'contact_nom', placeholder: 'Dr. Martin' },
-                  { label: 'Email contact', key: 'contact_email', placeholder: 'contact@etab.fr' },
-                ].map(f => (
-                  <div key={f.key} style={{ gridColumn: f.full ? '1 / -1' : 'auto' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{f.label}</label>
-                    <input type='text' placeholder={f.placeholder} value={(form as any)[f.key]}
-                      onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                      style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }} />
-                  </div>
-                ))}
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Type</label>
-                  <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
-                    {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Formule</label>
-                  <select value={form.formule} onChange={e => setForm(p => ({ ...p, formule: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
-                    <option>Essentiel</option>
-                    <option>Premium</option>
-                    <option>Privilège</option>
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                <button onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: '10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
-                <button onClick={handleAdd} disabled={saving || !form.nom}
-                  style={{ flex: 1, padding: '10px', background: saving || !form.nom ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {saving ? 'Enregistrement...' : 'Ajouter'}
+        <Modal onClose={() => setShowEquipModal(false)} maxWidth="540px">
+          <ModalHeader title={`Équipements — ${selectedEtabEquip.nom}`} sub={`${etabEquipements.length} équipement${etabEquipements.length > 1 ? 's' : ''} affecté${etabEquipements.length > 1 ? 's' : ''}`} onClose={() => setShowEquipModal(false)} />
+          <div style={{ padding: '20px 24px' }}>
+            <div style={{ padding: '14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '10px' }}>Affecter un équipement</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select value={affectForm.equipement_id} onChange={e => setAffectForm({ equipement_id: e.target.value })}
+                  style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }}>
+                  <option value=''>Sélectionner un équipement...</option>
+                  {allEquipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
+                </select>
+                <button onClick={handleAffectEquip} disabled={affectSaving || !affectForm.equipement_id}
+                  style={{ padding: '8px 16px', background: affectSaving || !affectForm.equipement_id ? 'rgba(26,86,219,0.3)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
+                  {affectSaving ? '...' : 'Affecter'}
                 </button>
               </div>
             </div>
+            {equipLoading ? (
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-tertiary)', fontSize: '13px' }}>Chargement...</div>
+            ) : etabEquipements.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-tertiary)', fontSize: '13px' }}>Aucun équipement affecté</div>
+            ) : etabEquipements.map(eq => {
+              const st = statutEquip(eq.statut)
+              return (
+                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '6px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>{eq.designation}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{eq.reference} · {eq.localisation || '—'}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color }} />
+                    <span style={{ fontSize: '11px', color: st.color, fontWeight: '500' }}>{st.label}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </Modal>
       )}
 
-      {/* Modal accès */}
-      {showAccessModal && selectedEtab && (
-        <div onClick={() => setShowAccessModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Créer un accès client</div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{selectedEtab.nom}</div>
+      {/* Modal Ajout établissement */}
+      {showAddModal && (
+        <Modal onClose={() => setShowAddModal(false)}>
+          <ModalHeader title="Ajouter un établissement" onClose={() => setShowAddModal(false)} />
+          <div style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Nom *</label>
+                <input type='text' placeholder='EHPAD Les Pins' value={form.nom} onChange={e => setForm(p => ({ ...p, nom: e.target.value }))} style={inputStyle} />
               </div>
-              <button onClick={() => setShowAccessModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-            </div>
-            <div style={{ padding: '20px 22px' }}>
-              {accessSuccess ? (
-                <div style={{ padding: '16px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '8px', textAlign: 'center' }}>
-                  <i className="ti ti-check" style={{ fontSize: '24px', color: '#059669', display: 'block', marginBottom: '6px' }} aria-hidden="true" />
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#059669' }}>Accès créé avec succès</div>
-                </div>
-              ) : (
-                <>
-                  {[
-                    { label: 'Email', key: 'email', type: 'email', placeholder: 'contact@ehpad.fr' },
-                    { label: 'Mot de passe', key: 'password', type: 'password', placeholder: '••••••••' },
-                    { label: 'Confirmer', key: 'confirmPassword', type: 'password', placeholder: '••••••••' },
-                  ].map(f => (
-                    <div key={f.key} style={{ marginBottom: '12px' }}>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{f.label}</label>
-                      <input type={f.type} placeholder={f.placeholder} value={(accessForm as any)[f.key]}
-                        onChange={e => setAccessForm(p => ({ ...p, [f.key]: e.target.value }))}
-                        style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }} />
-                    </div>
-                  ))}
-                  {accessError && (
-                    <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '0.5px solid #FECACA', borderRadius: '6px', fontSize: '12px', color: '#DC2626', marginBottom: '12px' }}>{accessError}</div>
-                  )}
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setShowAccessModal(false)} style={{ flex: 1, padding: '10px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
-                    <button onClick={handleCreateAccess} disabled={accessSaving || !accessForm.email || !accessForm.password}
-                      style={{ flex: 1, padding: '10px', background: accessSaving || !accessForm.email || !accessForm.password ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {accessSaving ? 'Création...' : 'Créer l\'accès'}
+              <div>
+                <label style={labelStyle}>Ville</label>
+                <input type='text' placeholder='Paris' value={form.ville} onChange={e => setForm(p => ({ ...p, ville: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Type</label>
+                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}>
+                  {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Contact</label>
+                <input type='text' placeholder='Dr. Martin' value={form.contact_nom} onChange={e => setForm(p => ({ ...p, contact_nom: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email contact</label>
+                <input type='email' placeholder='contact@etab.fr' value={form.contact_email} onChange={e => setForm(p => ({ ...p, contact_email: e.target.value }))} style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Formule</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['Essentiel', 'Premium', 'Privilège'].map(f => (
+                    <button key={f} onClick={() => setForm(p => ({ ...p, formule: f }))}
+                      style={{ flex: 1, padding: '10px', border: `1px solid ${form.formule === f ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-md)', background: form.formule === f ? 'var(--accent-light)' : 'var(--surface)', color: form.formule === f ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: form.formule === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+                      {f}
                     </button>
-                  </div>
-                </>
-              )}
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
+              <button onClick={handleAdd} disabled={saving || !form.nom}
+                style={{ flex: 1, padding: '11px', background: saving || !form.nom ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !form.nom ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                {saving ? 'Enregistrement...' : 'Ajouter'}
+              </button>
             </div>
           </div>
-        </div>
+        </Modal>
+      )}
+
+      {/* Modal Accès */}
+      {showAccessModal && selectedEtab && (
+        <Modal onClose={() => setShowAccessModal(false)} maxWidth="400px">
+          <ModalHeader title="Créer un accès client" sub={selectedEtab.nom} onClose={() => setShowAccessModal(false)} />
+          <div style={{ padding: '20px 24px' }}>
+            {accessSuccess ? (
+              <div style={{ padding: '20px', background: 'var(--success-light)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                <i className="ti ti-check" style={{ fontSize: '28px', color: 'var(--success)', display: 'block', marginBottom: '8px' }} aria-hidden="true" />
+                <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--success)' }}>Accès créé avec succès</div>
+              </div>
+            ) : (
+              <>
+                {[
+                  { label: 'Email', key: 'email', type: 'email', placeholder: 'contact@ehpad.fr' },
+                  { label: 'Mot de passe', key: 'password', type: 'password', placeholder: '••••••••' },
+                  { label: 'Confirmer', key: 'confirmPassword', type: 'password', placeholder: '••••••••' },
+                ].map(f => (
+                  <div key={f.key} style={{ marginBottom: '14px' }}>
+                    <label style={labelStyle}>{f.label}</label>
+                    <input type={f.type} placeholder={f.placeholder} value={(accessForm as any)[f.key]}
+                      onChange={e => setAccessForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
+                  </div>
+                ))}
+                {accessError && (
+                  <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '14px' }}>{accessError}</div>
+                )}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => setShowAccessModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
+                  <button onClick={handleCreateAccess} disabled={accessSaving || !accessForm.email || !accessForm.password}
+                    style={{ flex: 1, padding: '11px', background: accessSaving || !accessForm.email || !accessForm.password ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                    {accessSaving ? 'Création...' : 'Créer l\'accès'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   )

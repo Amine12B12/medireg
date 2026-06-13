@@ -5,94 +5,155 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const [role, setRole] = useState<'admin' | 'client'>('admin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState('')
   const supabase = createClient()
+  const router = useRouter()
 
   async function handleLogin() {
+    if (!email || !password) { setError('Veuillez remplir tous les champs'); return }
     setLoading(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
+      setError('Email ou mot de passe incorrect')
       setLoading(false)
       return
     }
     router.push('/dashboard')
-    router.refresh()
   }
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: '#F0F4FA',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Inter, -apple-system, sans-serif',
-      padding: '20px'
+      minHeight: '100vh', background: 'var(--bg)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font)', padding: '20px'
     }}>
-      <div style={{
-        background: '#fff',
-        borderRadius: '20px',
-        width: '100%',
-        maxWidth: '420px',
-        padding: '44px 40px',
-        border: '0.5px solid #DDE5F0',
-        boxShadow: '0 4px 32px rgba(10,22,40,0.06)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
-          <div style={{ width: '36px', height: '36px', background: '#1A56DB', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      {/* Fond décoratif */}
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,86,219,0.06) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(110,86,207,0.05) 0%, transparent 70%)' }} />
+      </div>
+
+      <div style={{ width: '100%', maxWidth: '400px', position: 'relative', zIndex: 1 }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            width: '48px', height: '48px',
+            background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)',
+            borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+            boxShadow: '0 4px 16px rgba(26,86,219,0.25)'
+          }}>
+            <i className="ti ti-activity-heartbeat" style={{ fontSize: '24px', color: '#fff' }} aria-hidden="true" />
           </div>
-          <div style={{ fontSize: '17px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.2px' }}>
-            Medi<span style={{ color: '#1A56DB' }}>Track</span>
+          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+            Medi<span style={{ color: 'var(--accent)' }}>Track</span>
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+            Gestion de matériel médical
           </div>
         </div>
 
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#E8F5EF', color: '#00875A', fontSize: '11px', fontWeight: '500', padding: '4px 10px', borderRadius: '20px', marginBottom: '20px' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Plateforme certifiée données médicales
+        {/* Card */}
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-xl)',
+          padding: '32px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.06)'
+        }}>
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px', marginBottom: '4px' }}>Connexion</div>
+            <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Accédez à votre espace MediTrack</div>
+          </div>
+
+          {error && (
+            <div style={{ padding: '12px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--danger)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="ti ti-alert-circle" style={{ fontSize: '16px', flexShrink: 0 }} aria-hidden="true" />
+              {error}
+            </div>
+          )}
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>
+              Adresse email
+            </label>
+            <div style={{ position: 'relative' }}>
+              <i className="ti ti-mail" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+              <input
+                type="email"
+                placeholder="votre@email.fr"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                style={{ width: '100%', padding: '11px 12px 11px 38px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', transition: 'border-color 0.15s' }}
+                onFocus={e => (e.target as HTMLInputElement).style.borderColor = 'var(--accent)'}
+                onBlur={e => (e.target as HTMLInputElement).style.borderColor = 'var(--border)'}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>
+              Mot de passe
+            </label>
+            <div style={{ position: 'relative' }}>
+              <i className="ti ti-lock" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                style={{ width: '100%', padding: '11px 12px 11px 38px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', transition: 'border-color 0.15s' }}
+                onFocus={e => (e.target as HTMLInputElement).style.borderColor = 'var(--accent)'}
+                onBlur={e => (e.target as HTMLInputElement).style.borderColor = 'var(--border)'}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            style={{
+              width: '100%', padding: '12px',
+              background: loading ? 'rgba(26,86,219,0.5)' : 'var(--accent)',
+              border: 'none', borderRadius: 'var(--radius-md)',
+              color: '#fff', fontSize: '14px', fontWeight: '500',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--font)',
+              boxShadow: loading ? 'none' : '0 2px 8px rgba(26,86,219,0.3)',
+              transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+            }}
+          >
+            {loading ? (
+              <>
+                <i className="ti ti-loader-2" style={{ fontSize: '16px', animation: 'spin 1s linear infinite' }} aria-hidden="true" />
+                Connexion...
+              </>
+            ) : (
+              <>
+                Se connecter
+                <i className="ti ti-arrow-right" style={{ fontSize: '16px' }} aria-hidden="true" />
+              </>
+            )}
+          </button>
         </div>
 
-        <div style={{ fontSize: '24px', fontWeight: '600', color: '#0A1628', letterSpacing: '-0.4px', marginBottom: '4px' }}>Bon retour</div>
-        <div style={{ fontSize: '14px', color: '#6B7A99', marginBottom: '24px' }}>Connectez-vous à votre espace</div>
-
-        <div style={{ display: 'flex', background: '#F0F4FA', borderRadius: '10px', padding: '3px', gap: '3px', marginBottom: '24px' }}>
-          {(['admin', 'client'] as const).map((r) => (
-            <button key={r} onClick={() => setRole(r)} style={{ flex: 1, padding: '9px', border: 'none', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer', fontWeight: role === r ? '500' : '400', color: role === r ? '#0A1628' : '#6B7A99', background: role === r ? '#fff' : 'transparent', boxShadow: role === r ? '0 1px 4px rgba(10,22,40,0.08)' : 'none', transition: 'all 0.15s' }}>
-              {r === 'admin' ? 'Administrateur' : 'Établissement'}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Adresse e-mail</label>
-          <input type="email" placeholder="nom@structure.fr" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={{ width: '100%', padding: '12px 14px', border: '1.5px solid #DDE5F0', borderRadius: '10px', fontSize: '14px', color: '#0A1628', fontFamily: 'inherit', outline: 'none', background: '#fff' }} onFocus={e => e.target.style.borderColor='#1A56DB'} onBlur={e => e.target.style.borderColor='#DDE5F0'} />
-        </div>
-
-        <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B7A99', marginBottom: '6px' }}>Mot de passe</label>
-          <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={{ width: '100%', padding: '12px 14px', border: '1.5px solid #DDE5F0', borderRadius: '10px', fontSize: '14px', color: '#0A1628', fontFamily: 'inherit', outline: 'none', background: '#fff' }} onFocus={e => e.target.style.borderColor='#1A56DB'} onBlur={e => e.target.style.borderColor='#DDE5F0'} />
-        </div>
-
-        {error && (
-          <div style={{ padding: '10px 14px', borderRadius: '10px', background: '#FEF2F2', color: '#DC2626', fontSize: '13px', marginBottom: '12px', border: '0.5px solid #FECACA' }}>{error}</div>
-        )}
-
-        <button onClick={handleLogin} disabled={loading} style={{ width: '100%', padding: '13px', background: loading ? '#93AEED' : '#1A56DB', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '500', fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.15s' }}>
-          {loading ? 'Connexion...' : 'Se connecter →'}
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '24px', fontSize: '12px', color: '#B0BCCE' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00B37E" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Connexion chiffrée TLS 1.3
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '12px', color: 'var(--text-tertiary)' }}>
+          MediTrack · Plateforme de gestion PSDM
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }
