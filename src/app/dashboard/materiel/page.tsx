@@ -252,7 +252,7 @@ export default function MaterielPage() {
             {importLoading ? 'Import...' : 'Import CSV'}
             <input type='file' accept='.csv' style={{ display: 'none' }} onChange={handleImport} />
           </label>
-          <button onClick={() => setShowCatModal(true)}
+          <button onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(true)}}
             style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}
             onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
             onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'}
@@ -260,7 +260,7 @@ export default function MaterielPage() {
             <i className="ti ti-tags" style={{ fontSize: '14px' }} aria-hidden="true" />
             Catégories
           </button>
-          <button onClick={() => setShowAddModal(true)}
+          <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(true)}}
             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
             <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
             Ajouter
@@ -362,7 +362,7 @@ export default function MaterielPage() {
 
       {/* FICHE MODALE */}
       {selected && (
-        <div onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
@@ -476,13 +476,13 @@ export default function MaterielPage() {
 
       {/* MODAL AJOUT */}
       {showAddModal && (
-        <div onClick={() => setShowAddModal(false)}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Ajouter un équipement</div>
-              <button onClick={() => setShowAddModal(false)}
+              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
@@ -527,14 +527,16 @@ export default function MaterielPage() {
                   </select>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Établissement</label>
-                  <SearchableSelect
-                    options={etablissements.map(e => ({ value: e.id, label: e.nom }))}
-                    value={addForm.etablissement_id}
-                    onChange={v => setAddForm(p => ({ ...p, etablissement_id: v }))}
-                    placeholder="Sélectionner un établissement..."
-                  />
-                </div>
+  <label style={labelStyle}>Établissement</label>
+  <select
+    value={addForm.etablissement_id}
+    onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))}
+    style={inputStyle}
+  >
+    <option value=''>Sélectionner...</option>
+    {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
+  </select>
+</div>
                 <div>
                   <label style={labelStyle}>Date d'achat</label>
                   <input type='date' value={addForm.date_achat} onChange={e => setAddForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} />
@@ -549,7 +551,7 @@ export default function MaterielPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => setShowAddModal(false)}
+                <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>
@@ -565,7 +567,7 @@ export default function MaterielPage() {
 
       {/* MODAL CATEGORIES */}
       {showCatModal && (
-        <div onClick={() => setShowCatModal(false)}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false)}}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '420px', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
@@ -574,7 +576,7 @@ export default function MaterielPage() {
                 <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Catégories</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{categoriesFull.length} catégorie{categoriesFull.length > 1 ? 's' : ''}</div>
               </div>
-              <button onClick={() => setShowCatModal(false)}
+              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false)}}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>

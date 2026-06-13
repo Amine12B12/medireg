@@ -77,7 +77,7 @@ export default function DevisPage() {
       {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} demande{filtered.length > 1 ? 's' : ''}</div>
-        <button onClick={() => setShowModal(true)}
+        <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(true)}}
           style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Nouvelle demande
@@ -153,11 +153,11 @@ export default function DevisPage() {
 
       {/* Modal */}
       {showModal && (
-        <div onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Nouvelle demande de devis</div>
-              <button onClick={() => setShowModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
@@ -165,13 +165,15 @@ export default function DevisPage() {
               {profile?.role === 'admin' && (
                 <div>
                   <label style={labelStyle}>Établissement</label>
-                  <SearchableSelect
-                    options={etablissements.map(e => ({ value: e.id, label: e.nom }))}
-                    value={selectedEtab}
-                    onChange={setSelectedEtab}
-                    placeholder="Sélectionner un établissement..."
-                  />
-                </div>
+                    <select
+                      value={selectedEtab}
+                      onChange={e => setSelectedEtab(e.target.value)}
+              style={inputStyle}
+  >
+    <option value=''>Sélectionner...</option>
+    {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
+  </select>
+</div>
               )}
               <div>
                 <label style={labelStyle}>Description *</label>
@@ -180,7 +182,7 @@ export default function DevisPage() {
                   style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setShowModal(false)}
+                <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>

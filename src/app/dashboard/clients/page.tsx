@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 
 type Etablissement = {
@@ -10,6 +10,34 @@ type Etablissement = {
 }
 
 const TYPES_CLIENT = ['EHPAD', 'Pharmacie', 'SSIAD', 'SAD', 'Établissement seniors', 'Clinique', 'HAD', 'Autre']
+
+const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'Inter, -apple-system, sans-serif', outline: 'none', background: 'var(--surface)' }
+const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as const, color: 'var(--text-secondary)', marginBottom: '5px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
+
+function Modal({ onClose, children, maxWidth = '480px' }: { onClose: () => void; children: React.ReactNode; maxWidth?: string }) {
+  return (
+    <div onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ModalHeader({ title, sub, onClose }: { title: string; sub?: string; onClose: () => void }) {
+  return (
+    <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
+      <div>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{title}</div>
+        {sub && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{sub}</div>}
+      </div>
+      <button onClick={onClose} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+        <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
 
 export default function ClientsPage() {
   const [etablissements, setEtablissements] = useState<Etablissement[]>([])
@@ -28,7 +56,7 @@ export default function ClientsPage() {
   const [etabDocs, setEtabDocs] = useState<any[]>([])
   const [equipLoading, setEquipLoading] = useState(false)
   const [docsLoading, setDocsLoading] = useState(false)
-  const [affectForm, setAffectForm] = useState({ equipement_id: '' })
+  const [affectEquipId, setAffectEquipId] = useState('')
   const [affectSaving, setAffectSaving] = useState(false)
   const [saving, setSaving] = useState(false)
   const [accessSaving, setAccessSaving] = useState(false)
@@ -36,12 +64,21 @@ export default function ClientsPage() {
   const [accessError, setAccessError] = useState('')
   const [filterStatut, setFilterStatut] = useState('tous')
   const [filterType, setFilterType] = useState('tous')
-  const [form, setForm] = useState({ nom: '', type: 'EHPAD', ville: '', contact_nom: '', contact_email: '', formule: 'Essentiel' })
-  const [accessForm, setAccessForm] = useState({ email: '', password: '', confirmPassword: '' })
-  const supabase = createClient()
+  const [formuleSelected, setFormuleSelected] = useState('Essentiel')
 
-  const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }
-  const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as const, color: 'var(--text-secondary)', marginBottom: '5px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
+  // Refs pour le formulaire d'ajout
+  const nomRef = useRef<HTMLInputElement>(null)
+  const villeRef = useRef<HTMLInputElement>(null)
+  const contactNomRef = useRef<HTMLInputElement>(null)
+  const contactEmailRef = useRef<HTMLInputElement>(null)
+  const typeRef = useRef<HTMLSelectElement>(null)
+
+  // Refs pour le formulaire d'accès
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+  const confirmPasswordRef = useRef<HTMLInputElement>(null)
+
+  const supabase = createClient()
 
   async function load() {
     const { data: etabs } = await supabase.from('etablissements').select('*').order('nom')
@@ -66,7 +103,7 @@ export default function ClientsPage() {
     setSelectedEtabEquip(etab)
     setShowEquipModal(true)
     setEquipLoading(true)
-    setAffectForm({ equipement_id: '' })
+    setAffectEquipId('')
     const { data: etabEquips } = await supabase.from('equipements').select('*').eq('etablissement_id', etab.id)
     const { data: all } = await supabase.from('equipements').select('id, reference, designation').neq('etablissement_id', etab.id)
     setEtabEquipements(etabEquips || [])
@@ -86,38 +123,49 @@ export default function ClientsPage() {
   }
 
   async function handleAffectEquip() {
-    if (!affectForm.equipement_id || !selectedEtabEquip) return
+    if (!affectEquipId || !selectedEtabEquip) return
     setAffectSaving(true)
-    await supabase.from('equipements').update({ etablissement_id: selectedEtabEquip.id }).eq('id', affectForm.equipement_id)
-    setAffectForm({ equipement_id: '' })
+    await supabase.from('equipements').update({ etablissement_id: selectedEtabEquip.id }).eq('id', affectEquipId)
+    setAffectEquipId('')
     setAffectSaving(false)
     openEquipModal(selectedEtabEquip)
     load()
   }
 
   async function handleAdd() {
-    if (!form.nom) return
+    const nom = nomRef.current?.value?.trim()
+    if (!nom) return
     setSaving(true)
-    await supabase.from('etablissements').insert([{ ...form }])
+    await supabase.from('etablissements').insert([{
+      nom,
+      ville: villeRef.current?.value || '',
+      contact_nom: contactNomRef.current?.value || '',
+      contact_email: contactEmailRef.current?.value || '',
+      type: typeRef.current?.value || 'EHPAD',
+      formule: formuleSelected
+    }])
     setShowAddModal(false)
-    setForm({ nom: '', type: 'EHPAD', ville: '', contact_nom: '', contact_email: '', formule: 'Essentiel' })
+    setFormuleSelected('Essentiel')
     setSaving(false)
     load()
   }
 
   async function handleCreateAccess() {
-    if (!accessForm.email || !accessForm.password) return
-    if (accessForm.password !== accessForm.confirmPassword) { setAccessError('Les mots de passe ne correspondent pas'); return }
-    if (accessForm.password.length < 6) { setAccessError('Minimum 6 caractères'); return }
+    const email = emailRef.current?.value?.trim()
+    const password = passwordRef.current?.value
+    const confirmPassword = confirmPasswordRef.current?.value
+    if (!email || !password) return
+    if (password !== confirmPassword) { setAccessError('Les mots de passe ne correspondent pas'); return }
+    if (password.length < 6) { setAccessError('Minimum 6 caractères'); return }
     setAccessSaving(true); setAccessError('')
     const res = await fetch('/api/create-user', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: accessForm.email, password: accessForm.password, etablissement_id: selectedEtab?.id, nom: selectedEtab?.nom })
+      body: JSON.stringify({ email, password, etablissement_id: selectedEtab?.id, nom: selectedEtab?.nom })
     })
     const data = await res.json()
     if (data.error) { setAccessError(data.error); setAccessSaving(false); return }
     setAccessSuccess(true); setAccessSaving(false)
-    setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false); setAccessForm({ email: '', password: '', confirmPassword: '' }) }, 2000)
+    setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 2000)
   }
 
   const formuleBadge = (f: string) => {
@@ -141,26 +189,6 @@ export default function ClientsPage() {
     </button>
   )
 
-  const Modal = ({ onClose, children, maxWidth = '480px' }: any) => (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-      <div onClick={(e: any) => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
-        {children}
-      </div>
-    </div>
-  )
-
-  const ModalHeader = ({ title, sub, onClose }: any) => (
-    <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
-      <div>
-        <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{title}</div>
-        {sub && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{sub}</div>}
-      </div>
-      <button onClick={onClose} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-        <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
-      </button>
-    </div>
-  )
-
   if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
   return (
@@ -169,7 +197,7 @@ export default function ClientsPage() {
       {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} établissement{filtered.length > 1 ? 's' : ''}</div>
-        <button onClick={() => setShowAddModal(true)}
+        <button onClick={() => { setShowAddModal(true); setFormuleSelected('Essentiel') }}
           style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Ajouter un client
@@ -243,11 +271,11 @@ export default function ClientsPage() {
                     </div>
                   </td>
                   <td style={{ padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                       {[
                         { icon: 'ti-device-heart-monitor', label: 'Équip.', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => openEquipModal(etab) },
                         { icon: 'ti-files', label: 'Docs', color: 'var(--success)', bg: 'var(--success-light)', onClick: () => openDocsModal(etab) },
-                        { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) } },
+                        { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
                       ].map(btn => (
                         <button key={btn.label} onClick={btn.onClick}
                           style={{ padding: '5px 8px', background: btn.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: btn.color, cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
@@ -303,13 +331,13 @@ export default function ClientsPage() {
             <div style={{ padding: '14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '10px' }}>Affecter un équipement</div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <select value={affectForm.equipement_id} onChange={e => setAffectForm({ equipement_id: e.target.value })}
+                <select value={affectEquipId} onChange={e => setAffectEquipId(e.target.value)}
                   style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }}>
                   <option value=''>Sélectionner un équipement...</option>
                   {allEquipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
                 </select>
-                <button onClick={handleAffectEquip} disabled={affectSaving || !affectForm.equipement_id}
-                  style={{ padding: '8px 16px', background: affectSaving || !affectForm.equipement_id ? 'rgba(26,86,219,0.3)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
+                <button onClick={handleAffectEquip} disabled={affectSaving || !affectEquipId}
+                  style={{ padding: '8px 16px', background: affectSaving || !affectEquipId ? 'rgba(26,86,219,0.3)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
                   {affectSaving ? '...' : 'Affecter'}
                 </button>
               </div>
@@ -345,32 +373,32 @@ export default function ClientsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Nom *</label>
-                <input type='text' placeholder='EHPAD Les Pins' value={form.nom} onChange={e => setForm(p => ({ ...p, nom: e.target.value }))} style={inputStyle} />
+                <input ref={nomRef} type='text' placeholder='EHPAD Les Pins' style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Ville</label>
-                <input type='text' placeholder='Paris' value={form.ville} onChange={e => setForm(p => ({ ...p, ville: e.target.value }))} style={inputStyle} />
+                <input ref={villeRef} type='text' placeholder='Paris' style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Type</label>
-                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}>
+                <select ref={typeRef} style={inputStyle}>
                   {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label style={labelStyle}>Contact</label>
-                <input type='text' placeholder='Dr. Martin' value={form.contact_nom} onChange={e => setForm(p => ({ ...p, contact_nom: e.target.value }))} style={inputStyle} />
+                <input ref={contactNomRef} type='text' placeholder='Dr. Martin' style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Email contact</label>
-                <input type='email' placeholder='contact@etab.fr' value={form.contact_email} onChange={e => setForm(p => ({ ...p, contact_email: e.target.value }))} style={inputStyle} />
+                <input ref={contactEmailRef} type='email' placeholder='contact@etab.fr' style={inputStyle} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Formule</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {['Essentiel', 'Premium', 'Privilège'].map(f => (
-                    <button key={f} onClick={() => setForm(p => ({ ...p, formule: f }))}
-                      style={{ flex: 1, padding: '10px', border: `1px solid ${form.formule === f ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-md)', background: form.formule === f ? 'var(--accent-light)' : 'var(--surface)', color: form.formule === f ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: form.formule === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+                    <button key={f} type="button" onClick={() => setFormuleSelected(f)}
+                      style={{ flex: 1, padding: '10px', border: `1px solid ${formuleSelected === f ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-md)', background: formuleSelected === f ? 'var(--accent-light)' : 'var(--surface)', color: formuleSelected === f ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: formuleSelected === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
                       {f}
                     </button>
                   ))}
@@ -378,9 +406,12 @@ export default function ClientsPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
-              <button onClick={handleAdd} disabled={saving || !form.nom}
-                style={{ flex: 1, padding: '11px', background: saving || !form.nom ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !form.nom ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+              <button onClick={() => setShowAddModal(false)}
+                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                Annuler
+              </button>
+              <button onClick={handleAdd} disabled={saving}
+                style={{ flex: 1, padding: '11px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
                 {saving ? 'Enregistrement...' : 'Ajouter'}
               </button>
             </div>
@@ -400,25 +431,29 @@ export default function ClientsPage() {
               </div>
             ) : (
               <>
-                {[
-                  { label: 'Email', key: 'email', type: 'email', placeholder: 'contact@ehpad.fr' },
-                  { label: 'Mot de passe', key: 'password', type: 'password', placeholder: '••••••••' },
-                  { label: 'Confirmer', key: 'confirmPassword', type: 'password', placeholder: '••••••••' },
-                ].map(f => (
-                  <div key={f.key} style={{ marginBottom: '14px' }}>
-                    <label style={labelStyle}>{f.label}</label>
-                    <input type={f.type} placeholder={f.placeholder} value={(accessForm as any)[f.key]}
-                      onChange={e => setAccessForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
-                  </div>
-                ))}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={labelStyle}>Email</label>
+                  <input ref={emailRef} type='email' placeholder='contact@ehpad.fr' style={inputStyle} />
+                </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={labelStyle}>Mot de passe</label>
+                  <input ref={passwordRef} type='password' placeholder='••••••••' style={inputStyle} />
+                </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={labelStyle}>Confirmer</label>
+                  <input ref={confirmPasswordRef} type='password' placeholder='••••••••' style={inputStyle} />
+                </div>
                 {accessError && (
                   <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '14px' }}>{accessError}</div>
                 )}
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => setShowAccessModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
-                  <button onClick={handleCreateAccess} disabled={accessSaving || !accessForm.email || !accessForm.password}
-                    style={{ flex: 1, padding: '11px', background: accessSaving || !accessForm.email || !accessForm.password ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                    {accessSaving ? 'Création...' : 'Créer l\'accès'}
+                  <button onClick={() => setShowAccessModal(false)}
+                    style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                    Annuler
+                  </button>
+                  <button onClick={handleCreateAccess} disabled={accessSaving}
+                    style={{ flex: 1, padding: '11px', background: accessSaving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                    {accessSaving ? 'Création...' : "Créer l'accès"}
                   </button>
                 </div>
               </>

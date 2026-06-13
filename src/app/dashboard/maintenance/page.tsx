@@ -69,7 +69,7 @@ export default function MaintenancePage() {
       {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} intervention{filtered.length > 1 ? 's' : ''}</div>
-        <button onClick={() => setShowModal(true)}
+        <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(true)}}
           style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Planifier une intervention
@@ -168,11 +168,11 @@ export default function MaintenancePage() {
 
       {/* Modal ajout */}
       {showModal && (
-        <div onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false)}} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Planifier une intervention</div>
-              <button onClick={() => setShowModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false)}} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
@@ -217,7 +217,7 @@ export default function MaintenancePage() {
                   style={{ ...inputStyle, resize: 'none' }} />
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
+                <button onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false)}} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
                 <button onClick={handleAdd} disabled={saving || !form.equipement_id}
                   style={{ flex: 1, padding: '11px', background: saving || !form.equipement_id ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !form.equipement_id ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
                   {saving ? 'Enregistrement...' : 'Planifier'}
