@@ -7,7 +7,6 @@ import Sidebar from '@/components/sidebar'
 
 const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale du parc' },
-  '/dashboard/conformite': { title: 'Conformité', sub: 'Score de préparation contrôle' },
   '/dashboard/clients': { title: 'Clients', sub: 'Établissements pilotés' },
   '/dashboard/materiel': { title: 'Matériel', sub: 'Parc d\'équipements' },
   '/dashboard/maintenance': { title: 'Maintenance', sub: 'Planning des interventions' },
@@ -15,11 +14,14 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements hors service' },
   '/dashboard/devis': { title: 'Devis', sub: 'Demandes en cours' },
   '/dashboard/categories': { title: 'Catégories', sub: 'Types de matériel' },
+  '/dashboard/conformite': { title: 'Conformité', sub: 'Score de préparation contrôle' },
   '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert en gestion PSDM' },
+  '/dashboard/reporting': { title: 'Reporting', sub: 'Analyse avancée du parc' },
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null)
+  const [formule, setFormule] = useState<string>('Essentiel')
   const [alertCount, setAlertCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -41,8 +43,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      setRole(prof?.role || 'client')
+
+      const { data: prof } = await supabase.from('profiles').select('role, etablissement_id').eq('id', user.id).single()
+      if (!prof) return
+
+      setRole(prof.role)
+
+      if (prof.role === 'admin') {
+        setFormule('Privilège')
+      } else if (prof.etablissement_id) {
+        const { data: etab } = await supabase.from('etablissements').select('formule').eq('id', prof.etablissement_id).single()
+        setFormule(etab?.formule || 'Essentiel')
+      }
+
       const { count } = await supabase.from('pannes').select('*', { count: 'exact', head: true }).eq('statut', 'ouvert')
       setAlertCount(count || 0)
     }
@@ -67,33 +80,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font)' }}>
 
-      {/* Overlay mobile */}
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 200, backdropFilter: 'blur(2px)' }} />
       )}
 
-      {/* Sidebar */}
       <div style={{
         position: isMobile ? 'fixed' : 'relative',
         left: isMobile ? (sidebarOpen ? 0 : '-220px') : 0,
         top: 0, bottom: 0, zIndex: 300,
-        transition: 'left 0.2s ease',
-        flexShrink: 0
+        transition: 'left 0.2s ease', flexShrink: 0
       }}>
-        <Sidebar role={role} />
+        <Sidebar role={role} formule={formule} />
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0 }}>
-
-        {/* TOPBAR */}
-        <div style={{
-          background: 'var(--surface)',
-          borderBottom: '1px solid var(--border)',
-          padding: '0 24px', height: '58px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 100, flexShrink: 0,
-        }}>
+        <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '0 24px', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -117,29 +119,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
 
             {!isMobile && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '6px 12px 6px 8px',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--surface)'
-              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px 6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: role === 'admin' ? 'var(--accent-light)' : 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '600', color: role === 'admin' ? 'var(--accent)' : 'var(--success)' }}>
                   {role === 'admin' ? 'AD' : 'EP'}
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>{role === 'admin' ? 'Admin PSDM' : 'Mon espace'}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{role === 'admin' ? 'Administrateur' : 'Établissement'}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{role === 'admin' ? 'Administrateur' : formule}</div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* CONTENT */}
-        <div style={{ flex: 1 }}>
-          {children}
-        </div>
+        <div style={{ flex: 1 }}>{children}</div>
       </div>
     </div>
   )
