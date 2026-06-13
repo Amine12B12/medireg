@@ -1,26 +1,39 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F7F7F5 !important;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  --bg: #F7F7F5;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F5F3;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #999999;
+  --accent: #1A56DB;
+  --accent-light: #EEF3FF;
+  --success: #0A7C4E;
+  --success-light: #E8F5EE;
+  --warning: #9E5E00;
+  --warning-light: #FEF3E2;
+  --danger: #C2362A;
+  --danger-light: #FEF0EE;
+  --purple: #6E56CF;
+  --purple-light: #F0EEFF;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --font: 'Inter', -apple-system, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
 }

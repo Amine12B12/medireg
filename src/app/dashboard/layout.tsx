@@ -7,11 +7,11 @@ import Sidebar from '@/components/sidebar'
 
 const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale du parc' },
-  '/dashboard/clients': { title: 'Clients', sub: 'Établissements pilotes' },
-  '/dashboard/materiel': { title: 'Matériel', sub: 'Équipements enregistrés' },
+  '/dashboard/clients': { title: 'Clients', sub: 'Établissements pilotés' },
+  '/dashboard/materiel': { title: 'Matériel', sub: 'Parc d\'équipements' },
   '/dashboard/maintenance': { title: 'Maintenance', sub: 'Planning des interventions' },
   '/dashboard/livraisons': { title: 'Livraisons', sub: 'Installations planifiées' },
-  '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements nécessitant une action' },
+  '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements hors service' },
   '/dashboard/devis': { title: 'Devis', sub: 'Demandes en cours' },
   '/dashboard/categories': { title: 'Catégories', sub: 'Types de matériel' },
 }
@@ -47,26 +47,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     load()
   }, [])
 
-  // Ferme sidebar sur navigation mobile
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
   const page = pageTitles[pathname] || { title: 'MediTrack', sub: '' }
 
   if (!role) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, -apple-system, sans-serif', color: '#6B7280', fontSize: '13px' }}>
-      Chargement...
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <i className="ti ti-activity-heartbeat" style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
+        </div>
+        <span>Chargement...</span>
+      </div>
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F9FAFB', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font)' }}>
 
       {/* Overlay mobile */}
       {isMobile && sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }}
-        />
+        <div onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 200, backdropFilter: 'blur(2px)' }} />
       )}
 
       {/* Sidebar */}
@@ -74,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         position: isMobile ? 'fixed' : 'relative',
         left: isMobile ? (sidebarOpen ? 0 : '-220px') : 0,
         top: 0, bottom: 0, zIndex: 300,
-        transition: 'left 0.25s ease',
+        transition: 'left 0.2s ease',
         flexShrink: 0
       }}>
         <Sidebar role={role} />
@@ -84,43 +86,49 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* TOPBAR */}
         <div style={{
-          background: '#fff', borderBottom: '0.5px solid #E5E7EB',
-          padding: '0 16px', height: '56px',
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
+          padding: '0 24px', height: '58px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 100, flexShrink: 0
+          position: 'sticky', top: 0, zIndex: 100, flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Burger menu mobile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {isMobile && (
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{ width: '34px', height: '34px', border: '0.5px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}
-              >
+              <button onClick={() => setSidebarOpen(!sidebarOpen)}
+                style={{ width: '34px', height: '34px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-menu-2" style={{ fontSize: '18px' }} aria-hidden="true" />
               </button>
             )}
             <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{page.title}</div>
-              {!isMobile && <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>{page.sub}</div>}
+              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{page.title}</div>
+              {!isMobile && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{page.sub}</div>}
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Cloche */}
-            <button
-              onClick={() => router.push('/dashboard/alertes')}
-              style={{ position: 'relative', width: '34px', height: '34px', border: '0.5px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}
-            >
-              <i className="ti ti-bell" style={{ fontSize: '16px' }} aria-hidden="true" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button onClick={() => router.push('/dashboard/alertes')}
+              style={{ position: 'relative', width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <i className="ti ti-bell" style={{ fontSize: '17px' }} aria-hidden="true" />
               {alertCount > 0 && (
-                <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', background: '#DC2626', borderRadius: '50%', border: '1.5px solid #fff' }} />
+                <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--surface)' }} />
               )}
             </button>
 
-            {/* Badge role - caché sur mobile */}
             {!isMobile && (
-              <div style={{ padding: '4px 10px', background: role === 'admin' ? '#EFF6FF' : '#F0FDF4', border: `0.5px solid ${role === 'admin' ? '#BFDBFE' : '#BBF7D0'}`, borderRadius: '20px', fontSize: '11px', fontWeight: '500', color: role === 'admin' ? '#1A56DB' : '#059669' }}>
-                {role === 'admin' ? 'Administrateur' : 'Établissement'}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '6px 12px 6px 8px',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--surface)'
+              }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: role === 'admin' ? 'var(--accent-light)' : 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '600', color: role === 'admin' ? 'var(--accent)' : 'var(--success)' }}>
+                  {role === 'admin' ? 'AD' : 'EP'}
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>{role === 'admin' ? 'Admin PSDM' : 'Mon espace'}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{role === 'admin' ? 'Administrateur' : 'Établissement'}</div>
+                </div>
               </div>
             )}
           </div>
