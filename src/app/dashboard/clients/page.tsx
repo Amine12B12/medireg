@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { exportToCSV } from '@/lib/csv'
 
 type Etablissement = {
   id: string; nom: string; type: string; ville: string
@@ -20,11 +19,15 @@ export default function ClientsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showAccessModal, setShowAccessModal] = useState(false)
   const [showEquipModal, setShowEquipModal] = useState(false)
+  const [showDocsModal, setShowDocsModal] = useState(false)
   const [selectedEtab, setSelectedEtab] = useState<Etablissement | null>(null)
   const [selectedEtabEquip, setSelectedEtabEquip] = useState<Etablissement | null>(null)
+  const [selectedEtabDocs, setSelectedEtabDocs] = useState<Etablissement | null>(null)
   const [etabEquipements, setEtabEquipements] = useState<any[]>([])
   const [allEquipements, setAllEquipements] = useState<any[]>([])
+  const [etabDocs, setEtabDocs] = useState<any[]>([])
   const [equipLoading, setEquipLoading] = useState(false)
+  const [docsLoading, setDocsLoading] = useState(false)
   const [affectForm, setAffectForm] = useState({ equipement_id: '' })
   const [affectSaving, setAffectSaving] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -68,6 +71,25 @@ export default function ClientsPage() {
     setEquipLoading(false)
   }
 
+  async function openDocsModal(etab: Etablissement) {
+    setSelectedEtabDocs(etab)
+    setShowDocsModal(true)
+    setDocsLoading(true)
+    const { data: equips } = await supabase.from('equipements').select('id, reference, designation').eq('etablissement_id', etab.id)
+    if (!equips || equips.length === 0) {
+      setEtabDocs([])
+      setDocsLoading(false)
+      return
+    }
+    const { data: docs } = await supabase.from('documents').select('*').in('equipement_id', equips.map(e => e.id))
+    const docsWithEquip = (docs || []).map(d => ({
+      ...d,
+      equip: equips.find(e => e.id === d.equipement_id)
+    }))
+    setEtabDocs(docsWithEquip)
+    setDocsLoading(false)
+  }
+
   async function handleAffectEquip() {
     if (!affectForm.equipement_id || !selectedEtabEquip) return
     setAffectSaving(true)
@@ -77,42 +99,6 @@ export default function ClientsPage() {
     openEquipModal(selectedEtabEquip)
     load()
   }
-
-  async function handleExportDocs(etab: Etablissement) {
-    
-  const { data: equips } = await supabase
-    .from('equipements')
-    .select('id, reference, designation')
-    .eq('etablissement_id', etab.id)
-    
-
-  if (!equips || equips.length === 0) return
-
-  const { data: docs } = await supabase
-    .from('documents')
-    .select('*')
-    .in('equipement_id', equips.map(e => e.id))
-
-  if (!docs || docs.length === 0) {
-    alert('Aucun document pour cet établissement')
-    return
-  }
-
-  const data = docs.map(d => {
-    const equip = equips.find(e => e.id === d.equipement_id)
-    return {
-      etablissement: etab.nom,
-      equipement: equip?.designation || '—',
-      reference: equip?.reference || '—',
-      document: d.nom,
-      type: d.type_doc || '—',
-      url: d.url,
-      date_upload: new Date(d.created_at).toLocaleDateString('fr-FR')
-    }
-  })
-
-  exportToCSV(data, `meditrack_documents_${etab.nom.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`)
-}
 
   async function handleAdd() {
     if (!form.nom) return
@@ -242,24 +228,22 @@ export default function ClientsPage() {
                     <span style={{ background: st.bg, color: st.color, border: `0.5px solid ${st.border}`, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>{st.label}</span>
                   </td>
                   <td style={{ padding: '11px 12px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                       <button onClick={() => openEquipModal(etab)}
                         style={{ padding: '5px 8px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#1A56DB', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
                         <i className="ti ti-device-heart-monitor" style={{ fontSize: '11px' }} aria-hidden="true" />
                         Équip.
+                      </button>
+                      <button onClick={() => openDocsModal(etab)}
+                        style={{ padding: '5px 8px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#059669', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                        <i className="ti ti-files" style={{ fontSize: '11px' }} aria-hidden="true" />
+                        Docs
                       </button>
                       <button onClick={() => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError(''); setAccessForm({ email: '', password: '', confirmPassword: '' }) }}
                         style={{ padding: '5px 8px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#374151', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
                         <i className="ti ti-key" style={{ fontSize: '11px' }} aria-hidden="true" />
                         Accès
                       </button>
-                      <button
-                       onClick={() => handleExportDocs(etab)}
-                      style={{ padding: '5px 8px', background: '#F0FDF4', border: '0.5px solid #BBF7D0', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#059669', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                      <i className="ti ti-download" style={{ fontSize: '11px' }} aria-hidden="true" />
-                      Docs
-                    </button>
-                      
                     </div>
                   </td>
                 </tr>
@@ -269,7 +253,52 @@ export default function ClientsPage() {
         </table>
       </div>
 
-      {/* Modal équipements établissement */}
+      {/* Modal documents */}
+      {showDocsModal && selectedEtabDocs && (
+        <div onClick={() => setShowDocsModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ padding: '18px 22px', borderBottom: '0.5px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff' }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Documents — {selectedEtabDocs.nom}</div>
+                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{etabDocs.length} document{etabDocs.length > 1 ? 's' : ''}</div>
+              </div>
+              <button onClick={() => setShowDocsModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+            </div>
+            <div style={{ padding: '20px 22px' }}>
+              {docsLoading ? (
+                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Chargement...</div>
+              ) : etabDocs.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '32px' }}>
+                  <i className="ti ti-folder-open" style={{ fontSize: '32px', display: 'block', marginBottom: '8px', opacity: 0.4 }} aria-hidden="true" />
+                  Aucun document pour cet établissement
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {etabDocs.map(doc => (
+                    <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#F9FAFB', borderRadius: '8px', border: '0.5px solid #E5E7EB' }}>
+                      <i className={`ti ${doc.type_doc?.includes('pdf') ? 'ti-file-type-pdf' : doc.type_doc?.includes('image') ? 'ti-photo' : 'ti-file-description'}`}
+                        style={{ fontSize: '20px', color: doc.type_doc?.includes('pdf') ? '#DC2626' : doc.type_doc?.includes('image') ? '#7C3AED' : '#1A56DB', flexShrink: 0 }} aria-hidden="true" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom}</div>
+                        <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>
+                          {doc.equip?.designation} · {doc.equip?.reference}
+                        </div>
+                      </div>
+                      <a href={doc.url} target='_blank' rel='noreferrer'
+                        style={{ padding: '6px 12px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: '6px', fontSize: '11px', fontWeight: '500', color: '#1A56DB', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        <i className="ti ti-download" style={{ fontSize: '12px' }} aria-hidden="true" />
+                        Ouvrir
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal équipements */}
       {showEquipModal && selectedEtabEquip && (
         <div onClick={() => setShowEquipModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
@@ -281,17 +310,13 @@ export default function ClientsPage() {
               <button onClick={() => setShowEquipModal(false)} style={{ background: '#F9FAFB', border: '0.5px solid #E5E7EB', color: '#6B7280', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>✕</button>
             </div>
             <div style={{ padding: '20px 22px' }}>
-
-              {/* Affecter */}
               <div style={{ marginBottom: '20px', padding: '14px', background: '#F9FAFB', borderRadius: '8px', border: '0.5px solid #E5E7EB' }}>
                 <div style={{ fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '10px' }}>Affecter un équipement existant</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <select value={affectForm.equipement_id} onChange={e => setAffectForm({ equipement_id: e.target.value })}
                     style={{ flex: 1, padding: '8px 10px', border: '0.5px solid #E5E7EB', borderRadius: '6px', fontSize: '12px', color: '#111827', fontFamily: 'inherit', outline: 'none' }}>
                     <option value=''>Sélectionner un équipement...</option>
-                    {allEquipements.map(e => (
-                      <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>
-                    ))}
+                    {allEquipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
                   </select>
                   <button onClick={handleAffectEquip} disabled={affectSaving || !affectForm.equipement_id}
                     style={{ padding: '8px 14px', background: affectSaving || !affectForm.equipement_id ? '#93AEED' : '#1A56DB', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
@@ -299,8 +324,6 @@ export default function ClientsPage() {
                   </button>
                 </div>
               </div>
-
-              {/* Liste */}
               {equipLoading ? (
                 <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', padding: '20px' }}>Chargement...</div>
               ) : etabEquipements.length === 0 ? (
@@ -381,7 +404,7 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {/* Modal créer accès */}
+      {/* Modal accès */}
       {showAccessModal && selectedEtab && (
         <div onClick={() => setShowAccessModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>

@@ -124,6 +124,11 @@ export default function MaterielPage() {
     setUploadLoading(false)
   }
 
+  async function handleDeleteDoc(docId: string) {
+    await supabase.from('documents').delete().eq('id', docId)
+    loadDocs(selected!.id)
+  }
+
   async function handleAddEquip() {
     if (!addForm.reference || !addForm.designation) return
     setAddSaving(true)
@@ -337,6 +342,7 @@ export default function MaterielPage() {
                 </div>
               ))}
 
+              {/* Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Documents</span>
@@ -348,15 +354,28 @@ export default function MaterielPage() {
                 {documents.length === 0 ? (
                   <div style={{ fontSize: '12px', color: '#9CA3AF', textAlign: 'center', padding: '12px' }}>Aucun document</div>
                 ) : documents.map(doc => (
-                  <a key={doc.id} href={doc.url} target='_blank' rel='noreferrer'
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F9FAFB', borderRadius: '6px', border: '0.5px solid #E5E7EB', textDecoration: 'none', marginBottom: '6px' }}>
-                    <i className="ti ti-file-description" style={{ fontSize: '14px', color: '#1A56DB' }} aria-hidden="true" />
-                    <span style={{ fontSize: '12px', color: '#111827', fontWeight: '500', flex: 1 }}>{doc.nom}</span>
-                    <i className="ti ti-external-link" style={{ fontSize: '12px', color: '#9CA3AF' }} aria-hidden="true" />
-                  </a>
+                  <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F9FAFB', borderRadius: '6px', border: '0.5px solid #E5E7EB', marginBottom: '6px' }}>
+                    <i className="ti ti-file-description" style={{ fontSize: '14px', color: '#1A56DB', flexShrink: 0 }} aria-hidden="true" />
+                    <a href={doc.url} target='_blank' rel='noreferrer'
+                      style={{ fontSize: '12px', color: '#111827', fontWeight: '500', flex: 1, textDecoration: 'none' }}>
+                      {doc.nom}
+                    </a>
+                    <a href={doc.url} target='_blank' rel='noreferrer'>
+                      <i className="ti ti-external-link" style={{ fontSize: '12px', color: '#9CA3AF' }} aria-hidden="true" />
+                    </a>
+                    <button
+                      onClick={() => handleDeleteDoc(doc.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: '#9CA3AF', display: 'flex', alignItems: 'center' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#DC2626'}
+                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#9CA3AF'}
+                    >
+                      <i className="ti ti-trash" style={{ fontSize: '14px' }} aria-hidden="true" />
+                    </button>
+                  </div>
                 ))}
               </div>
 
+              {/* Panne */}
               <div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px', paddingBottom: '6px', borderBottom: '0.5px solid #F3F4F6' }}>Signaler une panne</div>
                 {panneSuccess ? (
