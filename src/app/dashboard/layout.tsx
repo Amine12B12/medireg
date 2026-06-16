@@ -13,7 +13,6 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/livraisons': { title: 'Livraisons', sub: 'Installations planifiées' },
   '/dashboard/alertes': { title: 'Alertes', sub: 'Équipements hors service' },
   '/dashboard/devis': { title: 'Devis', sub: 'Demandes en cours' },
-  '/dashboard/categories': { title: 'Catégories', sub: 'Types de matériel' },
   '/dashboard/conformite': { title: 'Conformité', sub: 'Score de préparation contrôle' },
   '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert en gestion PSDM' },
   '/dashboard/reporting': { title: 'Reporting', sub: 'Analyse avancée du parc' },
@@ -22,6 +21,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null)
   const [formule, setFormule] = useState<string>('Essentiel')
+  const [etabNom, setEtabNom] = useState<string>('')
   const [alertCount, setAlertCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -52,8 +52,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (prof.role === 'admin') {
         setFormule('Privilège')
       } else if (prof.etablissement_id) {
-        const { data: etab } = await supabase.from('etablissements').select('formule').eq('id', prof.etablissement_id).single()
+        const { data: etab } = await supabase
+          .from('etablissements')
+          .select('formule, nom, statut')
+          .eq('id', prof.etablissement_id)
+          .single()
+
+        if (etab?.statut === 'bloque') {
+          await supabase.auth.signOut()
+          router.push('/login?blocked=1')
+          return
+        }
+
         setFormule(etab?.formule || 'Essentiel')
+        setEtabNom(etab?.nom || '')
       }
 
       const { count } = await supabase.from('pannes').select('*', { count: 'exact', head: true }).eq('statut', 'ouvert')
@@ -91,7 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         top: 0, bottom: 0, zIndex: 300,
         transition: 'left 0.2s ease', flexShrink: 0
       }}>
-        <Sidebar role={role} formule={formule} />
+        <Sidebar role={role} formule={formule} etabNom={etabNom} />
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0 }}>
@@ -121,11 +133,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {!isMobile && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px 6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: role === 'admin' ? 'var(--accent-light)' : 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '600', color: role === 'admin' ? 'var(--accent)' : 'var(--success)' }}>
-                  {role === 'admin' ? 'AD' : 'EP'}
+                  {role === 'admin' ? 'AD' : etabNom?.slice(0, 2).toUpperCase() || 'EP'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>{role === 'admin' ? 'Admin PSDM' : 'Mon espace'}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{role === 'admin' ? 'Administrateur' : formule}</div>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                    {role === 'admin' ? 'Admin PSDM' : etabNom || 'Mon espace'}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
+                    {role === 'admin' ? 'Administrateur' : formule}
+                  </div>
                 </div>
               </div>
             )}

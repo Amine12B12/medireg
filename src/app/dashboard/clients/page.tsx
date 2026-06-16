@@ -66,14 +66,11 @@ export default function ClientsPage() {
   const [filterType, setFilterType] = useState('tous')
   const [formuleSelected, setFormuleSelected] = useState('Essentiel')
 
-  // Refs pour le formulaire d'ajout
   const nomRef = useRef<HTMLInputElement>(null)
   const villeRef = useRef<HTMLInputElement>(null)
   const contactNomRef = useRef<HTMLInputElement>(null)
   const contactEmailRef = useRef<HTMLInputElement>(null)
   const typeRef = useRef<HTMLSelectElement>(null)
-
-  // Refs pour le formulaire d'accès
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const confirmPasswordRef = useRef<HTMLInputElement>(null)
@@ -168,6 +165,12 @@ export default function ClientsPage() {
     setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 2000)
   }
 
+  async function handleBloquerClient(etab: Etablissement) {
+    const nouveauStatut = etab.statut === 'actif' ? 'bloque' : 'actif'
+    await supabase.from('etablissements').update({ statut: nouveauStatut }).eq('id', etab.id)
+    load()
+  }
+
   const formuleBadge = (f: string) => {
     if (f === 'Premium') return { color: 'var(--accent)', bg: 'var(--accent-light)' }
     if (f === 'Privilège') return { color: 'var(--purple)', bg: 'var(--purple-light)' }
@@ -209,6 +212,7 @@ export default function ClientsPage() {
         <div style={{ display: 'flex', gap: '4px' }}>
           {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
           {filterBtn('Actif', filterStatut === 'actif', () => setFilterStatut('actif'))}
+          {filterBtn('Bloqué', filterStatut === 'bloque', () => setFilterStatut('bloque'))}
           {filterBtn('En attente', filterStatut === 'en_attente', () => setFilterStatut('en_attente'))}
         </div>
         <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
@@ -235,11 +239,12 @@ export default function ClientsPage() {
             ) : filtered.map((etab, i) => {
               const fb = formuleBadge(etab.formule)
               const alerts = alertCount[etab.id] || 0
+              const isBloque = etab.statut === 'bloque'
               return (
-                <tr key={etab.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <tr key={etab.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', opacity: isBloque ? 0.6 : 1 }}>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-sm)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0 }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: 'var(--radius-sm)', background: isBloque ? 'var(--surface-hover)' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: isBloque ? 'var(--text-tertiary)' : 'var(--accent)', flexShrink: 0 }}>
                         {etab.nom.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -266,8 +271,10 @@ export default function ClientsPage() {
                   </td>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: etab.statut === 'actif' ? 'var(--success)' : 'var(--border-strong)' }} />
-                      <span style={{ fontSize: '12px', color: etab.statut === 'actif' ? 'var(--success)' : 'var(--text-tertiary)', fontWeight: '500' }}>{etab.statut === 'actif' ? 'Actif' : 'En attente'}</span>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isBloque ? 'var(--danger)' : etab.statut === 'actif' ? 'var(--success)' : 'var(--border-strong)' }} />
+                      <span style={{ fontSize: '12px', color: isBloque ? 'var(--danger)' : etab.statut === 'actif' ? 'var(--success)' : 'var(--text-tertiary)', fontWeight: '500' }}>
+                        {isBloque ? 'Bloqué' : etab.statut === 'actif' ? 'Actif' : 'En attente'}
+                      </span>
                     </div>
                   </td>
                   <td style={{ padding: '12px 14px' }}>
@@ -276,6 +283,7 @@ export default function ClientsPage() {
                         { icon: 'ti-device-heart-monitor', label: 'Équip.', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => openEquipModal(etab) },
                         { icon: 'ti-files', label: 'Docs', color: 'var(--success)', bg: 'var(--success-light)', onClick: () => openDocsModal(etab) },
                         { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
+                        { icon: isBloque ? 'ti-lock-open' : 'ti-lock', label: isBloque ? 'Activer' : 'Bloquer', color: isBloque ? 'var(--success)' : 'var(--danger)', bg: isBloque ? 'var(--success-light)' : 'var(--danger-light)', onClick: () => handleBloquerClient(etab) },
                       ].map(btn => (
                         <button key={btn.label} onClick={btn.onClick}
                           style={{ padding: '5px 8px', background: btn.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: btn.color, cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>

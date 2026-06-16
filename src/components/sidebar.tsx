@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-type Props = { role: string; formule: string }
+type Props = { role: string; formule: string; etabNom?: string }
 
 const navAdmin = [
   { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard', feature: null },
@@ -27,7 +27,7 @@ const navClient = [
   { label: 'Assistant IA', path: '/dashboard/assistant', icon: 'ti-sparkles', feature: 'assistant_ia' },
 ]
 
-export default function Sidebar({ role, formule }: Props) {
+export default function Sidebar({ role, formule, etabNom }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -59,25 +59,15 @@ export default function Sidebar({ role, formule }: Props) {
   }
 
   const nav = role === 'admin' ? navAdmin : navClient
+  const initiales = etabNom ? etabNom.slice(0, 2).toUpperCase() : role === 'admin' ? 'AD' : 'EP'
 
   return (
-    <div style={{
-      width: '220px', minHeight: '100vh',
-      background: 'var(--surface)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column',
-      flexShrink: 0, fontFamily: 'var(--font)'
-    }}>
+    <div style={{ width: '220px', minHeight: '100vh', background: 'var(--surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0, fontFamily: 'var(--font)' }}>
 
       {/* Logo */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '32px', height: '32px',
-            background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)',
-            borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(26,86,219,0.3)'
-          }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(26,86,219,0.3)' }}>
             <i className="ti ti-activity-heartbeat" style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
           </div>
           <div>
@@ -85,7 +75,7 @@ export default function Sidebar({ role, formule }: Props) {
               Medi<span style={{ color: 'var(--accent)' }}>Track</span>
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
-              {role === 'admin' ? 'Administration' : 'Espace client'}
+              {role === 'admin' ? 'Administration' : etabNom || 'Espace client'}
             </div>
           </div>
         </div>
@@ -125,8 +115,7 @@ export default function Sidebar({ role, formule }: Props) {
         {/* Badge formule client */}
         {role === 'client' && formule && (
           <div style={{
-            margin: '12px 8px 0',
-            padding: '8px 10px',
+            margin: '12px 8px 0', padding: '8px 10px',
             background: formule === 'Privilège' ? 'var(--purple-light)' : formule === 'Premium' ? 'var(--accent-light)' : 'var(--surface-hover)',
             borderRadius: 'var(--radius-md)',
             border: `1px solid ${formule === 'Privilège' ? 'rgba(110,86,207,0.2)' : formule === 'Premium' ? 'rgba(26,86,219,0.2)' : 'var(--border)'}`
@@ -144,18 +133,12 @@ export default function Sidebar({ role, formule }: Props) {
       {/* Footer */}
       <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', marginBottom: '4px' }}>
-          <div style={{
-            width: '30px', height: '30px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--accent-light) 0%, #DBEAFE 100%)',
-            border: '1px solid rgba(26,86,219,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0
-          }}>
-            {role === 'admin' ? 'AD' : 'EP'}
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-light) 0%, #DBEAFE 100%)', border: '1px solid rgba(26,86,219,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0 }}>
+            {initiales}
           </div>
           <div style={{ overflow: 'hidden' }}>
             <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {role === 'admin' ? 'Admin PSDM' : 'Mon établissement'}
+              {role === 'admin' ? 'Admin PSDM' : etabNom || 'Mon établissement'}
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
               {role === 'admin' ? 'Administrateur' : formule}
@@ -163,13 +146,7 @@ export default function Sidebar({ role, formule }: Props) {
           </div>
         </div>
         <button onClick={logout}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '7px 10px', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)', background: 'transparent',
-            color: 'var(--text-secondary)', fontSize: '12px',
-            cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s'
-          }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}
           onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
           onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}
         >

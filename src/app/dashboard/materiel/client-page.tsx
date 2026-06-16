@@ -17,6 +17,49 @@ const statutStyle = (s: string) => {
   return { color: 'var(--danger)', bg: 'var(--danger-light)', label: 'Hors service', dot: 'var(--danger)' }
 }
 
+function HistoriqueLocalisation({ equipementId }: { equipementId: string }) {
+  const [historique, setHistorique] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('historique_localisation')
+        .select('*')
+        .eq('equipement_id', equipementId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+      setHistorique(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [equipementId])
+
+  if (loading || historique.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: '20px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+        Historique des déplacements
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {historique.map(h => (
+          <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '12px' }}>
+            <i className="ti ti-map-pin" style={{ fontSize: '13px', color: 'var(--text-tertiary)', flexShrink: 0 }} aria-hidden="true" />
+            <span style={{ color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{h.ancienne_localisation || '—'}</span>
+            <i className="ti ti-arrow-right" style={{ fontSize: '12px', color: 'var(--text-tertiary)', flexShrink: 0 }} aria-hidden="true" />
+            <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{h.nouvelle_localisation || '—'}</span>
+            <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+              {new Date(h.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function MaterielClientPage({ etablissementId }: { etablissementId: string }) {
   const [equipements, setEquipements] = useState<Equipement[]>([])
   const [categories, setCategories] = useState<string[]>([])
@@ -103,7 +146,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
             <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--danger)' }}>
               {equipements.filter(e => e.statut === 'hors_service').length} équipement{equipements.filter(e => e.statut === 'hors_service').length > 1 ? 's' : ''} hors service
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--danger)', opacity: 0.8, marginTop: '1px' }}>Votre prestataire a été notifié et interviendra sous 24h</div>
+            <div style={{ fontSize: '12px', color: 'var(--danger)', opacity: 0.8, marginTop: '1px' }}>Votre prestataire a été notifié et prendra contact avec vous rapidement</div>
           </div>
         </div>
       )}
@@ -207,10 +250,9 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
 
       {/* Fiche modale */}
       {selected && (
-        <div onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false); setEditingLoc(false) }}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false); setEditingLoc(false) } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '520px', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
 
             {/* Header */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
@@ -276,10 +318,20 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                       style={{ ...inputStyle, flex: 1, borderColor: 'var(--accent)' }} />
                     <button onClick={async () => {
                       setLocSaving(true)
+                      const ancienne = selected.localisation || ''
                       await supabase.from('equipements').update({ localisation: newLoc }).eq('id', selected.id)
+                      if (newLoc !== ancienne) {
+                        await supabase.from('historique_localisation').insert([{
+                          equipement_id: selected.id,
+                          ancienne_localisation: ancienne || null,
+                          nouvelle_localisation: newLoc || null,
+                          modifie_par: 'client'
+                        }])
+                      }
                       setSelected({ ...selected, localisation: newLoc })
                       setEquipements(prev => prev.map(e => e.id === selected.id ? { ...e, localisation: newLoc } : e))
-                      setEditingLoc(false); setLocSaving(false)
+                      setEditingLoc(false)
+                      setLocSaving(false)
                     }} disabled={locSaving}
                       style={{ padding: '8px 14px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
                       {locSaving ? '...' : 'Sauver'}
@@ -294,6 +346,9 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                   </div>
                 )}
               </div>
+
+              {/* Historique localisation */}
+              <HistoriqueLocalisation equipementId={selected.id} />
 
               {/* Documents */}
               {documents.length > 0 && (
@@ -324,7 +379,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                     <i className="ti ti-check" style={{ fontSize: '16px', color: 'var(--success)' }} aria-hidden="true" />
                     <div>
                       <div style={{ fontSize: '13px', color: 'var(--success)', fontWeight: '600' }}>Panne signalée</div>
-                      <div style={{ fontSize: '12px', color: 'var(--success)', opacity: 0.8 }}>Votre prestataire interviendra sous 24h</div>
+                      <div style={{ fontSize: '12px', color: 'var(--success)', opacity: 0.8 }}>Votre prestataire prendra contact avec vous rapidement</div>
                     </div>
                   </div>
                 ) : (
@@ -335,9 +390,40 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                     <button onClick={async () => {
                       if (!pannDesc) return
                       setPanneSaving(true)
-                      await supabase.from('pannes').insert([{ equipement_id: selected.id, description: pannDesc, statut: 'ouvert' }])
+
+                      // Récupère infos établissement
+                      const { data: etab } = await supabase
+                        .from('etablissements')
+                        .select('nom, contact_email')
+                        .eq('id', etablissementId)
+                        .single()
+
+                      // Crée la panne
+                      await supabase.from('pannes').insert([{
+                        equipement_id: selected.id,
+                        description: pannDesc,
+                        statut: 'ouvert'
+                      }])
+
+                      // Met à jour le statut
                       await supabase.from('equipements').update({ statut: 'hors_service' }).eq('id', selected.id)
-                      setPanneSaving(false); setPanneSuccess(true); load()
+
+                      // Envoie l'email
+                      await fetch('/api/notify-panne', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          equipement: selected.designation,
+                          localisation: selected.localisation,
+                          etablissement: etab?.nom || '',
+                          description: pannDesc,
+                          contact_email: 'aamine3.benyoucef@gmail.com'
+                        })
+                      })
+
+                      setPanneSaving(false)
+                      setPanneSuccess(true)
+                      load()
                       setTimeout(() => { setSelected(null); setPanneSuccess(false); setPannDesc('') }, 2500)
                     }} disabled={panneSaving || !pannDesc}
                       style={{ width: '100%', padding: '11px', background: panneSaving || !pannDesc ? 'var(--surface-hover)' : 'var(--danger-light)', border: `1px solid ${panneSaving || !pannDesc ? 'var(--border)' : 'rgba(194,54,42,0.3)'}`, borderRadius: 'var(--radius-md)', color: panneSaving || !pannDesc ? 'var(--text-tertiary)' : 'var(--danger)', fontSize: '13px', fontWeight: '600', cursor: panneSaving || !pannDesc ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
