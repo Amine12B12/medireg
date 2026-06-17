@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<string | null>(null)
   const [formule, setFormule] = useState<string>('Essentiel')
   const [etabNom, setEtabNom] = useState<string>('')
-  const [userEmail, setUserEmail] = useState<string>('')
+  const [contactNom, setContactNom] = useState<string>('')
   const [alertCount, setAlertCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -45,8 +45,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      setUserEmail(user.email || '')
-
       const { data: prof } = await supabase
         .from('profiles')
         .select('role, etablissement_id')
@@ -59,11 +57,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       if (prof.role === 'admin') {
         setFormule('Privilège')
-        setEtabNom('Admin PSDM')
+        setEtabNom('Administration')
+        setContactNom('Admin PSDM')
       } else if (prof.etablissement_id) {
         const { data: etab } = await supabase
           .from('etablissements')
-          .select('formule, nom, statut')
+          .select('formule, nom, statut, contact_nom')
           .eq('id', prof.etablissement_id)
           .single()
 
@@ -74,10 +73,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         setFormule(etab?.formule || 'Essentiel')
-        setEtabNom(etab?.nom || user.email || '')
+        setEtabNom(etab?.nom || '')
+        setContactNom(etab?.contact_nom || user.email || '')
       } else {
-        // Profil sans établissement — affiche l'email
         setEtabNom(user.email || '')
+        setContactNom(user.email || '')
       }
 
       const { count } = await supabase
@@ -118,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         top: 0, bottom: 0, zIndex: 300,
         transition: 'left 0.2s ease', flexShrink: 0
       }}>
-        <Sidebar role={role} formule={formule} etabNom={etabNom} />
+        <Sidebar role={role} formule={formule} etabNom={etabNom} contactNom={contactNom} />
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0 }}>
@@ -144,22 +144,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span style={{ position: 'absolute', top: '7px', right: '7px', width: '7px', height: '7px', background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--surface)' }} />
               )}
             </button>
-
-            {!isMobile && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px 6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: role === 'admin' ? 'var(--accent-light)' : 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '600', color: role === 'admin' ? 'var(--accent)' : 'var(--success)' }}>
-                  {role === 'admin' ? 'AD' : etabNom?.slice(0, 2).toUpperCase() || 'EP'}
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                    {role === 'admin' ? 'Admin PSDM' : etabNom || userEmail}
-                  </div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                    {role === 'admin' ? 'Administrateur' : formule}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

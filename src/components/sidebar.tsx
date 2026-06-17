@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-type Props = { role: string; formule: string; etabNom?: string }
+type Props = { role: string; formule: string; etabNom?: string; contactNom?: string }
 
 const navAdmin = [
   { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard', feature: null },
@@ -21,13 +21,14 @@ const navAdmin = [
 const navClient = [
   { label: 'Tableau de bord', path: '/dashboard', icon: 'ti-layout-dashboard', feature: null },
   { label: 'Mon matériel', path: '/dashboard/materiel', icon: 'ti-device-heart-monitor', feature: 'parc' },
+  { label: 'Alertes', path: '/dashboard/alertes', icon: 'ti-bell', feature: null },
   { label: 'Maintenance', path: '/dashboard/maintenance', icon: 'ti-tool', feature: 'alertes_maintenance' },
   { label: 'Devis', path: '/dashboard/devis', icon: 'ti-file-invoice', feature: 'intervention' },
   { label: 'Conformité', path: '/dashboard/conformite', icon: 'ti-shield-check', feature: 'conformite' },
   { label: 'Assistant IA', path: '/dashboard/assistant', icon: 'ti-sparkles', feature: 'assistant_ia' },
 ]
 
-export default function Sidebar({ role, formule, etabNom }: Props) {
+export default function Sidebar({ role, formule, etabNom, contactNom }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -59,12 +60,14 @@ export default function Sidebar({ role, formule, etabNom }: Props) {
   }
 
   const nav = role === 'admin' ? navAdmin : navClient
-  const initiales = etabNom ? etabNom.slice(0, 2).toUpperCase() : role === 'admin' ? 'AD' : 'EP'
+  const initiales = contactNom
+    ? contactNom.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : etabNom?.slice(0, 2).toUpperCase() || 'EP'
 
   return (
     <div style={{ width: '220px', minHeight: '100vh', background: 'var(--surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0, fontFamily: 'var(--font)' }}>
 
-      {/* Logo */}
+      {/* Logo + nom établissement */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(26,86,219,0.3)' }}>
@@ -130,18 +133,18 @@ export default function Sidebar({ role, formule, etabNom }: Props) {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer — nom du contact */}
       <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', marginBottom: '4px' }}>
-          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-light) 0%, #DBEAFE 100%)', border: '1px solid rgba(26,86,219,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--accent)', flexShrink: 0 }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: role === 'admin' ? 'var(--accent-light)' : 'var(--success-light)', border: `1px solid ${role === 'admin' ? 'rgba(26,86,219,0.2)' : 'rgba(10,124,78,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: role === 'admin' ? 'var(--accent)' : 'var(--success)', flexShrink: 0 }}>
             {initiales}
           </div>
           <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {role === 'admin' ? 'Admin PSDM' : etabNom || 'Mon établissement'}
+            <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {contactNom || etabNom || 'Mon espace'}
             </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
-              {role === 'admin' ? 'Administrateur' : formule}
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {role === 'admin' ? 'Administrateur' : etabNom || formule}
             </div>
           </div>
         </div>
