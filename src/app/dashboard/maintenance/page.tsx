@@ -55,6 +55,7 @@ function generateFicheInterventionPDF(m: any) {
         <div class="field"><div class="field-label">Référence</div><div class="field-value">${m.equipements?.reference || '—'}</div></div>
         <div class="field"><div class="field-label">Établissement</div><div class="field-value">${m.equipements?.etablissements?.nom || '—'}</div></div>
         <div class="field"><div class="field-label">Localisation</div><div class="field-value">${m.equipements?.localisation || '—'}</div></div>
+        <div class="field"><div class="field-label">Prochaine révision</div><div class="field-value">${m.equipements?.date_revision || '—'}</div></div>
       </div>
     </div>
 
@@ -101,13 +102,23 @@ function generateFicheInterventionPDF(m: any) {
     </div>
 
     <div class="footer">
-      <span>MediTrack · Plateforme de gestion PSDM</span>
+      <span>MediTrack · Plateforme de gestion PSDM · www.meditrack-app.fr</span>
       <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
     </div>
   </body></html>`
 
   const w = window.open('', '_blank')
   if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { w.print() }, 500) }
+}
+
+function revisionStatus(dateRevision: string | null) {
+  if (!dateRevision) return null
+  const today = new Date()
+  const rev = new Date(dateRevision)
+  const diffDays = Math.ceil((rev.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return { label: 'Révision dépassée', color: 'var(--danger)', bg: 'var(--danger-light)', icon: 'ti-alert-triangle' }
+  if (diffDays <= 30) return { label: `Révision dans ${diffDays}j`, color: 'var(--warning)', bg: 'var(--warning-light)', icon: 'ti-clock' }
+  return { label: `Révision le ${new Date(dateRevision).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`, color: 'var(--success)', bg: 'var(--success-light)', icon: 'ti-tool' }
 }
 
 export default function MaintenancePage() {
@@ -129,9 +140,9 @@ export default function MaintenancePage() {
   async function load() {
     const { data: m } = await supabase
       .from('maintenances')
-      .select('*, equipements(reference, designation, localisation, etablissements(nom))')
+      .select('*, equipements(reference, designation, localisation, date_revision, etablissements(nom))')
       .order('date_prevue', { ascending: true })
-    const { data: e } = await supabase.from('equipements').select('id, reference, designation').order('designation')
+    const { data: e } = await supabase.from('equipements').select('id, reference, designation, date_revision').order('designation')
     setMaintenances(m || [])
     setEquipements(e || [])
     setLoading(false)
@@ -210,6 +221,7 @@ export default function MaintenancePage() {
           {filtered.map(m => {
             const st = statutStyle(m.statut)
             const isTermine = m.statut === 'termine'
+            const rev = revisionStatus((m.equipements as any)?.date_revision)
             return (
               <div key={m.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: 'var(--shadow-sm)', opacity: isTermine ? 0.7 : 1, borderLeft: `3px solid ${st.color}` }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: st.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -235,13 +247,22 @@ export default function MaintenancePage() {
                         )}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
                       <span style={{ background: m.type === 'preventive' ? 'var(--accent-light)' : 'var(--warning-light)', color: m.type === 'preventive' ? 'var(--accent)' : 'var(--warning)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>
                         {m.type === 'preventive' ? 'Préventive' : 'Curative'}
                       </span>
                       <span style={{ background: st.bg, color: st.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>{st.label}</span>
                     </div>
                   </div>
+
+                  {/* Révision */}
+                  {rev && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: rev.bg, borderRadius: 'var(--radius-sm)', border: `1px solid ${rev.color}22`, marginBottom: '10px', width: 'fit-content' }}>
+                      <i className={`ti ${rev.icon}`} style={{ fontSize: '13px', color: rev.color }} aria-hidden="true" />
+                      <span style={{ fontSize: '11px', fontWeight: '500', color: rev.color }}>{rev.label}</span>
+                    </div>
+                  )}
+
                   {m.notes && (
                     <div style={{ padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontStyle: 'italic' }}>
                       "{m.notes}"
@@ -288,9 +309,16 @@ export default function MaintenancePage() {
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={labelStyle}>Équipement *</label>
-                <select value={form.equipement_id} onChange={e => setForm(p => ({ ...p, equipement_id: e.target.value }))} style={inputStyle}>
+                <select value={form.equipement_id} onChange={e => {
+                  const eq = equipements.find(eq => eq.id === e.target.value)
+                  setForm(p => ({ ...p, equipement_id: e.target.value, date_prevue: eq?.date_revision || p.date_prevue }))
+                }} style={inputStyle}>
                   <option value=''>Sélectionner un équipement...</option>
-                  {equipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
+                  {equipements.map(e => (
+                    <option key={e.id} value={e.id}>
+                      {e.reference} — {e.designation}{e.date_revision ? ` (révision: ${e.date_revision})` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -313,6 +341,12 @@ export default function MaintenancePage() {
               <div>
                 <label style={labelStyle}>Date prévue</label>
                 <input type='date' value={form.date_prevue} onChange={e => setForm(p => ({ ...p, date_prevue: e.target.value }))} style={inputStyle} />
+                {form.equipement_id && equipements.find(e => e.id === form.equipement_id)?.date_revision && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="ti ti-info-circle" style={{ fontSize: '12px' }} aria-hidden="true" />
+                    Date de révision de cet équipement : {equipements.find(e => e.id === form.equipement_id)?.date_revision}
+                  </div>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Notes</label>
