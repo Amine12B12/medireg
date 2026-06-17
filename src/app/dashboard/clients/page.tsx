@@ -72,8 +72,6 @@ export default function ClientsPage() {
   const contactEmailRef = useRef<HTMLInputElement>(null)
   const typeRef = useRef<HTMLSelectElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
-  const passwordRef = useRef<HTMLInputElement>(null)
-  const confirmPasswordRef = useRef<HTMLInputElement>(null)
 
   const supabase = createClient()
 
@@ -149,20 +147,28 @@ export default function ClientsPage() {
 
   async function handleCreateAccess() {
     const email = emailRef.current?.value?.trim()
-    const password = passwordRef.current?.value
-    const confirmPassword = confirmPasswordRef.current?.value
-    if (!email || !password) return
-    if (password !== confirmPassword) { setAccessError('Les mots de passe ne correspondent pas'); return }
-    if (password.length < 6) { setAccessError('Minimum 6 caractères'); return }
-    setAccessSaving(true); setAccessError('')
+    if (!email) return
+    setAccessSaving(true)
+    setAccessError('')
+
     const res = await fetch('/api/create-user', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, etablissement_id: selectedEtab?.id, nom: selectedEtab?.nom })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        etablissement_id: selectedEtab?.id,
+        nom: selectedEtab?.nom
+      })
     })
     const data = await res.json()
-    if (data.error) { setAccessError(data.error); setAccessSaving(false); return }
-    setAccessSuccess(true); setAccessSaving(false)
-    setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 2000)
+    if (data.error) {
+      setAccessError(data.error)
+      setAccessSaving(false)
+      return
+    }
+    setAccessSuccess(true)
+    setAccessSaving(false)
+    setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 3000)
   }
 
   async function handleBloquerClient(etab: Etablissement) {
@@ -427,29 +433,26 @@ export default function ClientsPage() {
         </Modal>
       )}
 
-      {/* Modal Accès */}
+      {/* Modal Accès — invitation par email uniquement */}
       {showAccessModal && selectedEtab && (
         <Modal onClose={() => setShowAccessModal(false)} maxWidth="400px">
-          <ModalHeader title="Créer un accès client" sub={selectedEtab.nom} onClose={() => setShowAccessModal(false)} />
+          <ModalHeader title="Inviter un client" sub={selectedEtab.nom} onClose={() => setShowAccessModal(false)} />
           <div style={{ padding: '20px 24px' }}>
             {accessSuccess ? (
               <div style={{ padding: '20px', background: 'var(--success-light)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <i className="ti ti-check" style={{ fontSize: '28px', color: 'var(--success)', display: 'block', marginBottom: '8px' }} aria-hidden="true" />
-                <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--success)' }}>Accès créé avec succès</div>
+                <i className="ti ti-mail-check" style={{ fontSize: '32px', color: 'var(--success)', display: 'block', marginBottom: '10px' }} aria-hidden="true" />
+                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginBottom: '6px' }}>Invitation envoyée !</div>
+                <div style={{ fontSize: '12px', color: 'var(--success)', opacity: 0.8 }}>Le client va recevoir un email pour créer son mot de passe et accéder à son espace MediTrack.</div>
               </div>
             ) : (
               <>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={labelStyle}>Email</label>
-                  <input ref={emailRef} type='email' placeholder='contact@ehpad.fr' style={inputStyle} />
+                <div style={{ padding: '12px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '12px', color: 'var(--accent)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <i className="ti ti-info-circle" style={{ fontSize: '15px', flexShrink: 0, marginTop: '1px' }} aria-hidden="true" />
+                  <span>Un email d'invitation sera envoyé au client. Il pourra créer son propre mot de passe et accéder directement à son espace.</span>
                 </div>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={labelStyle}>Mot de passe</label>
-                  <input ref={passwordRef} type='password' placeholder='••••••••' style={inputStyle} />
-                </div>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={labelStyle}>Confirmer</label>
-                  <input ref={confirmPasswordRef} type='password' placeholder='••••••••' style={inputStyle} />
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Email du client</label>
+                  <input ref={emailRef} type='email' placeholder='contact@ehpad.fr' style={inputStyle} autoFocus />
                 </div>
                 {accessError && (
                   <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '14px' }}>{accessError}</div>
@@ -460,8 +463,9 @@ export default function ClientsPage() {
                     Annuler
                   </button>
                   <button onClick={handleCreateAccess} disabled={accessSaving}
-                    style={{ flex: 1, padding: '11px', background: accessSaving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                    {accessSaving ? 'Création...' : "Créer l'accès"}
+                    style={{ flex: 1, padding: '11px', background: accessSaving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <i className="ti ti-send" style={{ fontSize: '14px' }} aria-hidden="true" />
+                    {accessSaving ? 'Envoi...' : "Envoyer l'invitation"}
                   </button>
                 </div>
               </>

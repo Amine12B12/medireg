@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
-  const { email, password, etablissement_id, nom } = await request.json()
+  const { email, etablissement_id, nom } = await request.json()
 
-  if (!email || !password || !etablissement_id) {
+  if (!email || !etablissement_id) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
@@ -13,11 +13,9 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Crée le user dans Supabase Auth
-  const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true
+  // Invite le user par email — il reçoit un lien pour créer son mot de passe
+  const { data: userData, error: userError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: 'https://www.meditrack-app.fr/login'
   })
 
   if (userError) {
@@ -38,5 +36,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: profileError.message }, { status: 400 })
   }
 
-  return NextResponse.json({ success: true, user: userData.user })
+  return NextResponse.json({ success: true })
 }
