@@ -65,13 +65,13 @@ export default function ClientsPage() {
   const [filterStatut, setFilterStatut] = useState('tous')
   const [filterType, setFilterType] = useState('tous')
   const [formuleSelected, setFormuleSelected] = useState('Essentiel')
+  const [accessEmail, setAccessEmail] = useState('')
 
   const nomRef = useRef<HTMLInputElement>(null)
   const villeRef = useRef<HTMLInputElement>(null)
   const contactNomRef = useRef<HTMLInputElement>(null)
   const contactEmailRef = useRef<HTMLInputElement>(null)
   const typeRef = useRef<HTMLSelectElement>(null)
-  const emailRef = useRef<HTMLInputElement>(null)
 
   const supabase = createClient()
 
@@ -146,8 +146,7 @@ export default function ClientsPage() {
   }
 
   async function handleCreateAccess() {
-    const email = emailRef.current?.value?.trim()
-    if (!email) return
+    if (!accessEmail) return
     setAccessSaving(true)
     setAccessError('')
 
@@ -155,7 +154,7 @@ export default function ClientsPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email,
+        email: accessEmail,
         etablissement_id: selectedEtab?.id,
         nom: selectedEtab?.nom
       })
@@ -203,7 +202,6 @@ export default function ClientsPage() {
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} établissement{filtered.length > 1 ? 's' : ''}</div>
         <button onClick={() => { setShowAddModal(true); setFormuleSelected('Essentiel') }}
@@ -213,7 +211,6 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {/* Filtres */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
@@ -229,7 +226,6 @@ export default function ClientsPage() {
         </select>
       </div>
 
-      {/* Table */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -288,7 +284,7 @@ export default function ClientsPage() {
                       {[
                         { icon: 'ti-device-heart-monitor', label: 'Équip.', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => openEquipModal(etab) },
                         { icon: 'ti-files', label: 'Docs', color: 'var(--success)', bg: 'var(--success-light)', onClick: () => openDocsModal(etab) },
-                        { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
+                        { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setAccessEmail(etab.contact_email || ''); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
                         { icon: isBloque ? 'ti-lock-open' : 'ti-lock', label: isBloque ? 'Activer' : 'Bloquer', color: isBloque ? 'var(--success)' : 'var(--danger)', bg: isBloque ? 'var(--success-light)' : 'var(--danger-light)', onClick: () => handleBloquerClient(etab) },
                       ].map(btn => (
                         <button key={btn.label} onClick={btn.onClick}
@@ -433,7 +429,7 @@ export default function ClientsPage() {
         </Modal>
       )}
 
-      {/* Modal Accès — invitation par email uniquement */}
+      {/* Modal Accès */}
       {showAccessModal && selectedEtab && (
         <Modal onClose={() => setShowAccessModal(false)} maxWidth="400px">
           <ModalHeader title="Inviter un client" sub={selectedEtab.nom} onClose={() => setShowAccessModal(false)} />
@@ -452,7 +448,20 @@ export default function ClientsPage() {
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={labelStyle}>Email du client</label>
-                  <input ref={emailRef} type='email' placeholder='contact@ehpad.fr' style={inputStyle} autoFocus />
+                  <input
+                    type='email'
+                    value={accessEmail}
+                    onChange={e => setAccessEmail(e.target.value)}
+                    placeholder='contact@ehpad.fr'
+                    style={inputStyle}
+                    autoFocus
+                  />
+                  {selectedEtab.contact_email && accessEmail !== selectedEtab.contact_email && (
+                    <button onClick={() => setAccessEmail(selectedEtab.contact_email)}
+                      style={{ marginTop: '6px', fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font)' }}>
+                      ← Utiliser {selectedEtab.contact_email}
+                    </button>
+                  )}
                 </div>
                 {accessError && (
                   <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '14px' }}>{accessError}</div>
@@ -462,8 +471,8 @@ export default function ClientsPage() {
                     style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                     Annuler
                   </button>
-                  <button onClick={handleCreateAccess} disabled={accessSaving}
-                    style={{ flex: 1, padding: '11px', background: accessSaving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <button onClick={handleCreateAccess} disabled={accessSaving || !accessEmail}
+                    style={{ flex: 1, padding: '11px', background: accessSaving || !accessEmail ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving || !accessEmail ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     <i className="ti ti-send" style={{ fontSize: '14px' }} aria-hidden="true" />
                     {accessSaving ? 'Envoi...' : "Envoyer l'invitation"}
                   </button>
