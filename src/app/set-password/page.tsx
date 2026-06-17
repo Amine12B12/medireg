@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 function SetPasswordForm() {
@@ -11,27 +11,40 @@ function SetPasswordForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
-  const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    // Supabase met automatiquement la session en place depuis le lien d'invitation
-    // On attend juste que la session soit disponible
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+    async function handleHash() {
+      // Extrait les params du hash (#access_token=...&type=invite)
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      const type = params.get('type')
+
+      if (accessToken && refreshToken) {
+        // Établit la session manuellement depuis les tokens
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+        if (sessionError) {
+          setError('Lien invalide ou expiré. Contactez votre prestataire.')
+          return
+        }
         setSessionReady(true)
       } else {
-        // Attend un peu que Supabase traite le token depuis l'URL
-        setTimeout(async () => {
-          const { data: { session: s } } = await supabase.auth.getSession()
-          if (s) setSessionReady(true)
-          else setError('Lien invalide ou expiré. Contactez votre prestataire.')
-        }, 1500)
+        // Vérifie si une session existe déjà
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          setSessionReady(true)
+        } else {
+          setError('Lien invalide ou expiré. Contactez votre prestataire.')
+        }
       }
     }
-    checkSession()
+    handleHash()
   }, [])
 
   async function handleSubmit() {
@@ -62,15 +75,12 @@ function SetPasswordForm() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
-
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#1A56DB', letterSpacing: '-0.5px' }}>MediTrack</div>
           <div style={{ fontSize: '13px', color: '#999', marginTop: '4px' }}>Plateforme de gestion PSDM</div>
         </div>
 
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e5e5', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-
           <div style={{ padding: '28px 32px 0' }}>
             <div style={{ fontSize: '20px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '-0.3px', marginBottom: '6px' }}>
               Créer votre mot de passe
@@ -87,15 +97,15 @@ function SetPasswordForm() {
                 <div style={{ fontSize: '15px', fontWeight: '600', color: '#0A7C4E', marginBottom: '4px' }}>Mot de passe créé !</div>
                 <div style={{ fontSize: '13px', color: '#0A7C4E', opacity: 0.8 }}>Redirection vers votre espace...</div>
               </div>
+            ) : error && !sessionReady ? (
+              <div style={{ padding: '16px', background: '#FEF0EE', border: '1px solid rgba(194,54,42,0.2)', borderRadius: '8px', fontSize: '13px', color: '#C2362A', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
+                <div style={{ fontWeight: '600', marginBottom: '4px' }}>Lien expiré</div>
+                <div style={{ opacity: 0.8 }}>Contactez votre prestataire pour recevoir un nouvel accès.</div>
+              </div>
             ) : !sessionReady ? (
-              <div style={{ padding: '20px', textAlign: 'center' }}>
-                {error ? (
-                  <div style={{ padding: '14px', background: '#FEF0EE', border: '1px solid rgba(194,54,42,0.2)', borderRadius: '8px', fontSize: '13px', color: '#C2362A' }}>
-                    {error}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '13px', color: '#999' }}>Vérification du lien...</div>
-                )}
+              <div style={{ padding: '20px', textAlign: 'center', color: '#999', fontSize: '13px' }}>
+                Vérification du lien...
               </div>
             ) : (
               <>
@@ -103,37 +113,24 @@ function SetPasswordForm() {
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                     Nouveau mot de passe
                   </label>
-                  <input
-                    type='password'
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder='Minimum 8 caractères'
-                    style={inputStyle}
-                    autoFocus
-                  />
+                  <input type='password' value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder='Minimum 8 caractères' style={inputStyle} autoFocus />
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                     Confirmer le mot de passe
                   </label>
-                  <input
-                    type='password'
-                    value={confirm}
-                    onChange={e => setConfirm(e.target.value)}
-                    placeholder='Répétez votre mot de passe'
-                    style={inputStyle}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  />
+                  <input type='password' value={confirm} onChange={e => setConfirm(e.target.value)}
+                    placeholder='Répétez votre mot de passe' style={inputStyle}
+                    onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
                 </div>
-
                 {error && (
                   <div style={{ padding: '10px 14px', background: '#FEF0EE', border: '1px solid rgba(194,54,42,0.2)', borderRadius: '8px', fontSize: '12px', color: '#C2362A', marginBottom: '16px' }}>
                     {error}
                   </div>
                 )}
-
                 <button onClick={handleSubmit} disabled={loading || !password || !confirm}
-                  style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.2px' }}>
+                  style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif' }}>
                   {loading ? 'Enregistrement...' : 'Créer mon mot de passe →'}
                 </button>
               </>
