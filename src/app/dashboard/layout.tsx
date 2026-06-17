@@ -22,6 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<string | null>(null)
   const [formule, setFormule] = useState<string>('Essentiel')
   const [etabNom, setEtabNom] = useState<string>('')
+  const [userEmail, setUserEmail] = useState<string>('')
   const [alertCount, setAlertCount] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -44,13 +45,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      const { data: prof } = await supabase.from('profiles').select('role, etablissement_id').eq('id', user.id).single()
+      setUserEmail(user.email || '')
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('role, etablissement_id')
+        .eq('id', user.id)
+        .single()
+
       if (!prof) return
 
       setRole(prof.role)
 
       if (prof.role === 'admin') {
         setFormule('Privilège')
+        setEtabNom('Admin PSDM')
       } else if (prof.etablissement_id) {
         const { data: etab } = await supabase
           .from('etablissements')
@@ -65,10 +74,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         setFormule(etab?.formule || 'Essentiel')
-        setEtabNom(etab?.nom || '')
+        setEtabNom(etab?.nom || user.email || '')
+      } else {
+        // Profil sans établissement — affiche l'email
+        setEtabNom(user.email || '')
       }
 
-      const { count } = await supabase.from('pannes').select('*', { count: 'exact', head: true }).eq('statut', 'ouvert')
+      const { count } = await supabase
+        .from('pannes')
+        .select('*', { count: 'exact', head: true })
+        .eq('statut', 'ouvert')
       setAlertCount(count || 0)
     }
     load()
@@ -137,7 +152,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                    {role === 'admin' ? 'Admin PSDM' : etabNom || 'Mon espace'}
+                    {role === 'admin' ? 'Admin PSDM' : etabNom || userEmail}
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
                     {role === 'admin' ? 'Administrateur' : formule}
