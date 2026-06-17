@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
   // Invite le user par email — il reçoit un lien pour créer son mot de passe
   const { data: userData, error: userError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: 'https://www.meditrack-app.fr/login'
+    redirectTo: 'https://www.meditrack-app.fr/set-password'
   })
 
   if (userError) {
