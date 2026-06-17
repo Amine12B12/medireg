@@ -3,6 +3,113 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 
+function generateFicheInterventionPDF(m: any) {
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #1a1a1a; padding: 32px; font-size: 13px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #1A56DB; }
+    .logo { font-size: 20px; font-weight: 700; color: #1A56DB; }
+    .subtitle { font-size: 12px; color: #999; margin-top: 2px; }
+    .title { font-size: 16px; font-weight: 600; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field { background: #f9f9f9; border-radius: 6px; padding: 10px 12px; }
+    .field-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .field-value { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+    .field-full { grid-column: 1 / -1; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #ccc; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .checked { background: #1A56DB; border-color: #1A56DB; color: white; }
+    .signature-box { height: 60px; border: 1px dashed #ccc; border-radius: 6px; margin-top: 8px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 12px; }
+    .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #eee; font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+    @media print { body { padding: 16px; } }
+  </style></head><body>
+    <div class="header">
+      <div>
+        <div class="logo">MediTrack</div>
+        <div class="subtitle">Fiche intervention universelle</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="title">Intervention</div>
+        <div class="subtitle">${new Date(m.created_at || Date.now()).toLocaleDateString('fr-FR')}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">1. Informations générales</div>
+      <div class="grid">
+        <div class="field"><div class="field-label">Date intervention</div><div class="field-value">${m.date_prevue || '____/____/________'}</div></div>
+        <div class="field"><div class="field-label">Heure</div><div class="field-value">__________</div></div>
+        <div class="field"><div class="field-label">Type d'intervention</div><div class="field-value">${m.type === 'preventive' ? '☑ Préventive  ☐ Curative' : '☐ Préventive  ☑ Curative'}</div></div>
+        <div class="field"><div class="field-label">Statut</div><div class="field-value">${m.statut === 'planifie' ? 'Planifié' : m.statut === 'en_cours' ? 'En cours' : 'Terminé'}</div></div>
+        <div class="field field-full"><div class="field-label">Intervenant / Technicien</div><div class="field-value" style="min-height:20px;">____________________________</div></div>
+        <div class="field field-full"><div class="field-label">Entreprise / PSDM</div><div class="field-value" style="min-height:20px;">_________________________________</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Matériel concerné</div>
+      <div class="grid">
+        <div class="field"><div class="field-label">Désignation</div><div class="field-value">${m.equipements?.designation || '—'}</div></div>
+        <div class="field"><div class="field-label">Référence</div><div class="field-value">${m.equipements?.reference || '—'}</div></div>
+        <div class="field"><div class="field-label">Établissement</div><div class="field-value">${m.equipements?.etablissements?.nom || '—'}</div></div>
+        <div class="field"><div class="field-label">Localisation</div><div class="field-value">${m.equipements?.localisation || '—'}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Objet de l'intervention</div>
+      <div class="field field-full" style="min-height:70px;">
+        <div class="field-label">Description</div>
+        <div class="field-value" style="margin-top:4px;">${m.notes || '&nbsp;'}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">4. Résultat de l'intervention</div>
+      <div class="grid">
+        <div>
+          ${['Résolu', 'Partiellement résolu', 'À revoir', 'Matériel immobilisé'].map(r => `
+            <div class="checkbox-row">
+              <div class="checkbox ${m.statut === 'termine' && r === 'Résolu' ? 'checked' : ''}">${m.statut === 'termine' && r === 'Résolu' ? '✓' : ''}</div>
+              ${r}
+            </div>
+          `).join('')}
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:8px;">Statut matériel après intervention</div>
+          ${['En service', 'En maintenance', 'Hors service'].map(s => `
+            <div class="checkbox-row"><div class="checkbox"></div>${s}</div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">5. Signature</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Signature technicien</div>
+          <div class="signature-box">Signature</div>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Signature responsable établissement</div>
+          <div class="signature-box">Signature</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>MediTrack · Plateforme de gestion PSDM</span>
+      <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+    </div>
+  </body></html>`
+
+  const w = window.open('', '_blank')
+  if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { w.print() }, 500) }
+}
+
 export default function MaintenancePage() {
   const [maintenances, setMaintenances] = useState<any[]>([])
   const [equipements, setEquipements] = useState<any[]>([])
@@ -74,7 +181,6 @@ export default function MaintenancePage() {
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} intervention{filtered.length > 1 ? 's' : ''}</div>
         <button onClick={() => setShowModal(true)}
@@ -84,7 +190,6 @@ export default function MaintenancePage() {
         </button>
       </div>
 
-      {/* Filtres */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {filterBtn('Toutes', filterStatut === 'tous', () => setFilterStatut('tous'))}
         {filterBtn('Planifié', filterStatut === 'planifie', () => setFilterStatut('planifie'))}
@@ -92,7 +197,6 @@ export default function MaintenancePage() {
         {filterBtn('Terminé', filterStatut === 'termine', () => setFilterStatut('termine'))}
       </div>
 
-      {/* Liste */}
       {filtered.length === 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '48px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -143,24 +247,27 @@ export default function MaintenancePage() {
                       "{m.notes}"
                     </div>
                   )}
-                  {!isTermine && (
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {m.statut === 'planifie' && (
-                        <button onClick={() => updateStatut(m.id, 'en_cours')}
-                          style={{ padding: '6px 14px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-player-play" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          Démarrer
-                        </button>
-                      )}
-                      {m.statut === 'en_cours' && (
-                        <button onClick={() => updateStatut(m.id, 'termine')}
-                          style={{ padding: '6px 14px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          Terminer
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {!isTermine && m.statut === 'planifie' && (
+                      <button onClick={() => updateStatut(m.id, 'en_cours')}
+                        style={{ padding: '6px 14px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <i className="ti ti-player-play" style={{ fontSize: '13px' }} aria-hidden="true" />
+                        Démarrer
+                      </button>
+                    )}
+                    {!isTermine && m.statut === 'en_cours' && (
+                      <button onClick={() => updateStatut(m.id, 'termine')}
+                        style={{ padding: '6px 14px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />
+                        Terminer
+                      </button>
+                    )}
+                    <button onClick={() => generateFicheInterventionPDF(m)}
+                      style={{ padding: '6px 14px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <i className="ti ti-file-type-pdf" style={{ fontSize: '13px' }} aria-hidden="true" />
+                      Fiche PDF
+                    </button>
+                  </div>
                 </div>
               </div>
             )
@@ -168,15 +275,13 @@ export default function MaintenancePage() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Planifier une intervention</div>
-              <button onClick={() => setShowModal(false)}
-                style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <button onClick={() => setShowModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
@@ -216,9 +321,7 @@ export default function MaintenancePage() {
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button onClick={() => setShowModal(false)}
-                  style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                  Annuler
-                </button>
+                  style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
                 <button onClick={handleAdd} disabled={saving || !form.equipement_id}
                   style={{ flex: 1, padding: '11px', background: saving || !form.equipement_id ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !form.equipement_id ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
                   {saving ? 'Enregistrement...' : 'Planifier'}

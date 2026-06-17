@@ -8,9 +8,12 @@ import { exportToCSV, parseCSV } from '@/lib/csv'
 
 type Equipement = {
   id: string; reference: string; designation: string; categorie: string
-  fabricant: string; modele: string; numero_serie: string
+  fabricant: string; modele: string; numero_serie: string; numero_lot: string
   mode_dispo: string; statut: string; localisation: string
   date_achat: string; date_mes: string; date_revision: string
+  date_retrait: string; motif_retrait: string; service: string
+  etage: string; responsable_referent: string; fin_garantie: string
+  date_installation: string; fournisseur: string; commentaires: string
   etablissement_id: string
 }
 
@@ -24,6 +27,123 @@ const modeLabel = (m: string) => {
   if (m === 'location') return 'Location'
   if (m === 'achat') return 'Achat'
   return 'MAD'
+}
+
+function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[], historique: any[]) {
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #1a1a1a; padding: 32px; font-size: 12px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #1A56DB; }
+    .logo { font-size: 20px; font-weight: 700; color: #1A56DB; }
+    .subtitle { font-size: 11px; color: #999; margin-top: 2px; }
+    .title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 3px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    .badge-service { background: #E8F5EE; color: #0A7C4E; }
+    .badge-maintenance { background: #FEF3E2; color: #9E5E00; }
+    .badge-hors { background: #FEF0EE; color: #C2362A; }
+    .section { margin-bottom: 16px; }
+    .section-title { font-size: 10px; font-weight: 700; color: #1A56DB; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #1A56DB; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .field { background: #f9f9f9; border-radius: 5px; padding: 8px 10px; }
+    .field-label { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+    .field-value { font-size: 12px; font-weight: 500; color: #1a1a1a; min-height: 16px; }
+    .doc-item { padding: 5px 8px; background: #f9f9f9; border-radius: 4px; margin-bottom: 4px; font-size: 11px; }
+    .hist-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #f9f9f9; border-radius: 4px; margin-bottom: 4px; font-size: 11px; }
+    .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; font-size: 10px; color: #999; display: flex; justify-content: space-between; }
+    @media print { body { padding: 16px; } }
+  </style></head><body>
+    <div class="header">
+      <div>
+        <div class="logo">MediTrack</div>
+        <div class="subtitle">Fiche équipement universelle — MVP V1</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="title">${eq.designation}</div>
+        <div class="subtitle">${eq.reference}</div>
+        <div style="margin-top:5px;">
+          <span class="badge ${eq.statut === 'en_service' ? 'badge-service' : eq.statut === 'maintenance' ? 'badge-maintenance' : 'badge-hors'}">
+            ${eq.statut === 'en_service' ? 'En service' : eq.statut === 'maintenance' ? 'En maintenance' : 'Hors service'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 1 — Identification du matériel</div>
+      <div class="grid">
+        <div class="field"><div class="field-label">Référence</div><div class="field-value">${eq.reference || '—'}</div></div>
+        <div class="field"><div class="field-label">Désignation</div><div class="field-value">${eq.designation || '—'}</div></div>
+        <div class="field"><div class="field-label">Catégorie</div><div class="field-value">${eq.categorie || '—'}</div></div>
+        <div class="field"><div class="field-label">Fabricant</div><div class="field-value">${eq.fabricant || '—'}</div></div>
+        <div class="field"><div class="field-label">Modèle</div><div class="field-value">${eq.modele || '—'}</div></div>
+        <div class="field"><div class="field-label">N° de série</div><div class="field-value">${eq.numero_serie || '—'}</div></div>
+        <div class="field"><div class="field-label">N° de lot</div><div class="field-value">${eq.numero_lot || '—'}</div></div>
+        <div class="field"><div class="field-label">Date mise en service</div><div class="field-value">${eq.date_mes || '—'}</div></div>
+        <div class="field"><div class="field-label">Fin de garantie</div><div class="field-value">${eq.fin_garantie || '—'}</div></div>
+        ${eq.date_retrait ? `<div class="field"><div class="field-label">Date retrait</div><div class="field-value">${eq.date_retrait}</div></div>` : ''}
+        ${eq.motif_retrait ? `<div class="field"><div class="field-label">Motif retrait</div><div class="field-value">${eq.motif_retrait}</div></div>` : ''}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 2 — Localisation</div>
+      <div class="grid">
+        <div class="field"><div class="field-label">Établissement</div><div class="field-value">${etabNom || '—'}</div></div>
+        <div class="field"><div class="field-label">Service</div><div class="field-value">${eq.service || '—'}</div></div>
+        <div class="field"><div class="field-label">Étage</div><div class="field-value">${eq.etage || '—'}</div></div>
+        <div class="field"><div class="field-label">Chambre / Zone</div><div class="field-value">${eq.localisation || '—'}</div></div>
+        <div class="field"><div class="field-label">Statut</div><div class="field-value">${eq.statut === 'en_service' ? 'En service' : eq.statut === 'maintenance' ? 'En maintenance' : 'Hors service'}</div></div>
+        <div class="field"><div class="field-label">Responsable référent</div><div class="field-value">${eq.responsable_referent || '—'}</div></div>
+        <div class="field"><div class="field-label">Date installation</div><div class="field-value">${eq.date_installation || '—'}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 3 — Fournisseur / Origine</div>
+      <div class="grid">
+        <div class="field"><div class="field-label">PSDM / Fournisseur</div><div class="field-value">${eq.fournisseur || '—'}</div></div>
+        <div class="field"><div class="field-label">Type mise à disposition</div><div class="field-value">${eq.mode_dispo === 'location' ? 'Location' : eq.mode_dispo === 'achat' ? 'Achat' : 'Mise à disposition'}</div></div>
+        <div class="field"><div class="field-label">Date livraison</div><div class="field-value">${eq.date_achat || '—'}</div></div>
+        <div class="field"><div class="field-label">Prochaine révision</div><div class="field-value">${eq.date_revision || '—'}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 4 — Documents associés</div>
+      ${docs.length > 0 ? docs.map(d => `
+        <div class="doc-item">
+          <a href="${d.url}" target="_blank" style="color:#1A56DB;text-decoration:none;">📄 ${d.nom}</a>
+        </div>
+      `).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun document associé</div>`}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 5 — Historique des déplacements</div>
+      ${historique.length > 0 ? historique.map(h => `
+        <div class="hist-item">
+          <span style="color:#999;text-decoration:line-through;">${h.ancienne_localisation || '—'}</span>
+          <span style="color:#999;">→</span>
+          <span style="font-weight:500;">${h.nouvelle_localisation || '—'}</span>
+          <span style="margin-left:auto;color:#999;font-size:10px;">${new Date(h.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </div>
+      `).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun déplacement enregistré</div>`}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Bloc 6 — Commentaires / Observations</div>
+      <div style="min-height:60px;background:#f9f9f9;border-radius:5px;padding:10px;font-size:12px;color:#1a1a1a;">
+        ${eq.commentaires || '<span style="color:#ccc;">Aucun commentaire</span>'}
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>MediTrack · Plateforme de gestion PSDM · www.meditrack-app.fr</span>
+      <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+    </div>
+  </body></html>`
+
+  const w = window.open('', '_blank')
+  if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { w.print() }, 500) }
 }
 
 export default function MaterielPage() {
@@ -55,11 +175,17 @@ export default function MaterielPage() {
   const [roleLoaded, setRoleLoaded] = useState(false)
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null)
+  const [editingCommentaire, setEditingCommentaire] = useState(false)
+  const [newCommentaire, setNewCommentaire] = useState('')
+  const [commentaireSaving, setCommentaireSaving] = useState(false)
   const [addForm, setAddForm] = useState({
     reference: '', designation: '', categorie: '', fabricant: '',
-    modele: '', numero_serie: '', mode_dispo: 'location',
-    statut: 'en_service', localisation: '', date_achat: '',
-    date_mes: '', date_revision: '', etablissement_id: ''
+    modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
+    statut: 'en_service', localisation: '', service: '', etage: '',
+    responsable_referent: '', fournisseur: '', date_achat: '',
+    date_mes: '', date_revision: '', fin_garantie: '',
+    date_installation: '', date_retrait: '', motif_retrait: '',
+    commentaires: '', etablissement_id: ''
   })
   const supabase = createClient()
 
@@ -122,6 +248,8 @@ export default function MaterielPage() {
     setSelected(eq)
     setPannDesc('')
     setPanneSuccess(false)
+    setEditingCommentaire(false)
+    setNewCommentaire(eq.commentaires || '')
     loadDocs(eq.id)
   }
 
@@ -151,9 +279,12 @@ export default function MaterielPage() {
     setShowAddModal(false)
     setAddForm({
       reference: '', designation: '', categorie: '', fabricant: '',
-      modele: '', numero_serie: '', mode_dispo: 'location',
-      statut: 'en_service', localisation: '', date_achat: '',
-      date_mes: '', date_revision: '', etablissement_id: etablissements[0]?.id || ''
+      modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
+      statut: 'en_service', localisation: '', service: '', etage: '',
+      responsable_referent: '', fournisseur: '', date_achat: '',
+      date_mes: '', date_revision: '', fin_garantie: '',
+      date_installation: '', date_retrait: '', motif_retrait: '',
+      commentaires: '', etablissement_id: etablissements[0]?.id || ''
     })
     setAddSaving(false)
     load()
@@ -180,10 +311,14 @@ export default function MaterielPage() {
       reference: e.reference, designation: e.designation,
       categorie: e.categorie || '', fabricant: e.fabricant || '',
       modele: e.modele || '', numero_serie: e.numero_serie || '',
-      mode_dispo: e.mode_dispo || '', statut: e.statut || '',
-      localisation: e.localisation || '', date_achat: e.date_achat || '',
+      numero_lot: e.numero_lot || '', mode_dispo: e.mode_dispo || '',
+      statut: e.statut || '', localisation: e.localisation || '',
+      service: e.service || '', etage: e.etage || '',
+      responsable_referent: e.responsable_referent || '',
+      fournisseur: e.fournisseur || '', date_achat: e.date_achat || '',
       date_mes: e.date_mes || '', date_revision: e.date_revision || '',
-      etablissement_id: e.etablissement_id || ''
+      fin_garantie: e.fin_garantie || '', date_installation: e.date_installation || '',
+      commentaires: e.commentaires || '', etablissement_id: e.etablissement_id || ''
     }))
     exportToCSV(data, `meditrack_equipements_${new Date().toISOString().slice(0, 10)}.csv`)
   }
@@ -202,9 +337,14 @@ export default function MaterielPage() {
         reference: row.reference, designation: row.designation,
         categorie: row.categorie || null, fabricant: row.fabricant || null,
         modele: row.modele || null, numero_serie: row.numero_serie || null,
-        mode_dispo: row.mode_dispo || 'location', statut: row.statut || 'en_service',
-        localisation: row.localisation || null, date_achat: row.date_achat || null,
+        numero_lot: row.numero_lot || null, mode_dispo: row.mode_dispo || 'location',
+        statut: row.statut || 'en_service', localisation: row.localisation || null,
+        service: row.service || null, etage: row.etage || null,
+        responsable_referent: row.responsable_referent || null,
+        fournisseur: row.fournisseur || null, date_achat: row.date_achat || null,
         date_mes: row.date_mes || null, date_revision: row.date_revision || null,
+        fin_garantie: row.fin_garantie || null, date_installation: row.date_installation || null,
+        commentaires: row.commentaires || null,
         etablissement_id: row.etablissement_id || etablissements[0]?.id
       }], { onConflict: 'reference' })
       if (error) errors++; else success++
@@ -244,26 +384,23 @@ export default function MaterielPage() {
             onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
             onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'}
           >
-            <i className="ti ti-download" style={{ fontSize: '14px' }} aria-hidden="true" />
-            Export CSV
+            <i className="ti ti-download" style={{ fontSize: '14px' }} aria-hidden="true" />Export CSV
           </button>
           <label style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className="ti ti-upload" style={{ fontSize: '14px' }} aria-hidden="true" />
             {importLoading ? 'Import...' : 'Import CSV'}
             <input type='file' accept='.csv' style={{ display: 'none' }} onChange={handleImport} />
           </label>
-          <button onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(true)}}
+          <button onClick={() => setShowCatModal(true)}
             style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}
             onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
             onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'}
           >
-            <i className="ti ti-tags" style={{ fontSize: '14px' }} aria-hidden="true" />
-            Catégories
+            <i className="ti ti-tags" style={{ fontSize: '14px' }} aria-hidden="true" />Catégories
           </button>
-          <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(true)}}
+          <button onClick={() => setShowAddModal(true)}
             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-            <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
-            Ajouter
+            <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />Ajouter
           </button>
         </div>
       </div>
@@ -362,10 +499,10 @@ export default function MaterielPage() {
 
       {/* FICHE MODALE */}
       {selected && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -376,37 +513,89 @@ export default function MaterielPage() {
                   <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{selected.reference} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom}</div>
                 </div>
               </div>
-              <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
-                style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}>
-                <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <button onClick={async () => {
+                  const { data: hist } = await supabase.from('historique_localisation').select('*').eq('equipement_id', selected.id).order('created_at', { ascending: false })
+                  generateFicheEquipementPDF(selected, etablissements.find(e => e.id === selected.etablissement_id)?.nom || '', documents, hist || [])
+                }}
+                  style={{ padding: '6px 12px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <i className="ti ti-file-type-pdf" style={{ fontSize: '14px' }} aria-hidden="true" />PDF
+                </button>
+                <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
+                  style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                  <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+                </button>
+              </div>
             </div>
+
             <div style={{ padding: '20px 24px' }}>
               <div style={{ marginBottom: '20px' }}>
                 {(() => { const st = statutStyle(selected.statut); return <span style={{ background: st.bg, color: st.color, padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>{st.label}</span> })()}
               </div>
-              {[
-                { title: 'Identification', rows: [['Référence', selected.reference], ['Catégorie', selected.categorie || '—'], ['N° de série', selected.numero_serie || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—']] },
-                { title: 'Localisation & Contrat', rows: [['Localisation', selected.localisation || '—'], ['Mode', modeLabel(selected.mode_dispo)]] },
-                { title: 'Dates', rows: [['Date achat', selected.date_achat || '—'], ['Mise en service', selected.date_mes || '—'], ['Prochaine révision', selected.date_revision || '—']] },
-              ].map(section => (
-                <div key={section.title} style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>{section.title}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    {section.rows.map(([label, value]) => (
-                      <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                        <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
-                        <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
-                      </div>
-                    ))}
-                  </div>
+
+              {/* Bloc 1 */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 1 — Identification</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    ['Référence', selected.reference],
+                    ['Catégorie', selected.categorie || '—'],
+                    ['N° de série', selected.numero_serie || '—'],
+                    ['N° de lot', selected.numero_lot || '—'],
+                    ['Fabricant', selected.fabricant || '—'],
+                    ['Modèle', selected.modele || '—'],
+                    ['Fin de garantie', selected.fin_garantie || '—'],
+                    ['Date MES', selected.date_mes || '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Bloc 2 */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 2 — Localisation</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    ['Service', selected.service || '—'],
+                    ['Étage', selected.etage || '—'],
+                    ['Chambre / Zone', selected.localisation || '—'],
+                    ['Responsable', selected.responsable_referent || '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bloc 3 */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 3 — Fournisseur / Contrat</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {[
+                    ['Fournisseur', selected.fournisseur || '—'],
+                    ['Mode', modeLabel(selected.mode_dispo)],
+                    ['Date livraison', selected.date_achat || '—'],
+                    ['Date installation', selected.date_installation || '—'],
+                    ['Prochaine révision', selected.date_revision || '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Documents</div>
+                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 4 — Documents</div>
                   <label style={{ fontSize: '12px', color: 'var(--accent)', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <i className="ti ti-upload" style={{ fontSize: '13px' }} aria-hidden="true" />
                     {uploadLoading ? 'Upload...' : 'Ajouter'}
@@ -434,6 +623,48 @@ export default function MaterielPage() {
                     </button>
                   </div>
                 ))}
+              </div>
+
+              {/* Commentaires */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 6 — Commentaires</div>
+                  {!editingCommentaire && (
+                    <button onClick={() => { setEditingCommentaire(true); setNewCommentaire(selected.commentaires || '') }}
+                      style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="ti ti-edit" style={{ fontSize: '13px' }} aria-hidden="true" />
+                      Modifier
+                    </button>
+                  )}
+                </div>
+                {editingCommentaire ? (
+                  <div>
+                    <textarea value={newCommentaire} onChange={e => setNewCommentaire(e.target.value)} rows={4}
+                      placeholder="Observations, notes techniques, historique..."
+                      style={{ ...inputStyle, resize: 'none', marginBottom: '8px' }} autoFocus />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={async () => {
+                        setCommentaireSaving(true)
+                        await supabase.from('equipements').update({ commentaires: newCommentaire }).eq('id', selected.id)
+                        setSelected({ ...selected, commentaires: newCommentaire })
+                        setEquipements(prev => prev.map(e => e.id === selected.id ? { ...e, commentaires: newCommentaire } : e))
+                        setEditingCommentaire(false)
+                        setCommentaireSaving(false)
+                      }} disabled={commentaireSaving}
+                        style={{ flex: 1, padding: '8px', background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                        {commentaireSaving ? '...' : 'Sauvegarder'}
+                      </button>
+                      <button onClick={() => setEditingCommentaire(false)}
+                        style={{ padding: '8px 12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', minHeight: '60px', fontSize: '13px', color: selected.commentaires ? 'var(--text-primary)' : 'var(--text-tertiary)', fontStyle: selected.commentaires ? 'normal' : 'italic' }}>
+                    {selected.commentaires || 'Aucun commentaire — cliquez sur Modifier pour en ajouter'}
+                  </div>
+                )}
               </div>
 
               {/* Panne */}
@@ -476,26 +707,31 @@ export default function MaterielPage() {
 
       {/* MODAL AJOUT */}
       {showAddModal && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Ajouter un équipement</div>
-              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
+              <button onClick={() => setShowAddModal(false)}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
             <div style={{ padding: '20px 24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+
+                {/* BLOC 1 */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 — Identification</div>
+                </div>
                 {[
                   { label: 'Référence *', key: 'reference', placeholder: 'LIT-2024-004' },
                   { label: 'Désignation *', key: 'designation', placeholder: 'Lit médicalisé' },
                   { label: 'Fabricant', key: 'fabricant', placeholder: 'Invacare' },
-                  { label: 'Modèle', key: 'modele', placeholder: 'Sonata Electric' },
+                  { label: 'Fournisseur / PSDM', key: 'fournisseur', placeholder: 'GLOBAL MEDICAL' },
+                  { label: 'Modèle / Référence', key: 'modele', placeholder: 'Sonata Electric' },
                   { label: 'N° de série', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
-                  { label: 'Localisation', key: 'localisation', placeholder: 'Chambre 12' },
+                  { label: 'N° de lot', key: 'numero_lot', placeholder: 'LOT-2024-001' },
                 ].map(f => (
                   <div key={f.key}>
                     <label style={labelStyle}>{f.label}</label>
@@ -511,6 +747,65 @@ export default function MaterielPage() {
                   </select>
                 </div>
                 <div>
+                  <label style={labelStyle}>Statut</label>
+                  <select value={addForm.statut} onChange={e => setAddForm(p => ({ ...p, statut: e.target.value }))} style={inputStyle}>
+                    <option value='en_service'>En service</option>
+                    <option value='maintenance'>Maintenance</option>
+                    <option value='hors_service'>Hors service</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Date mise en service</label>
+                  <input type='date' value={addForm.date_mes} onChange={e => setAddForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Fin de garantie</label>
+                  <input type='date' value={addForm.fin_garantie} onChange={e => setAddForm(p => ({ ...p, fin_garantie: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date retrait</label>
+                  <input type='date' value={addForm.date_retrait} onChange={e => setAddForm(p => ({ ...p, date_retrait: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Motif retrait</label>
+                  <select value={addForm.motif_retrait} onChange={e => setAddForm(p => ({ ...p, motif_retrait: e.target.value }))} style={inputStyle}>
+                    <option value=''>—</option>
+                    <option value='panne'>Panne</option>
+                    <option value='remplacement'>Remplacement</option>
+                    <option value='obsolescence'>Obsolescence</option>
+                    <option value='restitution'>Restitution</option>
+                  </select>
+                </div>
+
+                {/* BLOC 2 */}
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 — Localisation</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Établissement</label>
+                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))} style={inputStyle}>
+                    <option value=''>Sélectionner...</option>
+                    {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
+                  </select>
+                </div>
+                {[
+                  { label: 'Service', key: 'service', placeholder: 'Soins intensifs' },
+                  { label: 'Étage', key: 'etage', placeholder: '2ème étage' },
+                  { label: 'Chambre / Zone', key: 'localisation', placeholder: 'Chambre 12' },
+                  { label: 'Responsable référent', key: 'responsable_referent', placeholder: 'Dr. Martin' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={labelStyle}>{f.label}</label>
+                    <input value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      placeholder={f.placeholder} style={inputStyle} />
+                  </div>
+                ))}
+
+                {/* BLOC 3 */}
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 — Fournisseur / Contrat</div>
+                </div>
+                <div>
                   <label style={labelStyle}>Mode</label>
                   <select value={addForm.mode_dispo} onChange={e => setAddForm(p => ({ ...p, mode_dispo: e.target.value }))} style={inputStyle}>
                     <option value='location'>Location</option>
@@ -519,45 +814,38 @@ export default function MaterielPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Statut</label>
-                  <select value={addForm.statut} onChange={e => setAddForm(p => ({ ...p, statut: e.target.value }))} style={inputStyle}>
-                    <option value='en_service'>En service</option>
-                    <option value='maintenance'>Maintenance</option>
-                    <option value='hors_service'>Hors service</option>
-                  </select>
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-  <label style={labelStyle}>Établissement</label>
-  <select
-    value={addForm.etablissement_id}
-    onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))}
-    style={inputStyle}
-  >
-    <option value=''>Sélectionner...</option>
-    {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
-  </select>
-</div>
-                <div>
-                  <label style={labelStyle}>Date d'achat</label>
+                  <label style={labelStyle}>Date livraison</label>
                   <input type='date' value={addForm.date_achat} onChange={e => setAddForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Mise en service</label>
-                  <input type='date' value={addForm.date_mes} onChange={e => setAddForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} />
+                  <label style={labelStyle}>Date installation</label>
+                  <input type='date' value={addForm.date_installation} onChange={e => setAddForm(p => ({ ...p, date_installation: e.target.value }))} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Prochaine révision</label>
                   <input type='date' value={addForm.date_revision} onChange={e => setAddForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} />
                 </div>
+
+                {/* BLOC 6 — Commentaires */}
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 — Commentaires</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Observations / Notes</label>
+                  <textarea value={addForm.commentaires} onChange={e => setAddForm(p => ({ ...p, commentaires: e.target.value }))}
+                    placeholder="Observations, notes techniques..." rows={3}
+                    style={{ ...inputStyle, resize: 'none' }} />
+                </div>
               </div>
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false)}}
+                <button onClick={() => setShowAddModal(false)}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>
                 <button onClick={handleAddEquip} disabled={addSaving || !addForm.reference || !addForm.designation}
                   style={{ flex: 1, padding: '11px', background: addSaving || !addForm.reference || !addForm.designation ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: addSaving || !addForm.reference || !addForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                  {addSaving ? 'Enregistrement...' : 'Ajouter'}
+                  {addSaving ? 'Enregistrement...' : 'Ajouter l\'équipement'}
                 </button>
               </div>
             </div>
@@ -567,16 +855,15 @@ export default function MaterielPage() {
 
       {/* MODAL CATEGORIES */}
       {showCatModal && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false)}}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '420px', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '420px', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
               <div>
                 <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Catégories</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{categoriesFull.length} catégorie{categoriesFull.length > 1 ? 's' : ''}</div>
               </div>
-              <button onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false)}}
+              <button onClick={() => setShowCatModal(false)}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
