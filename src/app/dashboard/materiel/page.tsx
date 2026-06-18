@@ -178,6 +178,7 @@ export default function MaterielPage() {
   const [editingCommentaire, setEditingCommentaire] = useState(false)
   const [newCommentaire, setNewCommentaire] = useState('')
   const [commentaireSaving, setCommentaireSaving] = useState(false)
+  const [addError, setAddError] = useState('')
   const [addForm, setAddForm] = useState({
     reference: '', designation: '', categorie: '', fabricant: '',
     modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
@@ -273,22 +274,53 @@ export default function MaterielPage() {
   }
 
   async function handleAddEquip() {
-    if (!addForm.reference || !addForm.designation) return
-    setAddSaving(true)
-    await supabase.from('equipements').insert([addForm])
-    setShowAddModal(false)
-    setAddForm({
-      reference: '', designation: '', categorie: '', fabricant: '',
-      modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
-      statut: 'en_service', localisation: '', service: '', etage: '',
-      responsable_referent: '', fournisseur: '', date_achat: '',
-      date_mes: '', date_revision: '', fin_garantie: '',
-      date_installation: '', date_retrait: '', motif_retrait: '',
-      commentaires: '', etablissement_id: etablissements[0]?.id || ''
-    })
-    setAddSaving(false)
-    load()
+  if (!addForm.reference || !addForm.designation) return
+  setAddSaving(true)
+  setAddError('')
+
+  // Contrôle doublon numéro de série
+  if (addForm.numero_serie) {
+    const { data: existing } = await supabase
+      .from('equipements')
+      .select('id, reference, designation')
+      .eq('numero_serie', addForm.numero_serie)
+      .single()
+    if (existing) {
+      setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
+      setAddSaving(false)
+      return
+    }
   }
+
+  // Contrôle doublon référence
+  if (addForm.reference) {
+    const { data: existingRef } = await supabase
+      .from('equipements')
+      .select('id, designation')
+      .eq('reference', addForm.reference)
+      .single()
+    if (existingRef) {
+      setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
+      setAddSaving(false)
+      return
+    }
+  }
+
+  await supabase.from('equipements').insert([addForm])
+  setShowAddModal(false)
+  setAddForm({
+    reference: '', designation: '', categorie: '', fabricant: '',
+    modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
+    statut: 'en_service', localisation: '', service: '', etage: '',
+    responsable_referent: '', fournisseur: '', date_achat: '',
+    date_mes: '', date_revision: '', fin_garantie: '',
+    date_installation: '', date_retrait: '', motif_retrait: '',
+    commentaires: '', etablissement_id: etablissements[0]?.id || ''
+  })
+  setAddError('')
+  setAddSaving(false)
+  load()
+}
 
   async function handleAddCat() {
     if (!newCat.trim()) return
@@ -837,7 +869,11 @@ export default function MaterielPage() {
                     style={{ ...inputStyle, resize: 'none' }} />
                 </div>
               </div>
-
+              {addError && (
+                <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '10px' }}>
+                  ⚠️ {addError}
+                  </div>
+                )}
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                 <button onClick={() => setShowAddModal(false)}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>

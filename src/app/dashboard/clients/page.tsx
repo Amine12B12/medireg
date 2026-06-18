@@ -45,6 +45,8 @@ export default function ClientsPage() {
   const [alertCount, setAlertCount] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showAccessModal, setShowAccessModal] = useState(false)
   const [showEquipModal, setShowEquipModal] = useState(false)
   const [showDocsModal, setShowDocsModal] = useState(false)
@@ -59,13 +61,19 @@ export default function ClientsPage() {
   const [affectEquipId, setAffectEquipId] = useState('')
   const [affectSaving, setAffectSaving] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [deleteSaving, setDeleteSaving] = useState(false)
   const [accessSaving, setAccessSaving] = useState(false)
   const [accessSuccess, setAccessSuccess] = useState(false)
   const [accessError, setAccessError] = useState('')
   const [filterStatut, setFilterStatut] = useState('tous')
   const [filterType, setFilterType] = useState('tous')
   const [formuleSelected, setFormuleSelected] = useState('Essentiel')
+  const [formuleEdit, setFormuleEdit] = useState('Essentiel')
   const [accessEmail, setAccessEmail] = useState('')
+  const [editForm, setEditForm] = useState({
+    nom: '', ville: '', type: 'EHPAD', contact_nom: '', contact_email: ''
+  })
 
   const nomRef = useRef<HTMLInputElement>(null)
   const villeRef = useRef<HTMLInputElement>(null)
@@ -117,6 +125,49 @@ export default function ClientsPage() {
     setDocsLoading(false)
   }
 
+  function openEditModal(etab: Etablissement) {
+    setSelectedEtab(etab)
+    setEditForm({
+      nom: etab.nom,
+      ville: etab.ville || '',
+      type: etab.type || 'EHPAD',
+      contact_nom: etab.contact_nom || '',
+      contact_email: etab.contact_email || ''
+    })
+    setFormuleEdit(etab.formule || 'Essentiel')
+    setShowEditModal(true)
+  }
+
+  async function handleEdit() {
+    if (!selectedEtab || !editForm.nom.trim()) return
+    setEditSaving(true)
+    await supabase.from('etablissements').update({
+      nom: editForm.nom.trim(),
+      ville: editForm.ville,
+      type: editForm.type,
+      contact_nom: editForm.contact_nom,
+      contact_email: editForm.contact_email,
+      formule: formuleEdit
+    }).eq('id', selectedEtab.id)
+    setShowEditModal(false)
+    setEditSaving(false)
+    load()
+  }
+
+  async function handleDelete() {
+  if (!selectedEtab) return
+  setDeleteSaving(true)
+  await fetch('/api/delete-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ etablissement_id: selectedEtab.id })
+  })
+  setShowDeleteConfirm(false)
+  setDeleteSaving(false)
+  setSelectedEtab(null)
+  load()
+}
+
   async function handleAffectEquip() {
     if (!affectEquipId || !selectedEtabEquip) return
     setAffectSaving(true)
@@ -149,22 +200,13 @@ export default function ClientsPage() {
     if (!accessEmail) return
     setAccessSaving(true)
     setAccessError('')
-
     const res = await fetch('/api/create-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: accessEmail,
-        etablissement_id: selectedEtab?.id,
-        nom: selectedEtab?.nom
-      })
+      body: JSON.stringify({ email: accessEmail, etablissement_id: selectedEtab?.id, nom: selectedEtab?.nom })
     })
     const data = await res.json()
-    if (data.error) {
-      setAccessError(data.error)
-      setAccessSaving(false)
-      return
-    }
+    if (data.error) { setAccessError(data.error); setAccessSaving(false); return }
     setAccessSuccess(true)
     setAccessSaving(false)
     setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 3000)
@@ -285,7 +327,9 @@ export default function ClientsPage() {
                         { icon: 'ti-device-heart-monitor', label: 'Équip.', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => openEquipModal(etab) },
                         { icon: 'ti-files', label: 'Docs', color: 'var(--success)', bg: 'var(--success-light)', onClick: () => openDocsModal(etab) },
                         { icon: 'ti-key', label: 'Accès', color: 'var(--text-secondary)', bg: 'var(--surface-hover)', onClick: () => { setSelectedEtab(etab); setAccessEmail(etab.contact_email || ''); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
+                        { icon: 'ti-edit', label: 'Modifier', color: 'var(--warning)', bg: 'var(--warning-light)', onClick: () => openEditModal(etab) },
                         { icon: isBloque ? 'ti-lock-open' : 'ti-lock', label: isBloque ? 'Activer' : 'Bloquer', color: isBloque ? 'var(--success)' : 'var(--danger)', bg: isBloque ? 'var(--success-light)' : 'var(--danger-light)', onClick: () => handleBloquerClient(etab) },
+                        { icon: 'ti-trash', label: 'Supprimer', color: 'var(--danger)', bg: 'var(--danger-light)', onClick: () => { setSelectedEtab(etab); setShowDeleteConfirm(true) } },
                       ].map(btn => (
                         <button key={btn.label} onClick={btn.onClick}
                           style={{ padding: '5px 8px', background: btn.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: btn.color, cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
@@ -375,7 +419,7 @@ export default function ClientsPage() {
         </Modal>
       )}
 
-      {/* Modal Ajout établissement */}
+      {/* Modal Ajout */}
       {showAddModal && (
         <Modal onClose={() => setShowAddModal(false)}>
           <ModalHeader title="Ajouter un établissement" onClose={() => setShowAddModal(false)} />
@@ -429,6 +473,88 @@ export default function ClientsPage() {
         </Modal>
       )}
 
+      {/* Modal Modifier */}
+      {showEditModal && selectedEtab && (
+        <Modal onClose={() => setShowEditModal(false)}>
+          <ModalHeader title="Modifier le client" sub={selectedEtab.nom} onClose={() => setShowEditModal(false)} />
+          <div style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Nom *</label>
+                <input type='text' value={editForm.nom} onChange={e => setEditForm(p => ({ ...p, nom: e.target.value }))} placeholder='EHPAD Les Pins' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Ville</label>
+                <input type='text' value={editForm.ville} onChange={e => setEditForm(p => ({ ...p, ville: e.target.value }))} placeholder='Paris' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Type</label>
+                <select value={editForm.type} onChange={e => setEditForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}>
+                  {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Contact</label>
+                <input type='text' value={editForm.contact_nom} onChange={e => setEditForm(p => ({ ...p, contact_nom: e.target.value }))} placeholder='Dr. Martin' style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email contact</label>
+                <input type='email' value={editForm.contact_email} onChange={e => setEditForm(p => ({ ...p, contact_email: e.target.value }))} placeholder='contact@etab.fr' style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Formule</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['Essentiel', 'Premium', 'Privilège'].map(f => (
+                    <button key={f} type="button" onClick={() => setFormuleEdit(f)}
+                      style={{ flex: 1, padding: '10px', border: `1px solid ${formuleEdit === f ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-md)', background: formuleEdit === f ? 'var(--accent-light)' : 'var(--surface)', color: formuleEdit === f ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: formuleEdit === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowEditModal(false)}
+                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                Annuler
+              </button>
+              <button onClick={handleEdit} disabled={editSaving || !editForm.nom.trim()}
+                style={{ flex: 1, padding: '11px', background: editSaving || !editForm.nom.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: editSaving || !editForm.nom.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                {editSaving ? 'Enregistrement...' : 'Sauvegarder'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal Confirmation Suppression */}
+      {showDeleteConfirm && selectedEtab && (
+        <Modal onClose={() => setShowDeleteConfirm(false)} maxWidth="400px">
+          <ModalHeader title="Supprimer le client" onClose={() => setShowDeleteConfirm(false)} />
+          <div style={{ padding: '24px' }}>
+            <div style={{ padding: '16px', background: 'var(--danger-light)', borderRadius: 'var(--radius-md)', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <i className="ti ti-alert-triangle" style={{ fontSize: '20px', color: 'var(--danger)', flexShrink: 0, marginTop: '1px' }} aria-hidden="true" />
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--danger)', marginBottom: '4px' }}>Attention — action irréversible</div>
+                <div style={{ fontSize: '12px', color: 'var(--danger)', opacity: 0.8 }}>
+                  Vous allez supprimer <strong>{selectedEtab.nom}</strong> ainsi que tous les accès clients associés. Les équipements resteront dans la base mais ne seront plus affectés à cet établissement.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setShowDeleteConfirm(false)}
+                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                Annuler
+              </button>
+              <button onClick={handleDelete} disabled={deleteSaving}
+                style={{ flex: 1, padding: '11px', background: 'var(--danger)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: deleteSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                {deleteSaving ? 'Suppression...' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Modal Accès */}
       {showAccessModal && selectedEtab && (
         <Modal onClose={() => setShowAccessModal(false)} maxWidth="400px">
@@ -448,14 +574,7 @@ export default function ClientsPage() {
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={labelStyle}>Email du client</label>
-                  <input
-                    type='email'
-                    value={accessEmail}
-                    onChange={e => setAccessEmail(e.target.value)}
-                    placeholder='contact@ehpad.fr'
-                    style={inputStyle}
-                    autoFocus
-                  />
+                  <input type='email' value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder='contact@ehpad.fr' style={inputStyle} autoFocus />
                   {selectedEtab.contact_email && accessEmail !== selectedEtab.contact_email && (
                     <button onClick={() => setAccessEmail(selectedEtab.contact_email)}
                       style={{ marginTop: '6px', fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font)' }}>
