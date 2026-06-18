@@ -1,25 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useFormule } from '@/lib/useFormule'
 import FormuleGate from '@/components/FormuleGate'
+import { createClient } from '@/lib/supabase'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
 export default function AssistantPage() {
   const { formule, role, can } = useFormule()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Bonjour ! Je suis l\'assistant MediTrack. Je peux vous aider sur la gestion de votre matériel médical, la conformité réglementaire, la traçabilité, ou toute question liée à votre parc d\'équipements. Comment puis-je vous aider ?'
-    }
-  ])
+  const [etablissementId, setEtablissementId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
 
-  async function handleSend() {
-    if (!input.trim() || loading) return
-    const userMsg: Message = { role: 'user', content: input.trim() }
+  const suggestions = role === 'admin' ? [
+    'Combien d\'équipements sont hors service ?',
+    'Quelles maintenances sont prévues ce mois ?',
+    'Quel établissement a le plus d\'alertes ?',
+    'Comment préparer un audit DDASS ?',
+  ] : [
+    'Quels sont mes équipements en maintenance ?',
+    'Quand est la prochaine révision ?',
+    'Comment signaler une panne ?',
+    'Quels documents faut-il pour un contrôle ?',
+  ]
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: prof } = await supabase.from('profiles').select('etablissement_id').eq('id', user.id).single()
+      setEtablissementId(prof?.etablissement_id || null)
+    }
+    loadUser()
+  }, [])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  async function handleSend(text?: string) {
+    const content = text || input.trim()
+    if (!content || loading) return
+    const userMsg: Message = { role: 'user', content }
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
@@ -27,12 +53,14 @@ export default function AssistantPage() {
 
     try {
       const response = await fetch('/api/assistant', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    messages: newMessages.map(m => ({ role: m.role, content: m.content }))
-  })
-})
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          role,
+          etablissement_id: etablissementId
+        })
+      })
 
       const data = await response.json()
       const assistantMsg: Message = {
@@ -40,7 +68,7 @@ export default function AssistantPage() {
         content: data.content?.[0]?.text || 'Désolé, je n\'ai pas pu générer une réponse.'
       }
       setMessages(prev => [...prev, assistantMsg])
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Une erreur est survenue. Veuillez réessayer.' }])
     }
     setLoading(false)
@@ -51,13 +79,13 @@ export default function AssistantPage() {
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 58px)', fontFamily: 'var(--font)' }}>
 
         {/* Header */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <i className="ti ti-sparkles" style={{ fontSize: '18px', color: '#fff' }} aria-hidden="true" />
           </div>
           <div>
             <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Assistant MediTrack</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Expert en gestion de matériel médical · Toujours disponible</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Connecté à vos données en temps réel</div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'var(--success-light)', borderRadius: '20px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} />
@@ -65,80 +93,92 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg)' }}>
+        {/* Zone centrale — suggestions ou messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-          {/* Suggestions initiales */}
-          {messages.length === 1 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px', marginBottom: '8px' }}>
-              {[
-                'Quels documents faut-il pour un contrôle ?',
-                'Comment optimiser la maintenance préventive ?',
-                'Quelles sont les obligations de traçabilité ?',
-                'Comment préparer un audit DDASS ?',
-              ].map(s => (
-                <button key={s} onClick={() => { setInput(s) }}
-                  style={{ padding: '10px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left', transition: 'all 0.1s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-light)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(26,86,219,0.3)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)' }}
-                >
-                  {s}
-                </button>
+          {messages.length === 0 ? (
+            /* Écran d'accueil avec suggestions */
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <i className="ti ti-sparkles" style={{ fontSize: '28px', color: '#fff' }} aria-hidden="true" />
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Assistant MediTrack</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', maxWidth: '360px' }}>
+                  J'ai accès à vos données en temps réel. Posez-moi une question sur votre parc, vos maintenances ou vos pannes.
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '520px' }}>
+                {suggestions.map(s => (
+                  <button key={s} onClick={() => handleSend(s)}
+                    style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left', lineHeight: '1.4', transition: 'all 0.1s' }}
+                    onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--accent-light)'; b.style.color = 'var(--accent)'; b.style.borderColor = 'rgba(26,86,219,0.3)' }}
+                    onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--surface)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border)' }}
+                  >
+                    <i className="ti ti-message-question" style={{ fontSize: '13px', marginRight: '6px', opacity: 0.5 }} aria-hidden="true" />
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Messages */
+            <>
+              {messages.map((msg, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  {msg.role === 'assistant' && (
+                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                      <i className="ti ti-sparkles" style={{ fontSize: '14px', color: '#fff' }} aria-hidden="true" />
+                    </div>
+                  )}
+                  <div style={{
+                    maxWidth: '70%', padding: '12px 16px',
+                    background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface)',
+                    color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
+                    borderRadius: msg.role === 'user' ? 'var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg)' : 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)',
+                    fontSize: '13px', lineHeight: '1.6',
+                    border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none',
+                    boxShadow: 'var(--shadow-sm)',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {msg.content}
+                  </div>
+                  {msg.role === 'user' && (
+                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px', fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>
+                      {role === 'admin' ? 'AD' : 'EP'}
+                    </div>
+                  )}
+                </div>
               ))}
-            </div>
-          )}
 
-          {messages.map((msg, i) => (
-            <div key={i} style={{ display: 'flex', gap: '10px', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              {msg.role === 'assistant' && (
-                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                  <i className="ti ti-sparkles" style={{ fontSize: '14px', color: '#fff' }} aria-hidden="true" />
+              {loading && (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className="ti ti-sparkles" style={{ fontSize: '14px', color: '#fff' }} aria-hidden="true" />
+                  </div>
+                  <div style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      {[0, 1, 2].map(i => (
+                        <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', animation: `bounce 1s ${i * 0.15}s infinite` }} />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
-              <div style={{
-                maxWidth: '70%', padding: '12px 16px',
-                background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface)',
-                color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
-                borderRadius: msg.role === 'user' ? 'var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg)' : 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)',
-                fontSize: '13px', lineHeight: '1.6',
-                border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none',
-                boxShadow: 'var(--shadow-sm)',
-                whiteSpace: 'pre-wrap'
-              }}>
-                {msg.content}
-              </div>
-              {msg.role === 'user' && (
-                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px', fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>
-                  {role === 'admin' ? 'AD' : 'EP'}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {loading && (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="ti ti-sparkles" style={{ fontSize: '14px', color: '#fff' }} aria-hidden="true" />
-              </div>
-              <div style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', animation: `bounce 1s ${i * 0.15}s infinite` }} />
-                  ))}
-                </div>
-              </div>
-            </div>
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
         {/* Input */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-              placeholder="Posez votre question sur la gestion de matériel médical... (Entrée pour envoyer)"
+              placeholder="Posez une question sur vos équipements, maintenances, pannes... (Entrée pour envoyer)"
               rows={1}
               style={{ flex: 1, padding: '11px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', resize: 'none', background: 'var(--surface-hover)', lineHeight: '1.5', maxHeight: '120px', overflowY: 'auto' }}
               onInput={e => {
@@ -147,13 +187,13 @@ export default function AssistantPage() {
                 t.style.height = Math.min(t.scrollHeight, 120) + 'px'
               }}
             />
-            <button onClick={handleSend} disabled={loading || !input.trim()}
+            <button onClick={() => handleSend()} disabled={loading || !input.trim()}
               style={{ width: '40px', height: '40px', background: loading || !input.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(26,86,219,0.3)', transition: 'all 0.1s' }}>
               <i className="ti ti-send" style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
             </button>
           </div>
           <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-            MediTrack AI · Spécialisé en gestion PSDM · Shift+Entrée pour nouvelle ligne
+            MediTrack AI · Connecté à vos données · Shift+Entrée pour nouvelle ligne
           </div>
         </div>
 

@@ -417,7 +417,7 @@ export default function MaterielClientPage({ etablissementId }: { etablissementI
                           localisation: selected.localisation,
                           etablissement: etab?.nom || '',
                           description: pannDesc,
-                          contact_email: 'aamine3.benyoucef@gmail.com'
+                          contact_email: 'hassanfirdaouss@yahoo.com'
                         })
                       })
 

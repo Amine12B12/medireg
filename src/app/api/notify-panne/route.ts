@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     await resend.emails.send({
       from: 'MediTrack <alertes@meditrack-app.fr>',
-      to: ['aamine3.benyoucef@gmail.com'],
+      to: ['hassanfirdaouss@yahoo.com'],
       subject: `🚨 Panne signalée — ${equipement}`,
       html: `
         <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background: #F7F7F5;">

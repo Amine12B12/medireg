@@ -23,9 +23,12 @@ export default function LivraisonsPage() {
   async function load() {
     const { data: l } = await supabase
       .from('livraisons')
-      .select('*, equipements(reference, designation), etablissements(nom, ville)')
+      .select('*, equipements(reference, designation, date_installation, date_achat, etablissement_id), etablissements(nom, ville)')
       .order('date_prevue', { ascending: true })
-    const { data: e } = await supabase.from('equipements').select('id, reference, designation').order('designation')
+    const { data: e } = await supabase
+      .from('equipements')
+      .select('id, reference, designation, etablissement_id, date_installation, date_achat')
+      .order('designation')
     const { data: etabs } = await supabase.from('etablissements').select('id, nom').order('nom')
     setLivraisons(l || [])
     setEquipements(e || [])
@@ -34,6 +37,22 @@ export default function LivraisonsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  function handleEquipementChange(equipId: string) {
+    const eq = equipements.find(e => e.id === equipId)
+    if (!eq) {
+      setForm(p => ({ ...p, equipement_id: equipId }))
+      return
+    }
+    setForm(p => ({
+      ...p,
+      equipement_id: equipId,
+      // Pré-remplit l'établissement si l'équipement est déjà affecté
+      etablissement_id: eq.etablissement_id || p.etablissement_id,
+      // Pré-remplit la date depuis date_installation ou date_achat
+      date_prevue: eq.date_installation || eq.date_achat || p.date_prevue
+    }))
+  }
 
   async function handleAdd() {
     if (!form.equipement_id || !form.etablissement_id) return
@@ -47,6 +66,13 @@ export default function LivraisonsPage() {
     if (form.date_prevue) payload.date_prevue = form.date_prevue
     const { error } = await supabase.from('livraisons').insert([payload])
     if (error) console.error('Erreur livraison:', error)
+
+    // Met à jour l'établissement_id de l'équipement si différent
+    const eq = equipements.find(e => e.id === form.equipement_id)
+    if (eq && eq.etablissement_id !== form.etablissement_id) {
+      await supabase.from('equipements').update({ etablissement_id: form.etablissement_id }).eq('id', form.equipement_id)
+    }
+
     setShowModal(false)
     setForm({ equipement_id: '', etablissement_id: '', date_prevue: '', statut: 'planifie', notes: '' })
     setSaving(false)
@@ -77,7 +103,6 @@ export default function LivraisonsPage() {
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} livraison{filtered.length > 1 ? 's' : ''}</div>
         <button onClick={() => setShowModal(true)}
@@ -87,7 +112,6 @@ export default function LivraisonsPage() {
         </button>
       </div>
 
-      {/* Filtres */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {filterBtn('Toutes', filterStatut === 'tous', () => setFilterStatut('tous'))}
         {filterBtn('Planifié', filterStatut === 'planifie', () => setFilterStatut('planifie'))}
@@ -95,7 +119,6 @@ export default function LivraisonsPage() {
         {filterBtn('Livré', filterStatut === 'livre', () => setFilterStatut('livre'))}
       </div>
 
-      {/* Liste */}
       {filtered.length === 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '48px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -143,6 +166,12 @@ export default function LivraisonsPage() {
                             {(l.etablissements as any)?.ville}
                           </span>
                         )}
+                        {date && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-calendar" style={{ fontSize: '13px' }} aria-hidden="true" />
+                            {date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', flexShrink: 0 }}>{st.label}</span>
@@ -177,7 +206,6 @@ export default function LivraisonsPage() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
@@ -192,10 +220,16 @@ export default function LivraisonsPage() {
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={labelStyle}>Équipement *</label>
-                <select value={form.equipement_id} onChange={e => setForm(p => ({ ...p, equipement_id: e.target.value }))} style={inputStyle}>
+                <select value={form.equipement_id} onChange={e => handleEquipementChange(e.target.value)} style={inputStyle}>
                   <option value=''>Sélectionner un équipement...</option>
                   {equipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
                 </select>
+                {form.equipement_id && equipements.find(e => e.id === form.equipement_id)?.etablissement_id && (
+                  <div style={{ fontSize: '11px', color: 'var(--success)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="ti ti-info-circle" style={{ fontSize: '12px' }} aria-hidden="true" />
+                    Établissement et date pré-remplis depuis la fiche matériel
+                  </div>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Établissement *</label>
