@@ -9,12 +9,10 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Charge les données réelles selon le rôle
   let contextData = ''
 
   try {
     if (role === 'admin') {
-      // Admin voit tout
       const { data: equipements } = await supabaseAdmin
         .from('equipements')
         .select('reference, designation, categorie, statut, localisation, date_revision, fabricant, modele, etablissements(nom)')
@@ -47,14 +45,13 @@ ${etablissements?.map(e => `- ${e.nom} (${e.type}, ${e.ville || '—'}) — Form
 PARC MATÉRIEL (${equipements?.length || 0} équipements) :
 ${equipements?.map(e => `- [${e.statut.toUpperCase()}] ${e.designation} (${e.reference}) — ${(e.etablissements as any)?.nom || '—'} — Localisation: ${e.localisation || '—'} — Révision: ${e.date_revision || 'non définie'}`).join('\n') || 'Aucun'}
 
-MAINTENANCES À VENIR (${maintenances?.length || 0}) :
+MAINTENANCES (${maintenances?.length || 0}) :
 ${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Préventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} (${(m.equipements as any)?.etablissements?.nom || '—'}) — Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non définie'} — Notes: ${m.notes || '—'}`).join('\n') || 'Aucune'}
 
 PANNES RÉCENTES (${pannes?.length || 0}) :
 ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} (${(p.equipements as any)?.etablissements?.nom || '—'}) — ${new Date(p.created_at).toLocaleDateString('fr-FR')} — ${p.description}`).join('\n') || 'Aucune'}
 `
     } else if (role === 'client' && etablissement_id) {
-      // Client voit seulement son établissement
       const { data: etab } = await supabaseAdmin
         .from('etablissements')
         .select('nom, type, ville, formule')
@@ -113,16 +110,20 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} — $
       system: `Tu es l'assistant MediTrack, un expert en gestion de matériel médical à domicile (PSDM).
 Tu aides les prestataires de santé et les établissements clients à gérer leur parc d'équipements médicaux.
 
-${contextData ? `Tu as accès aux données réelles de MediTrack ci-dessous. Utilise-les pour répondre aux questions sur le parc, les maintenances, les pannes et les établissements. Si l'utilisateur demande des infos sur ses équipements, réponds avec les vraies données.
+${contextData ? `Tu as accès aux données réelles de MediTrack ci-dessous. Utilise-les pour répondre aux questions sur le parc, les maintenances, les pannes et les établissements.
 
 ${contextData}` : ''}
 
-RÈGLES :
-- Tu réponds en français, de façon concise et professionnelle
-- Tu utilises les données réelles fournies ci-dessus pour répondre aux questions
+RÈGLES DE FORMATAGE IMPORTANTES :
+- Réponds en français, de façon concise et professionnelle
+- Utilise des listes à puces avec des tirets (-) pour les énumérations
+- Utilise des emojis pour les statuts : ✅ En service, 🔴 Hors service, 🟠 Maintenance, 🔧 Préventive
+- N'utilise JAMAIS de tableaux Markdown avec des | 
+- N'utilise pas de --- comme séparateurs
+- Mets en gras les informations importantes avec **texte**
+- Garde les réponses claires et lisibles
 - Si une info n'est pas dans les données, dis-le clairement
-- Tu ne fournis pas de conseils médicaux aux patients
-- Tu peux aider à rédiger des procédures, préparer des audits, analyser la conformité`,
+- Tu ne fournis pas de conseils médicaux aux patients`,
       messages
     })
   })

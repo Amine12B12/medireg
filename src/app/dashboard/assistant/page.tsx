@@ -7,6 +7,22 @@ import { createClient } from '@/lib/supabase'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
+function renderMarkdown(text: string) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^### (.*)/gm, '<div style="font-size:13px;font-weight:700;margin:10px 0 4px">$1</div>')
+    .replace(/^## (.*)/gm, '<div style="font-size:14px;font-weight:700;margin:10px 0 4px">$1</div>')
+    .replace(/^# (.*)/gm, '<div style="font-size:15px;font-weight:700;margin:10px 0 4px">$1</div>')
+    .replace(/^- (.*)/gm, '<div style="display:flex;gap:6px;margin:3px 0"><span style="flex-shrink:0">•</span><span>$1</span></div>')
+    .replace(/^\* (.*)/gm, '<div style="display:flex;gap:6px;margin:3px 0"><span style="flex-shrink:0">•</span><span>$1</span></div>')
+    .replace(/^\d+\. (.*)/gm, '<div style="display:flex;gap:6px;margin:3px 0"><span>$1</span></div>')
+    .replace(/\|.*\|/g, '') // supprime les tableaux markdown
+    .replace(/^-{3,}$/gm, '<hr style="border:none;border-top:1px solid #eee;margin:8px 0">')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>')
+}
+
 export default function AssistantPage() {
   const { formule, role, can } = useFormule()
   const [etablissementId, setEtablissementId] = useState<string | null>(null)
@@ -93,11 +109,10 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        {/* Zone centrale — suggestions ou messages */}
+        {/* Zone centrale */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
           {messages.length === 0 ? (
-            /* Écran d'accueil avec suggestions */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -108,7 +123,6 @@ export default function AssistantPage() {
                   J'ai accès à vos données en temps réel. Posez-moi une question sur votre parc, vos maintenances ou vos pannes.
                 </div>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '520px' }}>
                 {suggestions.map(s => (
                   <button key={s} onClick={() => handleSend(s)}
@@ -123,7 +137,6 @@ export default function AssistantPage() {
               </div>
             </div>
           ) : (
-            /* Messages */
             <>
               {messages.map((msg, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
@@ -140,9 +153,12 @@ export default function AssistantPage() {
                     fontSize: '13px', lineHeight: '1.6',
                     border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none',
                     boxShadow: 'var(--shadow-sm)',
-                    whiteSpace: 'pre-wrap'
-                  }}>
-                    {msg.content}
+                  }}
+                    dangerouslySetInnerHTML={msg.role === 'assistant' ? {
+                      __html: renderMarkdown(msg.content)
+                    } : undefined}
+                  >
+                    {msg.role === 'user' ? msg.content : undefined}
                   </div>
                   {msg.role === 'user' && (
                     <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px', fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>
