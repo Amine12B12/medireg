@@ -252,55 +252,83 @@ export default function MaterielPage() {
   }
 
   async function handleAddEquip() {
-    if (!addForm.designation) return
-    setAddSaving(true)
-    setAddError('')
+  if (!addForm.designation) return
+  setAddSaving(true)
+  setAddError('')
 
-    if (addForm.numero_serie) {
-      const { data: existing } = await supabase
-        .from('equipements')
-        .select('id, reference, designation')
-        .eq('numero_serie', addForm.numero_serie)
-        .maybeSingle()
-      if (existing) {
-        setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
-        setAddSaving(false)
-        return
-      }
+  if (addForm.numero_serie) {
+    const { data: existing } = await supabase
+      .from('equipements')
+      .select('id, reference, designation')
+      .eq('numero_serie', addForm.numero_serie)
+      .maybeSingle()
+    if (existing) {
+      setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
+      setAddSaving(false)
+      return
     }
-
-    if (addForm.reference) {
-      const { data: existingRef } = await supabase
-        .from('equipements')
-        .select('id, designation')
-        .eq('reference', addForm.reference)
-        .maybeSingle()
-      if (existingRef) {
-        setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
-        setAddSaving(false)
-        return
-      }
-    }
-
-    const payload = {
-      ...addForm,
-      etablissement_id: addForm.etablissement_id || null
-    }
-    await supabase.from('equipements').insert([payload])
-    setShowAddModal(false)
-    setAddForm({
-      reference: '', designation: '', categorie: '', fabricant: '',
-      modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
-      statut: 'en_service', localisation: '', service: '', etage: '',
-      responsable_referent: '', fournisseur: '', date_achat: '',
-      date_mes: '', date_revision: '', fin_garantie: '',
-      date_installation: '', date_retrait: '', motif_retrait: '',
-      commentaires: '', etablissement_id: ''
-    })
-    setAddError('')
-    setAddSaving(false)
-    load()
   }
+
+  if (addForm.reference) {
+    const { data: existingRef } = await supabase
+      .from('equipements')
+      .select('id, designation')
+      .eq('reference', addForm.reference)
+      .maybeSingle()
+    if (existingRef) {
+      setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
+      setAddSaving(false)
+      return
+    }
+  }
+
+  const payload = {
+    designation: addForm.designation,
+    reference: addForm.reference || null,
+    categorie: addForm.categorie || null,
+    fabricant: addForm.fabricant || null,
+    modele: addForm.modele || null,
+    numero_serie: addForm.numero_serie || null,
+    numero_lot: addForm.numero_lot || null,
+    mode_dispo: addForm.mode_dispo || 'location',
+    statut: addForm.statut || 'en_service',
+    localisation: addForm.localisation || null,
+    service: addForm.service || null,
+    etage: addForm.etage || null,
+    responsable_referent: addForm.responsable_referent || null,
+    fournisseur: addForm.fournisseur || null,
+    date_achat: addForm.date_achat || null,
+    date_mes: addForm.date_mes || null,
+    date_revision: addForm.date_revision || null,
+    fin_garantie: addForm.fin_garantie || null,
+    date_installation: addForm.date_installation || null,
+    date_retrait: addForm.date_retrait || null,
+    motif_retrait: addForm.motif_retrait || null,
+    commentaires: addForm.commentaires || null,
+    etablissement_id: addForm.etablissement_id || null
+  }
+
+  const { error } = await supabase.from('equipements').insert([payload])
+  if (error) {
+    setAddError(`Erreur : ${error.message}`)
+    setAddSaving(false)
+    return
+  }
+
+  setShowAddModal(false)
+  setAddForm({
+    reference: '', designation: '', categorie: '', fabricant: '',
+    modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
+    statut: 'en_service', localisation: '', service: '', etage: '',
+    responsable_referent: '', fournisseur: '', date_achat: '',
+    date_mes: '', date_revision: '', fin_garantie: '',
+    date_installation: '', date_retrait: '', motif_retrait: '',
+    commentaires: '', etablissement_id: ''
+  })
+  setAddError('')
+  setAddSaving(false)
+  load()
+}
 
   async function handleAddCat() {
     if (!newCat.trim()) return
