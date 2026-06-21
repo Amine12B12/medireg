@@ -67,7 +67,6 @@ function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[]
         </div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 1 — Identification du matériel</div>
       <div class="grid">
@@ -84,7 +83,6 @@ function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[]
         ${eq.motif_retrait ? `<div class="field"><div class="field-label">Motif retrait</div><div class="field-value">${eq.motif_retrait}</div></div>` : ''}
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 2 — Localisation</div>
       <div class="grid">
@@ -97,7 +95,6 @@ function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[]
         <div class="field"><div class="field-label">Date installation</div><div class="field-value">${eq.date_installation || '—'}</div></div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 3 — Fournisseur / Origine</div>
       <div class="grid">
@@ -107,41 +104,25 @@ function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[]
         <div class="field"><div class="field-label">Prochaine révision</div><div class="field-value">${eq.date_revision || '—'}</div></div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 4 — Documents associés</div>
-      ${docs.length > 0 ? docs.map(d => `
-        <div class="doc-item">
-          <a href="${d.url}" target="_blank" style="color:#1A56DB;text-decoration:none;">📄 ${d.nom}</a>
-        </div>
-      `).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun document associé</div>`}
+      ${docs.length > 0 ? docs.map(d => `<div class="doc-item"><a href="${d.url}" target="_blank" style="color:#1A56DB;text-decoration:none;">📄 ${d.nom}</a></div>`).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun document associé</div>`}
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 5 — Historique des déplacements</div>
-      ${historique.length > 0 ? historique.map(h => `
-        <div class="hist-item">
-          <span style="color:#999;text-decoration:line-through;">${h.ancienne_localisation || '—'}</span>
-          <span style="color:#999;">→</span>
-          <span style="font-weight:500;">${h.nouvelle_localisation || '—'}</span>
-          <span style="margin-left:auto;color:#999;font-size:10px;">${new Date(h.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-        </div>
-      `).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun déplacement enregistré</div>`}
+      ${historique.length > 0 ? historique.map(h => `<div class="hist-item"><span style="color:#999;text-decoration:line-through;">${h.ancienne_localisation || '—'}</span><span style="color:#999;">→</span><span style="font-weight:500;">${h.nouvelle_localisation || '—'}</span><span style="margin-left:auto;color:#999;font-size:10px;">${new Date(h.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>`).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun déplacement enregistré</div>`}
     </div>
-
     <div class="section">
       <div class="section-title">Bloc 6 — Commentaires / Observations</div>
       <div style="min-height:60px;background:#f9f9f9;border-radius:5px;padding:10px;font-size:12px;color:#1a1a1a;">
         ${eq.commentaires || '<span style="color:#ccc;">Aucun commentaire</span>'}
       </div>
     </div>
-
     <div class="footer">
       <span>MediTrack · Plateforme de gestion PSDM · www.meditrack-app.fr</span>
       <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
     </div>
   </body></html>`
-
   const w = window.open('', '_blank')
   if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { w.print() }, 500) }
 }
@@ -220,9 +201,6 @@ export default function MaterielPage() {
     setEtablissements(etabs || [])
     setCategoriesFull(cats || [])
     setCategories((cats || []).map((c: any) => c.nom))
-    if (etabs && etabs.length > 0 && !addForm.etablissement_id) {
-      setAddForm(p => ({ ...p, etablissement_id: etabs[0].id }))
-    }
     setLoading(false)
   }
 
@@ -274,53 +252,55 @@ export default function MaterielPage() {
   }
 
   async function handleAddEquip() {
-  if (!addForm.reference || !addForm.designation) return
-  setAddSaving(true)
-  setAddError('')
+    if (!addForm.reference || !addForm.designation) return
+    setAddSaving(true)
+    setAddError('')
 
-  // Contrôle doublon numéro de série
-  if (addForm.numero_serie) {
-    const { data: existing } = await supabase
-      .from('equipements')
-      .select('id, reference, designation')
-      .eq('numero_serie', addForm.numero_serie)
-      .single()
-    if (existing) {
-      setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
-      setAddSaving(false)
-      return
+    if (addForm.numero_serie) {
+      const { data: existing } = await supabase
+        .from('equipements')
+        .select('id, reference, designation')
+        .eq('numero_serie', addForm.numero_serie)
+        .maybeSingle()
+      if (existing) {
+        setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
+        setAddSaving(false)
+        return
+      }
     }
-  }
 
-  // Contrôle doublon référence
-  if (addForm.reference) {
-    const { data: existingRef } = await supabase
-      .from('equipements')
-      .select('id, designation')
-      .eq('reference', addForm.reference)
-      .single()
-    if (existingRef) {
-      setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
-      setAddSaving(false)
-      return
+    if (addForm.reference) {
+      const { data: existingRef } = await supabase
+        .from('equipements')
+        .select('id, designation')
+        .eq('reference', addForm.reference)
+        .maybeSingle()
+      if (existingRef) {
+        setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
+        setAddSaving(false)
+        return
+      }
     }
-  }
 
-  await supabase.from('equipements').insert([addForm])
-  setShowAddModal(false)
-  setAddForm({
-    reference: '', designation: '', categorie: '', fabricant: '',
-    modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
-    statut: 'en_service', localisation: '', service: '', etage: '',
-    responsable_referent: '', fournisseur: '', date_achat: '',
-    date_mes: '', date_revision: '', fin_garantie: '',
-    date_installation: '', date_retrait: '', motif_retrait: '',
-    commentaires: '', etablissement_id: etablissements[0]?.id || ''
-  })
-  setAddError('')
-  setAddSaving(false)
-  load()
-}
+    const payload = {
+      ...addForm,
+      etablissement_id: addForm.etablissement_id || null
+    }
+    await supabase.from('equipements').insert([payload])
+    setShowAddModal(false)
+    setAddForm({
+      reference: '', designation: '', categorie: '', fabricant: '',
+      modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
+      statut: 'en_service', localisation: '', service: '', etage: '',
+      responsable_referent: '', fournisseur: '', date_achat: '',
+      date_mes: '', date_revision: '', fin_garantie: '',
+      date_installation: '', date_retrait: '', motif_retrait: '',
+      commentaires: '', etablissement_id: ''
+    })
+    setAddError('')
+    setAddSaving(false)
+    load()
+  }
 
   async function handleAddCat() {
     if (!newCat.trim()) return
@@ -377,7 +357,7 @@ export default function MaterielPage() {
         date_mes: row.date_mes || null, date_revision: row.date_revision || null,
         fin_garantie: row.fin_garantie || null, date_installation: row.date_installation || null,
         commentaires: row.commentaires || null,
-        etablissement_id: row.etablissement_id || etablissements[0]?.id
+        etablissement_id: row.etablissement_id || null
       }], { onConflict: 'reference' })
       if (error) errors++; else success++
     }
@@ -402,7 +382,6 @@ export default function MaterielPage() {
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* Header */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''}</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -430,14 +409,13 @@ export default function MaterielPage() {
           >
             <i className="ti ti-tags" style={{ fontSize: '14px' }} aria-hidden="true" />Catégories
           </button>
-          <button onClick={() => setShowAddModal(true)}
+          <button onClick={() => { setShowAddModal(true); setAddError('') }}
             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
             <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />Ajouter
           </button>
         </div>
       </div>
 
-      {/* Filtres */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
           <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
@@ -477,7 +455,6 @@ export default function MaterielPage() {
         )}
       </div>
 
-      {/* Table */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -510,7 +487,7 @@ export default function MaterielPage() {
                   <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{eq.designation}</td>
                   <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{eq.categorie || '—'}</td>
                   <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{eq.fabricant} {eq.modele}</td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{etab?.nom || '—'}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{etab?.nom || <span style={{ color: 'var(--warning)', fontStyle: 'italic' }}>Non affecté</span>}</td>
                   <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{eq.localisation || '—'}</td>
                   <td style={{ padding: '12px 14px' }}>
                     <span style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '500', border: '1px solid var(--border)' }}>{modeLabel(eq.mode_dispo)}</span>
@@ -529,12 +506,10 @@ export default function MaterielPage() {
         </table>
       </div>
 
-      {/* FICHE MODALE */}
       {selected && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
-
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -542,7 +517,7 @@ export default function MaterielPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{selected.designation}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{selected.reference} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{selected.reference} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom || 'Non affecté'}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -565,20 +540,10 @@ export default function MaterielPage() {
                 {(() => { const st = statutStyle(selected.statut); return <span style={{ background: st.bg, color: st.color, padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>{st.label}</span> })()}
               </div>
 
-              {/* Bloc 1 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 1 — Identification</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[
-                    ['Référence', selected.reference],
-                    ['Catégorie', selected.categorie || '—'],
-                    ['N° de série', selected.numero_serie || '—'],
-                    ['N° de lot', selected.numero_lot || '—'],
-                    ['Fabricant', selected.fabricant || '—'],
-                    ['Modèle', selected.modele || '—'],
-                    ['Fin de garantie', selected.fin_garantie || '—'],
-                    ['Date MES', selected.date_mes || '—'],
-                  ].map(([label, value]) => (
+                  {[['Référence', selected.reference], ['Catégorie', selected.categorie || '—'], ['N° de série', selected.numero_serie || '—'], ['N° de lot', selected.numero_lot || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—'], ['Fin de garantie', selected.fin_garantie || '—'], ['Date MES', selected.date_mes || '—']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -587,16 +552,10 @@ export default function MaterielPage() {
                 </div>
               </div>
 
-              {/* Bloc 2 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 2 — Localisation</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[
-                    ['Service', selected.service || '—'],
-                    ['Étage', selected.etage || '—'],
-                    ['Chambre / Zone', selected.localisation || '—'],
-                    ['Responsable', selected.responsable_referent || '—'],
-                  ].map(([label, value]) => (
+                  {[['Service', selected.service || '—'], ['Étage', selected.etage || '—'], ['Chambre / Zone', selected.localisation || '—'], ['Responsable', selected.responsable_referent || '—']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -605,17 +564,10 @@ export default function MaterielPage() {
                 </div>
               </div>
 
-              {/* Bloc 3 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 3 — Fournisseur / Contrat</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[
-                    ['Fournisseur', selected.fournisseur || '—'],
-                    ['Mode', modeLabel(selected.mode_dispo)],
-                    ['Date livraison', selected.date_achat || '—'],
-                    ['Date installation', selected.date_installation || '—'],
-                    ['Prochaine révision', selected.date_revision || '—'],
-                  ].map(([label, value]) => (
+                  {[['Fournisseur', selected.fournisseur || '—'], ['Mode', modeLabel(selected.mode_dispo)], ['Date livraison', selected.date_achat || '—'], ['Date installation', selected.date_installation || '—'], ['Prochaine révision', selected.date_revision || '—']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -624,7 +576,6 @@ export default function MaterielPage() {
                 </div>
               </div>
 
-              {/* Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 4 — Documents</div>
@@ -646,26 +597,22 @@ export default function MaterielPage() {
                     <a href={doc.url} target='_blank' rel='noreferrer' style={{ color: 'var(--text-tertiary)', display: 'flex' }}>
                       <i className="ti ti-external-link" style={{ fontSize: '13px' }} aria-hidden="true" />
                     </a>
-                    <button onClick={() => handleDeleteDoc(doc.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)', display: 'flex' }}
+                    <button onClick={() => handleDeleteDoc(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)', display: 'flex' }}
                       onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}
-                    >
+                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}>
                       <i className="ti ti-trash" style={{ fontSize: '14px' }} aria-hidden="true" />
                     </button>
                   </div>
                 ))}
               </div>
 
-              {/* Commentaires */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 6 — Commentaires</div>
                   {!editingCommentaire && (
                     <button onClick={() => { setEditingCommentaire(true); setNewCommentaire(selected.commentaires || '') }}
                       style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-edit" style={{ fontSize: '13px' }} aria-hidden="true" />
-                      Modifier
+                      <i className="ti ti-edit" style={{ fontSize: '13px' }} aria-hidden="true" />Modifier
                     </button>
                   )}
                 </div>
@@ -699,7 +646,6 @@ export default function MaterielPage() {
                 )}
               </div>
 
-              {/* Panne */}
               <div>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Signaler une panne</div>
                 {panneSuccess ? (
@@ -737,14 +683,13 @@ export default function MaterielPage() {
         </div>
       )}
 
-      {/* MODAL AJOUT */}
       {showAddModal && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setShowAddModal(false); setAddError('') } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Ajouter un équipement</div>
-              <button onClick={() => setShowAddModal(false)}
+              <button onClick={() => { setShowAddModal(false); setAddError('') }}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
@@ -752,7 +697,6 @@ export default function MaterielPage() {
             <div style={{ padding: '20px 24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
 
-                {/* BLOC 1 */}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 — Identification</div>
                 </div>
@@ -809,16 +753,24 @@ export default function MaterielPage() {
                   </select>
                 </div>
 
-                {/* BLOC 2 */}
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 — Localisation</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Établissement</label>
-                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))} style={inputStyle}>
-                    <option value=''>Sélectionner...</option>
+                  <label style={{ ...labelStyle, color: !addForm.etablissement_id ? 'var(--warning)' : 'var(--text-secondary)' }}>
+                    Établissement — sélectionner pour que le client voit le matériel
+                  </label>
+                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))}
+                    style={{ ...inputStyle, borderColor: !addForm.etablissement_id ? 'var(--warning)' : 'var(--border)' }}>
+                    <option value=''>Sélectionner un établissement...</option>
                     {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
                   </select>
+                  {!addForm.etablissement_id && (
+                    <div style={{ fontSize: '11px', color: 'var(--warning)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="ti ti-alert-triangle" style={{ fontSize: '12px' }} aria-hidden="true" />
+                      Sans établissement, l'équipement n'apparaîtra pas chez le client. Vous pourrez l'affecter plus tard via la page Clients.
+                    </div>
+                  )}
                 </div>
                 {[
                   { label: 'Service', key: 'service', placeholder: 'Soins intensifs' },
@@ -833,7 +785,6 @@ export default function MaterielPage() {
                   </div>
                 ))}
 
-                {/* BLOC 3 */}
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 — Fournisseur / Contrat</div>
                 </div>
@@ -858,7 +809,6 @@ export default function MaterielPage() {
                   <input type='date' value={addForm.date_revision} onChange={e => setAddForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} />
                 </div>
 
-                {/* BLOC 6 — Commentaires */}
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 — Commentaires</div>
                 </div>
@@ -869,13 +819,16 @@ export default function MaterielPage() {
                     style={{ ...inputStyle, resize: 'none' }} />
                 </div>
               </div>
+
               {addError && (
-                <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '10px' }}>
-                  ⚠️ {addError}
-                  </div>
-                )}
+                <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="ti ti-alert-circle" style={{ fontSize: '14px', flexShrink: 0 }} aria-hidden="true" />
+                  {addError}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => setShowAddModal(false)}
+                <button onClick={() => { setShowAddModal(false); setAddError('') }}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>
@@ -889,7 +842,6 @@ export default function MaterielPage() {
         </div>
       )}
 
-      {/* MODAL CATEGORIES */}
       {showCatModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
@@ -923,8 +875,7 @@ export default function MaterielPage() {
                     <button onClick={() => handleDeleteCat(cat.id)} disabled={catDeleting === cat.id}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-tertiary)', display: 'flex' }}
                       onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}
-                    >
+                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}>
                       <i className="ti ti-trash" style={{ fontSize: '15px' }} aria-hidden="true" />
                     </button>
                   </div>
