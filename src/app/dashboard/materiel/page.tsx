@@ -252,7 +252,7 @@ export default function MaterielPage() {
   }
 
   async function handleAddEquip() {
-    if (!addForm.reference || !addForm.designation) return
+    if (!addForm.designation) return
     setAddSaving(true)
     setAddError('')
 
@@ -832,8 +832,8 @@ export default function MaterielPage() {
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>
-                <button onClick={handleAddEquip} disabled={addSaving || !addForm.reference || !addForm.designation}
-                  style={{ flex: 1, padding: '11px', background: addSaving || !addForm.reference || !addForm.designation ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: addSaving || !addForm.reference || !addForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
+                <button onClick={handleAddEquip} disabled={addSaving || !addForm.designation}
+                  style={{ flex: 1, padding: '11px', background: addSaving || !addForm.designation ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: addSaving || !addForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
                   {addSaving ? 'Enregistrement...' : 'Ajouter l\'équipement'}
                 </button>
               </div>
