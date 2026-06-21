@@ -23,11 +23,11 @@ export default function LivraisonsPage() {
   async function load() {
     const { data: l } = await supabase
       .from('livraisons')
-      .select('*, equipements(reference, designation, date_installation, date_achat, etablissement_id), etablissements(nom, ville)')
+      .select('*, equipements(reference, designation, date_installation, date_achat, date_mes, etablissement_id), etablissements(nom, ville)')
       .order('date_prevue', { ascending: true })
     const { data: e } = await supabase
       .from('equipements')
-      .select('id, reference, designation, etablissement_id, date_installation, date_achat')
+      .select('id, reference, designation, etablissement_id, date_installation, date_achat, date_mes, date_retrait')
       .order('designation')
     const { data: etabs } = await supabase.from('etablissements').select('id, nom').order('nom')
     setLivraisons(l || [])
@@ -47,10 +47,8 @@ export default function LivraisonsPage() {
     setForm(p => ({
       ...p,
       equipement_id: equipId,
-      // Pré-remplit l'établissement si l'équipement est déjà affecté
       etablissement_id: eq.etablissement_id || p.etablissement_id,
-      // Pré-remplit la date depuis date_installation ou date_achat
-      date_prevue: eq.date_installation || eq.date_achat || p.date_prevue
+      date_prevue: eq.date_installation || eq.date_achat || eq.date_mes || p.date_prevue
     }))
   }
 
@@ -67,7 +65,6 @@ export default function LivraisonsPage() {
     const { error } = await supabase.from('livraisons').insert([payload])
     if (error) console.error('Erreur livraison:', error)
 
-    // Met à jour l'établissement_id de l'équipement si différent
     const eq = equipements.find(e => e.id === form.equipement_id)
     if (eq && eq.etablissement_id !== form.etablissement_id) {
       await supabase.from('equipements').update({ etablissement_id: form.etablissement_id }).eq('id', form.equipement_id)
@@ -244,6 +241,12 @@ export default function LivraisonsPage() {
                   <input type='date' value={form.date_prevue}
                     onChange={e => setForm(p => ({ ...p, date_prevue: e.target.value }))}
                     style={inputStyle} />
+                  {form.equipement_id && form.date_prevue && (
+                    <div style={{ fontSize: '11px', color: 'var(--success)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="ti ti-info-circle" style={{ fontSize: '12px' }} aria-hidden="true" />
+                      Pré-remplie depuis la fiche matériel
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={labelStyle}>Statut</label>
