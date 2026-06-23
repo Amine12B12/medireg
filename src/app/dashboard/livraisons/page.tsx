@@ -81,9 +81,26 @@ export default function LivraisonsPage() {
   }
 
   async function updateStatut(id: string, statut: string) {
-    await supabase.from('livraisons').update({ statut }).eq('id', id)
-    load()
+  await supabase.from('livraisons').update({ statut }).eq('id', id)
+
+  // Quand livré → équipement passe En service
+  if (statut === 'livre') {
+    const livraison = livraisons.find(l => l.id === id)
+    if (livraison?.equipement_id) {
+      await supabase.from('equipements').update({ statut: 'en_service' }).eq('id', livraison.equipement_id)
+    }
   }
+
+  // Quand en cours → équipement passe En préparation
+  if (statut === 'en_cours') {
+    const livraison = livraisons.find(l => l.id === id)
+    if (livraison?.equipement_id) {
+      await supabase.from('equipements').update({ statut: 'en_preparation' }).eq('id', livraison.equipement_id)
+    }
+  }
+
+  load()
+}
 
   const statutStyle = (s: string) => {
     if (s === 'planifie') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'Planifié', icon: 'ti-calendar' }
