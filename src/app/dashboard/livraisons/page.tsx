@@ -11,6 +11,8 @@ export default function LivraisonsPage() {
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [filterStatut, setFilterStatut] = useState('tous')
+  const [searchEquip, setSearchEquip] = useState('')
+  const [searchEtab, setSearchEtab] = useState('')
   const [form, setForm] = useState({
     equipement_id: '', etablissement_id: '',
     date_prevue: '', statut: 'planifie', notes: ''
@@ -72,6 +74,8 @@ export default function LivraisonsPage() {
 
     setShowModal(false)
     setForm({ equipement_id: '', etablissement_id: '', date_prevue: '', statut: 'planifie', notes: '' })
+    setSearchEquip('')
+    setSearchEtab('')
     setSaving(false)
     load()
   }
@@ -94,6 +98,12 @@ export default function LivraisonsPage() {
   )
 
   const filtered = livraisons.filter(l => filterStatut === 'tous' || l.statut === filterStatut)
+  const equipFiltered = equipements.filter(e =>
+    `${e.reference || ''} ${e.designation}`.toLowerCase().includes(searchEquip.toLowerCase())
+  )
+  const etabFiltered = etablissements.filter(e =>
+    e.nom.toLowerCase().includes(searchEtab.toLowerCase())
+  )
 
   if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
@@ -102,7 +112,7 @@ export default function LivraisonsPage() {
 
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} livraison{filtered.length > 1 ? 's' : ''}</div>
-        <button onClick={() => setShowModal(true)}
+        <button onClick={() => { setShowModal(true); setSearchEquip(''); setSearchEtab('') }}
           style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
           Planifier une livraison
@@ -131,7 +141,6 @@ export default function LivraisonsPage() {
             const date = l.date_prevue ? new Date(l.date_prevue) : null
             return (
               <div key={l.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: '14px', boxShadow: 'var(--shadow-sm)', borderLeft: `3px solid ${st.color}` }}>
-
                 {date ? (
                   <div style={{ width: '48px', flexShrink: 0, textAlign: 'center', background: st.bg, borderRadius: 'var(--radius-md)', padding: '8px 4px' }}>
                     <div style={{ fontSize: '20px', fontWeight: '700', color: st.color, lineHeight: 1 }}>{date.getDate()}</div>
@@ -144,7 +153,6 @@ export default function LivraisonsPage() {
                     <i className={`ti ${st.icon}`} style={{ fontSize: '20px', color: st.color }} aria-hidden="true" />
                   </div>
                 )}
-
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
                     <div>
@@ -183,15 +191,13 @@ export default function LivraisonsPage() {
                       {l.statut === 'planifie' && (
                         <button onClick={() => updateStatut(l.id, 'en_cours')}
                           style={{ padding: '6px 14px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-truck" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          En cours de livraison
+                          <i className="ti ti-truck" style={{ fontSize: '13px' }} aria-hidden="true" />En cours de livraison
                         </button>
                       )}
                       {l.statut === 'en_cours' && (
                         <button onClick={() => updateStatut(l.id, 'livre')}
                           style={{ padding: '6px 14px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          Marquer comme livré
+                          <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />Marquer comme livré
                         </button>
                       )}
                     </div>
@@ -204,22 +210,35 @@ export default function LivraisonsPage() {
       )}
 
       {showModal && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false) }}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setShowModal(false); setSearchEquip(''); setSearchEtab('') } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Planifier une livraison</div>
-              <button onClick={() => setShowModal(false)}
+              <button onClick={() => { setShowModal(false); setSearchEquip(''); setSearchEtab('') }}
                 style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+              {/* Équipement avec recherche */}
               <div>
                 <label style={labelStyle}>Équipement *</label>
-                <select value={form.equipement_id} onChange={e => handleEquipementChange(e.target.value)} style={inputStyle}>
-                  <option value=''>Sélectionner un équipement...</option>
-                  {equipements.map(e => <option key={e.id} value={e.id}>{e.reference} — {e.designation}</option>)}
+                <div style={{ position: 'relative', marginBottom: '6px' }}>
+                  <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+                  <input type='text' placeholder='Rechercher un équipement...' value={searchEquip}
+                    onChange={e => setSearchEquip(e.target.value)}
+                    style={{ ...inputStyle, paddingLeft: '32px' }} />
+                </div>
+                <select value={form.equipement_id} onChange={e => handleEquipementChange(e.target.value)}
+                  style={{ ...inputStyle, height: '110px' }} size={4}>
+                  <option value=''>-- Sélectionner --</option>
+                  {equipFiltered.map(e => (
+                    <option key={e.id} value={e.id}>
+                      {e.reference ? `${e.reference} — ` : ''}{e.designation}
+                    </option>
+                  ))}
                 </select>
                 {form.equipement_id && equipements.find(e => e.id === form.equipement_id)?.etablissement_id && (
                   <div style={{ fontSize: '11px', color: 'var(--success)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -228,13 +247,25 @@ export default function LivraisonsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Établissement avec recherche */}
               <div>
                 <label style={labelStyle}>Établissement *</label>
-                <select value={form.etablissement_id} onChange={e => setForm(p => ({ ...p, etablissement_id: e.target.value }))} style={inputStyle}>
-                  <option value=''>Sélectionner un établissement...</option>
-                  {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
+                <div style={{ position: 'relative', marginBottom: '6px' }}>
+                  <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+                  <input type='text' placeholder='Rechercher un établissement...' value={searchEtab}
+                    onChange={e => setSearchEtab(e.target.value)}
+                    style={{ ...inputStyle, paddingLeft: '32px' }} />
+                </div>
+                <select value={form.etablissement_id} onChange={e => setForm(p => ({ ...p, etablissement_id: e.target.value }))}
+                  style={{ ...inputStyle, height: '110px' }} size={4}>
+                  <option value=''>-- Sélectionner --</option>
+                  {etabFiltered.map(e => (
+                    <option key={e.id} value={e.id}>{e.nom}</option>
+                  ))}
                 </select>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div>
                   <label style={labelStyle}>Date prévue</label>
@@ -264,7 +295,7 @@ export default function LivraisonsPage() {
                   style={{ ...inputStyle, resize: 'none' }} />
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button onClick={() => setShowModal(false)}
+                <button onClick={() => { setShowModal(false); setSearchEquip(''); setSearchEtab('') }}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>

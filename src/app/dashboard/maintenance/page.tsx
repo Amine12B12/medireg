@@ -26,16 +26,12 @@ function generateFicheInterventionPDF(m: any) {
     @media print { body { padding: 16px; } }
   </style></head><body>
     <div class="header">
-      <div>
-        <div class="logo">MediTrack</div>
-        <div class="subtitle">Fiche intervention universelle</div>
-      </div>
+      <div><div class="logo">MediTrack</div><div class="subtitle">Fiche intervention universelle</div></div>
       <div style="text-align:right;">
         <div class="title">Intervention</div>
         <div class="subtitle">${new Date(m.created_at || Date.now()).toLocaleDateString('fr-FR')}</div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">1. Informations générales</div>
       <div class="grid">
@@ -47,7 +43,6 @@ function generateFicheInterventionPDF(m: any) {
         <div class="field field-full"><div class="field-label">Entreprise / PSDM</div><div class="field-value" style="min-height:20px;">_________________________________</div></div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">2. Matériel concerné</div>
       <div class="grid">
@@ -58,7 +53,6 @@ function generateFicheInterventionPDF(m: any) {
         <div class="field"><div class="field-label">Prochaine révision</div><div class="field-value">${m.equipements?.date_revision || '—'}</div></div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">3. Objet de l'intervention</div>
       <div class="field field-full" style="min-height:70px;">
@@ -66,7 +60,6 @@ function generateFicheInterventionPDF(m: any) {
         <div class="field-value" style="margin-top:4px;">${m.notes || '&nbsp;'}</div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">4. Résultat de l'intervention</div>
       <div class="grid">
@@ -86,7 +79,6 @@ function generateFicheInterventionPDF(m: any) {
         </div>
       </div>
     </div>
-
     <div class="section">
       <div class="section-title">5. Signature</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -100,13 +92,11 @@ function generateFicheInterventionPDF(m: any) {
         </div>
       </div>
     </div>
-
     <div class="footer">
       <span>MediTrack · Plateforme de gestion PSDM · www.meditrack-app.fr</span>
       <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
     </div>
   </body></html>`
-
   const w = window.open('', '_blank')
   if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { w.print() }, 500) }
 }
@@ -131,6 +121,7 @@ export default function MaintenancePage() {
   const [filterStatut, setFilterStatut] = useState('tous')
   const [role, setRole] = useState<string | null>(null)
   const [etablissementId, setEtablissementId] = useState<string | null>(null)
+  const [searchEquip, setSearchEquip] = useState('')
   const [form, setForm] = useState({
     equipement_id: '', type: 'preventive', statut: 'planifie',
     date_prevue: '', notes: ''
@@ -156,54 +147,52 @@ export default function MaintenancePage() {
   }, [role])
 
   async function load() {
-  if (role === 'client' && etablissementId) {
-    // Charge d'abord les équipements de l'établissement
-    const { data: equipsEtab } = await supabase
-      .from('equipements')
-      .select('id')
-      .eq('etablissement_id', etablissementId)
+    if (role === 'client' && etablissementId) {
+      const { data: equipsEtab } = await supabase
+        .from('equipements')
+        .select('id')
+        .eq('etablissement_id', etablissementId)
 
-    const equipIds = (equipsEtab || []).map(e => e.id)
+      const equipIds = (equipsEtab || []).map(e => e.id)
 
-    if (equipIds.length === 0) {
-      setMaintenances([])
+      if (equipIds.length === 0) {
+        setMaintenances([])
+        setEquipements([])
+        setLoading(false)
+        return
+      }
+
+      const { data: m } = await supabase
+        .from('maintenances')
+        .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
+        .in('equipement_id', equipIds)
+        .order('date_prevue', { ascending: true })
+
+      setMaintenances(m || [])
       setEquipements([])
       setLoading(false)
-      return
+    } else {
+      const { data: m } = await supabase
+        .from('maintenances')
+        .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
+        .order('date_prevue', { ascending: true })
+
+      const { data: e } = await supabase
+        .from('equipements')
+        .select('id, reference, designation, date_revision')
+        .order('designation')
+
+      setMaintenances(m || [])
+      setEquipements(e || [])
+      setLoading(false)
     }
-
-    const { data: m } = await supabase
-      .from('maintenances')
-      .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
-      .in('equipement_id', equipIds)
-      .order('date_prevue', { ascending: true })
-
-    setMaintenances(m || [])
-    setEquipements([])
-    setLoading(false)
-  } else {
-    const { data: m } = await supabase
-      .from('maintenances')
-      .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
-      .order('date_prevue', { ascending: true })
-
-    const { data: e } = await supabase
-      .from('equipements')
-      .select('id, reference, designation, date_revision')
-      .order('designation')
-
-    setMaintenances(m || [])
-    setEquipements(e || [])
-    setLoading(false)
   }
-}
 
   async function handleAdd() {
     if (!form.equipement_id) return
     setSaving(true)
     setFormError('')
 
-    // Contrôle date maintenance vs date livraison
     if (form.date_prevue) {
       const { data: livraison } = await supabase
         .from('livraisons')
@@ -232,6 +221,7 @@ export default function MaintenancePage() {
     setShowModal(false)
     setForm({ equipement_id: '', type: 'preventive', statut: 'planifie', date_prevue: '', notes: '' })
     setFormError('')
+    setSearchEquip('')
     setSaving(false)
     load()
   }
@@ -248,6 +238,9 @@ export default function MaintenancePage() {
   }
 
   const filtered = maintenances.filter(m => filterStatut === 'tous' || m.statut === filterStatut)
+  const equipFiltered = equipements.filter(e =>
+    `${e.reference || ''} ${e.designation}`.toLowerCase().includes(searchEquip.toLowerCase())
+  )
 
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
     <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
@@ -256,9 +249,7 @@ export default function MaintenancePage() {
   )
 
   if (loading || role === null) return (
-    <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>
-      Chargement...
-    </div>
+    <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
   )
 
   return (
@@ -267,7 +258,7 @@ export default function MaintenancePage() {
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} intervention{filtered.length > 1 ? 's' : ''}</div>
         {role === 'admin' && (
-          <button onClick={() => { setShowModal(true); setFormError('') }}
+          <button onClick={() => { setShowModal(true); setFormError(''); setSearchEquip('') }}
             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
             <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />
             Planifier une intervention
@@ -351,21 +342,18 @@ export default function MaintenancePage() {
                       {!isTermine && m.statut === 'planifie' && (
                         <button onClick={() => updateStatut(m.id, 'en_cours')}
                           style={{ padding: '6px 14px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-player-play" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          Démarrer
+                          <i className="ti ti-player-play" style={{ fontSize: '13px' }} aria-hidden="true" />Démarrer
                         </button>
                       )}
                       {!isTermine && m.statut === 'en_cours' && (
                         <button onClick={() => updateStatut(m.id, 'termine')}
                           style={{ padding: '6px 14px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />
-                          Terminer
+                          <i className="ti ti-check" style={{ fontSize: '13px' }} aria-hidden="true" />Terminer
                         </button>
                       )}
                       <button onClick={() => generateFicheInterventionPDF(m)}
                         style={{ padding: '6px 14px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <i className="ti ti-file-type-pdf" style={{ fontSize: '13px' }} aria-hidden="true" />
-                        Fiche PDF
+                        <i className="ti ti-file-type-pdf" style={{ fontSize: '13px' }} aria-hidden="true" />Fiche PDF
                       </button>
                     </div>
                   )}
@@ -377,29 +365,46 @@ export default function MaintenancePage() {
       )}
 
       {showModal && role === 'admin' && (
-        <div onMouseDown={e => { if (e.target === e.currentTarget) { setShowModal(false); setFormError('') } }}
+        <div onMouseDown={e => { if (e.target === e.currentTarget) { setShowModal(false); setFormError(''); setSearchEquip('') } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Planifier une intervention</div>
-              <button onClick={() => { setShowModal(false); setFormError('') }} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <button onClick={() => { setShowModal(false); setFormError(''); setSearchEquip('') }}
+                style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
               </button>
             </div>
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={labelStyle}>Équipement *</label>
+                <div style={{ position: 'relative', marginBottom: '6px' }}>
+                  <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+                  <input
+                    type='text'
+                    placeholder='Rechercher un équipement...'
+                    value={searchEquip}
+                    onChange={e => setSearchEquip(e.target.value)}
+                    style={{ ...inputStyle, paddingLeft: '32px' }}
+                  />
+                </div>
                 <select value={form.equipement_id} onChange={e => {
                   const eq = equipements.find(eq => eq.id === e.target.value)
-                  setForm(p => ({ ...p, equipement_id: e.target.value, date_prevue: eq?.date_revision || p.date_prevue }))
-                }} style={inputStyle}>
-                  <option value=''>Sélectionner un équipement...</option>
-                  {equipements.map(e => (
+                  setForm(p => ({ ...p, equipement_id: e.target.value, date_prevue: eq?.date_revision ? `${eq.date_revision}T09:00` : p.date_prevue }))
+                }} style={{ ...inputStyle, height: '110px' }} size={4}>
+                  <option value=''>-- Sélectionner --</option>
+                  {equipFiltered.map(e => (
                     <option key={e.id} value={e.id}>
-                      {e.reference} — {e.designation}{e.date_revision ? ` (révision: ${e.date_revision})` : ''}
+                      {e.reference ? `${e.reference} — ` : ''}{e.designation}{e.date_revision ? ` (révision: ${e.date_revision})` : ''}
                     </option>
                   ))}
                 </select>
+                {form.equipement_id && (
+                  <div style={{ fontSize: '11px', color: 'var(--success)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="ti ti-check" style={{ fontSize: '12px' }} aria-hidden="true" />
+                    {equipements.find(e => e.id === form.equipement_id)?.designation} sélectionné
+                  </div>
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div>
@@ -439,7 +444,7 @@ export default function MaintenancePage() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => { setShowModal(false); setFormError('') }}
+                <button onClick={() => { setShowModal(false); setFormError(''); setSearchEquip('') }}
                   style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
                 <button onClick={handleAdd} disabled={saving || !form.equipement_id}
                   style={{ flex: 1, padding: '11px', background: saving || !form.equipement_id ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving || !form.equipement_id ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
