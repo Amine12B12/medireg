@@ -156,25 +156,47 @@ export default function MaintenancePage() {
   }, [role])
 
   async function load() {
-    let query = supabase
+  if (role === 'client' && etablissementId) {
+    // Charge d'abord les équipements de l'établissement
+    const { data: equipsEtab } = await supabase
+      .from('equipements')
+      .select('id')
+      .eq('etablissement_id', etablissementId)
+
+    const equipIds = (equipsEtab || []).map(e => e.id)
+
+    if (equipIds.length === 0) {
+      setMaintenances([])
+      setEquipements([])
+      setLoading(false)
+      return
+    }
+
+    const { data: m } = await supabase
+      .from('maintenances')
+      .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
+      .in('equipement_id', equipIds)
+      .order('date_prevue', { ascending: true })
+
+    setMaintenances(m || [])
+    setEquipements([])
+    setLoading(false)
+  } else {
+    const { data: m } = await supabase
       .from('maintenances')
       .select('*, equipements(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
       .order('date_prevue', { ascending: true })
 
-    if (role === 'client' && etablissementId) {
-      query = supabase
-        .from('maintenances')
-        .select('*, equipements!inner(reference, designation, localisation, date_revision, etablissement_id, etablissements(nom))')
-        .eq('equipements.etablissement_id', etablissementId)
-        .order('date_prevue', { ascending: true })
-    }
+    const { data: e } = await supabase
+      .from('equipements')
+      .select('id, reference, designation, date_revision')
+      .order('designation')
 
-    const { data: m } = await query
-    const { data: e } = await supabase.from('equipements').select('id, reference, designation, date_revision').order('designation')
     setMaintenances(m || [])
     setEquipements(e || [])
     setLoading(false)
   }
+}
 
   async function handleAdd() {
     if (!form.equipement_id) return
