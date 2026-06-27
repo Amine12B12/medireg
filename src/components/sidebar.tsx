@@ -14,6 +14,7 @@ const navAdmin = [
   { label: 'Alertes', path: '/dashboard/alertes', icon: 'ti-bell', feature: null },
   { label: 'Devis', path: '/dashboard/devis', icon: 'ti-file-invoice', feature: null },
   { label: 'Conformité', path: '/dashboard/conformite', icon: 'ti-shield-check', feature: null },
+  { label: 'Matériovigilance', path: '/dashboard/materiovigilance', icon: 'ti-shield-exclamation', feature: null },
   { label: 'Assistant IA', path: '/dashboard/assistant', icon: 'ti-sparkles', feature: null },
   { label: 'Reporting', path: '/dashboard/reporting', icon: 'ti-chart-bar', feature: null },
 ]

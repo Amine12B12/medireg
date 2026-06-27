@@ -16,6 +16,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/conformite': { title: 'Conformité', sub: 'Score de préparation contrôle' },
   '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert en gestion PSDM' },
   '/dashboard/reporting': { title: 'Reporting', sub: 'Analyse avancée du parc' },
+  '/dashboard/materiovigilance': { title: 'Matériovigilance', sub: 'Gestion des incidents' },
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
