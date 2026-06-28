@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (role === 'admin') {
       const { data: equipements } = await supabaseAdmin
         .from('equipements')
-        .select('reference, designation, categorie, statut, localisation, date_revision, fabricant, modele, numero_serie, commentaires, etablissements(nom)')
+        .select('id, reference, designation, categorie, statut, localisation, date_revision, fabricant, modele, numero_serie, commentaires, responsable_referent, service, etage, etablissements(nom)')
         .order('created_at')
         .limit(100)
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 ${etablissements?.map(e => `- ${e.nom} (${e.type}, ${e.ville || '—'}) — Formule: ${e.formule} — Statut: ${e.statut}`).join('\n') || 'Aucun'}
 
 PARC MATÉRIEL (${equipements?.length || 0} équipements) :
-${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (Réf: ${e.reference || '—'} | N°Série: ${(e as any).numero_serie || '—'}) — Client: ${(e.etablissements as any)?.nom || 'Non affecté'} — Localisation: ${e.localisation || '—'} — Révision: ${e.date_revision || 'non définie'} — Commentaires: ${(e as any).commentaires || '—'}`).join('\n') || 'Aucun'}
+${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (ID: ${e.id} | Réf: ${e.reference || '—'} | N°Série: ${(e as any).numero_serie || '—'}) — Client: ${(e.etablissements as any)?.nom || 'Non affecté'} — Localisation: ${e.localisation || '—'} — Service: ${(e as any).service || '—'} — Étage: ${(e as any).etage || '—'} — Responsable: ${(e as any).responsable_referent || '—'} — Révision: ${e.date_revision || 'non définie'} — Commentaires: ${(e as any).commentaires || '—'}`).join('\n') || 'Aucun'}
 
 MAINTENANCES (${maintenances?.length || 0}) :
 ${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Préventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} (N°Série: ${(m.equipements as any)?.numero_serie || '—'}) (${(m.equipements as any)?.etablissements?.nom || '—'}) — Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non définie'} — Notes: ${m.notes || '—'}`).join('\n') || 'Aucune'}
@@ -60,7 +60,7 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} (N°S
 
       const { data: equipements } = await supabaseAdmin
         .from('equipements')
-        .select('reference, designation, categorie, statut, localisation, date_revision, fabricant, modele, numero_serie, commentaires')
+        .select('id, reference, designation, categorie, statut, localisation, date_revision, fabricant, modele, numero_serie, commentaires')
         .eq('etablissement_id', etablissement_id)
         .order('created_at')
 
@@ -156,14 +156,23 @@ RAPPORTS PAR ÉQUIPEMENT :
 
 RÉGLEMENTATION :
 - Pour toute question réglementaire (matériovigilance, marquage CE, obligations PSDM, remboursement), utilise la recherche web sur les sources officielles
-- Pour les fiches techniques ou notices d'un fabricant, recherche sur le site du fabricant correspondant`,
+- Pour les fiches techniques ou notices d'un fabricant, recherche sur le site du fabricant correspondant
+
+MODIFICATIONS DIRECTES (admin uniquement) :
+- Si l'utilisateur demande de modifier un équipement (changer localisation, statut, commentaires, date révision, responsable, service, étage), identifie l'équipement exact dans les données grâce à son ID et génère une action JSON dans ce format EXACT à la fin de ta réponse :
+\`\`\`action
+{"type":"update_equipement","equipement_id":"UUID_ICI","field":"localisation","old_value":"Chambre 12","new_value":"Chambre 23","description":"Déplacement du Lit médicalisé de Chambre 12 vers Chambre 23"}
+\`\`\`
+- Ne génère l'action QUE si tu as trouvé l'équipement exact dans les données (tu as l'ID dans le contexte)
+- Champs modifiables : localisation, statut, commentaires, date_revision, responsable_referent, service, etage
+- Valeurs de statut valides : en_service, maintenance, hors_service, en_preparation
+- Ne propose JAMAIS de supprimer quoi que ce soit — explique comment faire manuellement dans l'interface si demandé`,
       messages
     })
   })
 
   const data = await response.json()
 
-  // Traite la réponse qui peut contenir des blocs tool_use (web_search)
   const textContent = data.content
     ?.filter((c: any) => c.type === 'text')
     ?.map((c: any) => c.text)
