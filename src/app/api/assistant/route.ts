@@ -37,19 +37,19 @@ export async function POST(request: Request) {
         .order('nom')
 
       contextData = `
-=== DONNÉES RÉELLES DE MEDITRACK ===
+=== DONNEES REELLES DE MEDITRACK ===
 
-ÉTABLISSEMENTS (${etablissements?.length || 0}) :
-${etablissements?.map(e => `- ${e.nom} (${e.type}, ${e.ville || '—'}) — Formule: ${e.formule} — Statut: ${e.statut}`).join('\n') || 'Aucun'}
+ETABLISSEMENTS (${etablissements?.length || 0}) :
+${etablissements?.map(e => `- ${e.nom} (${e.type}, ${e.ville || '-'}) - Formule: ${e.formule} - Statut: ${e.statut}`).join('\n') || 'Aucun'}
 
-PARC MATÉRIEL (${equipements?.length || 0} équipements) :
-${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (ID: ${e.id} | Réf: ${e.reference || '—'} | N°Série: ${(e as any).numero_serie || '—'}) — Client: ${(e.etablissements as any)?.nom || 'Non affecté'} — Localisation: ${e.localisation || '—'} — Service: ${(e as any).service || '—'} — Étage: ${(e as any).etage || '—'} — Responsable: ${(e as any).responsable_referent || '—'} — Révision: ${e.date_revision || 'non définie'} — Commentaires: ${(e as any).commentaires || '—'}`).join('\n') || 'Aucun'}
+PARC MATERIEL (${equipements?.length || 0} equipements) :
+${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (ID: ${e.id} | Ref: ${e.reference || '-'} | N Serie: ${(e as any).numero_serie || '-'}) - Client: ${(e.etablissements as any)?.nom || 'Non affecte'} - Localisation: ${e.localisation || '-'} - Service: ${(e as any).service || '-'} - Etage: ${(e as any).etage || '-'} - Responsable: ${(e as any).responsable_referent || '-'} - Revision: ${e.date_revision || 'non definie'} - Commentaires: ${(e as any).commentaires || '-'}`).join('\n') || 'Aucun'}
 
 MAINTENANCES (${maintenances?.length || 0}) :
-${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Préventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} (N°Série: ${(m.equipements as any)?.numero_serie || '—'}) (${(m.equipements as any)?.etablissements?.nom || '—'}) — Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non définie'} — Notes: ${m.notes || '—'}`).join('\n') || 'Aucune'}
+${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Preventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} (${(m.equipements as any)?.etablissements?.nom || '-'}) - Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non definie'} - Notes: ${m.notes || '-'}`).join('\n') || 'Aucune'}
 
-PANNES RÉCENTES (${pannes?.length || 0}) :
-${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} (N°Série: ${(p.equipements as any)?.numero_serie || '—'}) (${(p.equipements as any)?.etablissements?.nom || '—'}) — ${new Date(p.created_at).toLocaleDateString('fr-FR')} — ${p.description}`).join('\n') || 'Aucune'}
+PANNES RECENTES (${pannes?.length || 0}) :
+${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} (${(p.equipements as any)?.etablissements?.nom || '-'}) - ${new Date(p.created_at).toLocaleDateString('fr-FR')} - ${p.description}`).join('\n') || 'Aucune'}
 `
     } else if (role === 'client' && etablissement_id) {
       const { data: etab } = await supabaseAdmin
@@ -79,22 +79,22 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} (N°S
         .limit(5)
 
       contextData = `
-=== DONNÉES DE VOTRE ÉTABLISSEMENT ===
+=== DONNEES DE VOTRE ETABLISSEMENT ===
 
-ÉTABLISSEMENT : ${etab?.nom} (${etab?.type}, ${etab?.ville || '—'}) — Formule: ${etab?.formule}
+ETABLISSEMENT : ${etab?.nom} (${etab?.type}, ${etab?.ville || '-'}) - Formule: ${etab?.formule}
 
-VOTRE PARC (${equipements?.length || 0} équipements) :
-${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (Réf: ${e.reference || '—'} | N°Série: ${(e as any).numero_serie || '—'}) — Localisation: ${e.localisation || '—'} — Révision: ${e.date_revision || 'non définie'} — Commentaires: ${(e as any).commentaires || '—'}`).join('\n') || 'Aucun équipement'}
+VOTRE PARC (${equipements?.length || 0} equipements) :
+${equipements?.map(e => `- [${(e.statut || 'inconnu').toUpperCase()}] ${e.designation} (Ref: ${e.reference || '-'} | N Serie: ${(e as any).numero_serie || '-'}) - Localisation: ${e.localisation || '-'} - Revision: ${e.date_revision || 'non definie'} - Commentaires: ${(e as any).commentaires || '-'}`).join('\n') || 'Aucun equipement'}
 
 MAINTENANCES (${maintenances?.length || 0}) :
-${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Préventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} — Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non définie'} — Notes: ${m.notes || '—'}`).join('\n') || 'Aucune maintenance'}
+${maintenances?.map(m => `- ${m.type === 'preventive' ? 'Preventive' : 'Curative'} [${m.statut}] pour ${(m.equipements as any)?.designation} - Date: ${m.date_prevue ? new Date(m.date_prevue).toLocaleDateString('fr-FR') : 'non definie'} - Notes: ${m.notes || '-'}`).join('\n') || 'Aucune maintenance'}
 
-PANNES RÉCENTES (${pannes?.length || 0}) :
-${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} — ${new Date(p.created_at).toLocaleDateString('fr-FR')} — ${p.description}`).join('\n') || 'Aucune panne'}
+PANNES RECENTES (${pannes?.length || 0}) :
+${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} - ${new Date(p.created_at).toLocaleDateString('fr-FR')} - ${p.description}`).join('\n') || 'Aucune panne'}
 `
     }
   } catch (err) {
-    console.error('Erreur chargement données:', err)
+    console.error('Erreur chargement donnees:', err)
   }
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -107,76 +107,60 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} — $
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
-      tools: [
-        {
-          type: 'web_search_20250305',
-          name: 'web_search'
-        }
-      ],
-      system: `Tu es l'assistant MediTrack, un expert en gestion de matériel médical à domicile (PSDM) et en réglementation des dispositifs médicaux en France.
+      system: `Tu es l assistant MediTrack, un expert en gestion de materiel medical a domicile (PSDM) et en reglementation des dispositifs medicaux en France.
 
-${contextData ? `Tu as accès aux données réelles de MediTrack ci-dessous. Utilise-les pour répondre aux questions sur le parc, les maintenances, les pannes et les établissements.
+${contextData ? `Tu as acces aux donnees reelles de MediTrack ci-dessous. Utilise-les pour repondre aux questions sur le parc, les maintenances, les pannes et les etablissements.
 
 ${contextData}` : ''}
 
-SOURCES RÉGLEMENTAIRES — utilise la recherche web pour consulter :
-- ANSM (ansm.sante.fr) → autorisation, surveillance, matériovigilance, rappels de dispositifs médicaux
-- HAS (has-sante.fr) → recommandations, évaluations, bonnes pratiques
-- Légifrance (legifrance.gouv.fr) → textes de loi, décrets, arrêtés sur les dispositifs médicaux
-- ARS → obligations locales et régionales
-- LNE/G-MED → certification et marquage CE des dispositifs médicaux
-- CPAM / Ameli → remboursement et conventionnement PSDM
+SOURCES REGLEMENTAIRES a mentionner dans tes reponses :
+- ANSM (ansm.sante.fr) -> autorisation, surveillance, materiovigilance
+- HAS (has-sante.fr) -> recommandations, evaluations
+- Legifrance (legifrance.gouv.fr) -> textes de loi
+- ARS -> obligations locales
+- CPAM / Ameli -> remboursement PSDM
 
-SITES FABRICANTS — utilise la recherche web pour consulter :
-- Invacare (invacare.fr) → lits médicalisés, fauteuils roulants
-- Winncare (winncare.com) → lits, matelas, équipements de nursing
-- Sunrise Medical (sunrisemedical.fr) → fauteuils roulants Quickie
-- Vermeiren (vermeiren.com) → fauteuils roulants, déambulateurs
-- Arjo (arjo.com) → lève-personnes, équipements de mobilisation
-- Hartmann (hartmann.fr) → pansements, équipements médicaux
-- Systam (systam.com) → matelas anti-escarre
-- ResMed (resmed.fr) → ventilateurs, PPC, apnée du sommeil
+FABRICANTS a mentionner si pertinent :
+- Invacare, Winncare, Sunrise Medical, Vermeiren, Arjo, Hartmann, Systam, ResMed
 
-RÈGLES DE FORMATAGE :
-- Réponds en français, de façon concise et professionnelle
-- Utilise des listes à puces avec des tirets (-) pour les énumérations
-- Utilise des emojis pour les statuts : ✅ En service, 🔴 Hors service, 🟠 Maintenance, 🔧 Préventive
-- N'utilise JAMAIS de tableaux Markdown avec des |
-- N'utilise pas de --- comme séparateurs
+REGLES DE FORMATAGE :
+- Reponds en francais, de facon concise et professionnelle
+- Utilise des listes a puces avec des tirets (-) pour les enumerations
+- Utilise des emojis pour les statuts : OK En service, STOP Hors service, OUTIL Maintenance
+- N utilise JAMAIS de tableaux Markdown avec des |
 - Mets en gras les informations importantes avec **texte**
-- Garde les réponses claires et lisibles
-- Si une info n'est pas dans les données MediTrack, utilise la recherche web
-- Tu ne fournis pas de conseils médicaux aux patients
-- Cite toujours la source quand tu utilises la recherche web
+- Si une info n est pas dans les donnees MediTrack, dis-le clairement
+- Tu ne fournis pas de conseils medicaux aux patients
 
-RAPPORTS PAR ÉQUIPEMENT :
-- Si on te demande un rapport sur un équipement (par n° de série, référence ou désignation), génère un rapport structuré avec : statut, localisation, établissement, fabricant, modèle, date de révision, maintenances associées, pannes en cours, commentaires
-- Si on te demande tous les équipements d'un client ou établissement, liste-les avec statut, localisation et date de révision
-- Si on te demande un rapport de conformité, base-toi sur les données disponibles
-
-RÉGLEMENTATION :
-- Pour toute question réglementaire (matériovigilance, marquage CE, obligations PSDM, remboursement), utilise la recherche web sur les sources officielles
-- Pour les fiches techniques ou notices d'un fabricant, recherche sur le site du fabricant correspondant
+RAPPORTS PAR EQUIPEMENT :
+- Si on te demande un rapport sur un equipement, genere un rapport structure avec : statut, localisation, etablissement, fabricant, modele, date de revision, maintenances, pannes, commentaires
 
 MODIFICATIONS DIRECTES (admin uniquement) :
-- Si l'utilisateur demande de modifier un équipement (changer localisation, statut, commentaires, date révision, responsable, service, étage), identifie l'équipement exact dans les données grâce à son ID et génère une action JSON dans ce format EXACT à la fin de ta réponse :
+- Si l utilisateur demande de modifier un equipement (changer localisation, statut, commentaires, date revision, responsable, service, etage), identifie l equipement exact dans les donnees grace a son ID et genere une action JSON dans ce format EXACT a la fin de ta reponse :
 \`\`\`action
-{"type":"update_equipement","equipement_id":"UUID_ICI","field":"localisation","old_value":"Chambre 12","new_value":"Chambre 23","description":"Déplacement du Lit médicalisé de Chambre 12 vers Chambre 23"}
+{"type":"update_equipement","equipement_id":"UUID_ICI","field":"localisation","old_value":"Chambre 12","new_value":"Chambre 23","description":"Deplacement du Lit medicalise de Chambre 12 vers Chambre 23"}
 \`\`\`
-- Ne génère l'action QUE si tu as trouvé l'équipement exact dans les données (tu as l'ID dans le contexte)
+- Ne genere l action QUE si tu as trouve l equipement exact dans les donnees
 - Champs modifiables : localisation, statut, commentaires, date_revision, responsable_referent, service, etage
 - Valeurs de statut valides : en_service, maintenance, hors_service, en_preparation
-- Ne propose JAMAIS de supprimer quoi que ce soit — explique comment faire manuellement dans l'interface si demandé`,
+- Ne propose JAMAIS de supprimer quoi que ce soit`,
       messages
     })
   })
 
   const data = await response.json()
 
+  if (!response.ok) {
+    console.error('Erreur API Anthropic:', data)
+    return NextResponse.json({
+      content: [{ type: 'text', text: 'Erreur de connexion a l IA. Verifiez la cle API.' }]
+    })
+  }
+
   const textContent = data.content
     ?.filter((c: any) => c.type === 'text')
     ?.map((c: any) => c.text)
-    ?.join('\n') || 'Désolé, je n\'ai pas pu générer une réponse.'
+    ?.join('\n') || 'Desole, je n ai pas pu generer une reponse.'
 
   return NextResponse.json({
     ...data,

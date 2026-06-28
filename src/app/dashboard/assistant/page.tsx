@@ -33,6 +33,7 @@ function renderMarkdown(text: string) {
 export default function AssistantPage() {
   const { formule, role, can } = useFormule()
   const [etablissementId, setEtablissementId] = useState<string | null>(null)
+  const [userLoaded, setUserLoaded] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -41,26 +42,38 @@ export default function AssistantPage() {
   const supabase = createClient()
 
   const suggestions = role === 'admin' ? [
-    'Combien d\'équipements sont hors service ?',
-    'Change le Lit médicalisé de chambre 12 à chambre 23',
+    'Combien d equipements sont hors service ?',
+    'Change le Lit medicalise de chambre 12 a chambre 23',
     'Mets le fauteuil roulant en maintenance',
-    'Comment préparer un audit DDASS ?',
+    'Comment preparer un audit DDASS ?',
   ] : [
-    'Quels sont mes équipements en maintenance ?',
-    'Quand est la prochaine révision ?',
+    'Quels sont mes equipements en maintenance ?',
+    'Quand est la prochaine revision ?',
     'Comment signaler une panne ?',
-    'Quels documents faut-il pour un contrôle ?',
+    'Quels documents faut-il pour un controle ?',
   ]
 
   useEffect(() => {
     async function loadUser() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setUserLoaded(true); return }
       const { data: prof } = await supabase.from('profiles').select('etablissement_id').eq('id', user.id).single()
       setEtablissementId(prof?.etablissement_id || null)
+      setUserLoaded(true)
     }
     loadUser()
   }, [])
+
+  // Lit le parametre ?q= dans l URL et envoie le message auto
+  useEffect(() => {
+    if (!userLoaded) return
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
+    if (q) {
+      handleSend(decodeURIComponent(q))
+      window.history.replaceState({}, '', '/dashboard/assistant')
+    }
+  }, [userLoaded])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -87,28 +100,28 @@ export default function AssistantPage() {
       })
 
       const data = await response.json()
-      const text = data.content?.[0]?.text || ''
+      const responseText = data.content?.[0]?.text || ''
 
-      // Détecte si la réponse contient une action JSON
-      const actionMatch = text.match(/```action\n([\s\S]*?)\n```/)
+      // Detecte si la reponse contient une action JSON
+      const actionMatch = responseText.match(/```action\n([\s\S]*?)\n```/)
       let action: ActionPayload | undefined
-      let displayText = text
+      let displayText = responseText
 
       if (actionMatch) {
         try {
           action = JSON.parse(actionMatch[1])
-          displayText = text.replace(/```action\n[\s\S]*?\n```/, '').trim()
+          displayText = responseText.replace(/```action\n[\s\S]*?\n```/, '').trim()
         } catch {}
       }
 
       const assistantMsg: Message = {
         role: 'assistant',
-        content: displayText || 'Désolé, je n\'ai pas pu générer une réponse.',
+        content: displayText || 'Desole, je n ai pas pu generer une reponse.',
         action
       }
       setMessages(prev => [...prev, assistantMsg])
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Une erreur est survenue. Veuillez réessayer.' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Une erreur est survenue. Veuillez reessayer.' }])
     }
     setLoading(false)
   }
@@ -124,23 +137,21 @@ export default function AssistantPage() {
       const data = await response.json()
 
       if (data.success) {
-        // Supprime l'action du message (déjà confirmée)
         setMessages(prev => prev.map((m, i) =>
           i === msgIndex ? { ...m, action: undefined } : m
         ))
-        // Ajoute un message de confirmation
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `✅ Modification appliquée — ${action.description}`
+          content: `Modification appliquee — ${action.description}`
         }])
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `❌ Erreur lors de la modification : ${data.error || 'erreur inconnue'}`
+          content: `Erreur lors de la modification : ${data.error || 'erreur inconnue'}`
         }])
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: '❌ Erreur lors de la modification.' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Erreur lors de la modification.' }])
     }
     setConfirming(null)
   }
@@ -149,21 +160,20 @@ export default function AssistantPage() {
     setMessages(prev => prev.map((m, i) =>
       i === msgIndex ? { ...m, action: undefined } : m
     ))
-    setMessages(prev => [...prev, { role: 'assistant', content: 'Modification annulée.' }])
+    setMessages(prev => [...prev, { role: 'assistant', content: 'Modification annulee.' }])
   }
 
   return (
     <FormuleGate feature="assistant_ia" formule={formule} role={role} can={can}>
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 58px)', fontFamily: 'var(--font)' }}>
 
-        {/* Header */}
         <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <i className="ti ti-sparkles" style={{ fontSize: '18px', color: '#fff' }} aria-hidden="true" />
           </div>
           <div>
             <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Assistant MediTrack</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Connecté à vos données · Peut modifier les équipements</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Connecte a vos donnees · Peut modifier les equipements</div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'var(--success-light)', borderRadius: '20px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} />
@@ -171,7 +181,6 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        {/* Zone centrale */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'var(--bg)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
           {messages.length === 0 ? (
@@ -182,13 +191,13 @@ export default function AssistantPage() {
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Assistant MediTrack</div>
                 <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', maxWidth: '400px' }}>
-                  Je peux répondre à vos questions ET modifier directement vos équipements. Essayez : "Change le Lit médicalisé de chambre 12 à chambre 23"
+                  Je peux repondre a vos questions ET modifier directement vos equipements.
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '520px' }}>
                 {suggestions.map(s => (
                   <button key={s} onClick={() => handleSend(s)}
-                    style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left', lineHeight: '1.4', transition: 'all 0.1s' }}
+                    style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left', lineHeight: '1.4' }}
                     onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--accent-light)'; b.style.color = 'var(--accent)'; b.style.borderColor = 'rgba(26,86,219,0.3)' }}
                     onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'var(--surface)'; b.style.color = 'var(--text-secondary)'; b.style.borderColor = 'var(--border)' }}>
                     <i className="ti ti-message-question" style={{ fontSize: '13px', marginRight: '6px', opacity: 0.5 }} aria-hidden="true" />
@@ -220,7 +229,6 @@ export default function AssistantPage() {
                       {msg.role === 'user' ? msg.content : undefined}
                     </div>
 
-                    {/* Carte de confirmation d'action */}
                     {msg.action && msg.role === 'assistant' && (
                       <div style={{ padding: '14px 16px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.3)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -231,7 +239,7 @@ export default function AssistantPage() {
                           <div>{msg.action.description}</div>
                           <div style={{ marginTop: '4px', display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
                             <span style={{ textDecoration: 'line-through' }}>{msg.action.old_value}</span>
-                            <span>→</span>
+                            <span>vers</span>
                             <span style={{ fontWeight: '600', color: 'var(--success)' }}>{msg.action.new_value}</span>
                           </div>
                         </div>
@@ -277,14 +285,13 @@ export default function AssistantPage() {
           )}
         </div>
 
-        {/* Input */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-              placeholder="Posez une question ou demandez une modification... (ex: Change le Lit de chambre 12 à chambre 23)"
+              placeholder="Posez une question ou demandez une modification..."
               rows={1}
               style={{ flex: 1, padding: '11px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', resize: 'none', background: 'var(--surface-hover)', lineHeight: '1.5', maxHeight: '120px', overflowY: 'auto' }}
               onInput={e => {
@@ -294,12 +301,12 @@ export default function AssistantPage() {
               }}
             />
             <button onClick={() => handleSend()} disabled={loading || !input.trim()}
-              style={{ width: '40px', height: '40px', background: loading || !input.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(26,86,219,0.3)', transition: 'all 0.1s' }}>
+              style={{ width: '40px', height: '40px', background: loading || !input.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
               <i className="ti ti-send" style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
             </button>
           </div>
           <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-            MediTrack AI · Peut modifier vos données · Shift+Entrée pour nouvelle ligne
+            MediTrack AI · Peut modifier vos donnees · Shift+Entree pour nouvelle ligne
           </div>
         </div>
 
