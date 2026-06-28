@@ -55,68 +55,68 @@ function generateFicheEquipementPDF(eq: Equipement, etabNom: string, docs: any[]
     @media print { body { padding: 16px; } }
   </style></head><body>
     <div class="header">
-      <div><div class="logo">MediTrack</div><div class="subtitle">Fiche équipement universelle</div></div>
+      <div><div class="logo">MediTrack</div><div class="subtitle">Fiche equipement universelle</div></div>
       <div style="text-align:right;">
         <div class="title">${eq.designation}</div>
-        <div class="subtitle">${eq.reference || '—'}</div>
+        <div class="subtitle">${eq.reference || '-'}</div>
         <div style="margin-top:5px;">
           <span class="badge ${eq.statut === 'en_service' ? 'badge-service' : eq.statut === 'maintenance' ? 'badge-maintenance' : eq.statut === 'en_preparation' ? 'badge-prep' : 'badge-hors'}">
-            ${eq.statut === 'en_service' ? 'En service' : eq.statut === 'maintenance' ? 'En maintenance' : eq.statut === 'en_preparation' ? 'En préparation' : 'Hors service'}
+            ${eq.statut === 'en_service' ? 'En service' : eq.statut === 'maintenance' ? 'En maintenance' : eq.statut === 'en_preparation' ? 'En preparation' : 'Hors service'}
           </span>
         </div>
       </div>
     </div>
     <div class="section">
-      <div class="section-title">Bloc 1 — Identification</div>
+      <div class="section-title">Bloc 1 - Identification</div>
       <div class="grid">
-        <div class="field"><div class="field-label">Référence</div><div class="field-value">${eq.reference || '—'}</div></div>
-        <div class="field"><div class="field-label">Désignation</div><div class="field-value">${eq.designation || '—'}</div></div>
-        <div class="field"><div class="field-label">Catégorie</div><div class="field-value">${eq.categorie || '—'}</div></div>
-        <div class="field"><div class="field-label">Fabricant</div><div class="field-value">${eq.fabricant || '—'}</div></div>
-        <div class="field"><div class="field-label">Modèle</div><div class="field-value">${eq.modele || '—'}</div></div>
-        <div class="field"><div class="field-label">N° de série</div><div class="field-value">${eq.numero_serie || '—'}</div></div>
-        <div class="field"><div class="field-label">N° de lot</div><div class="field-value">${eq.numero_lot || '—'}</div></div>
-        <div class="field"><div class="field-label">Date MES</div><div class="field-value">${eq.date_mes || '—'}</div></div>
-        <div class="field"><div class="field-label">Fin de garantie</div><div class="field-value">${eq.fin_garantie || '—'}</div></div>
-        ${eq.date_retrait ? `<div class="field"><div class="field-label">Date retrait</div><div class="field-value">${eq.date_retrait}</div></div>` : ''}
-        ${eq.motif_retrait ? `<div class="field"><div class="field-label">Motif retrait</div><div class="field-value">${eq.motif_retrait}</div></div>` : ''}
+        <div class="field"><div class="field-label">Reference</div><div class="field-value">${eq.reference || '-'}</div></div>
+        <div class="field"><div class="field-label">Designation</div><div class="field-value">${eq.designation || '-'}</div></div>
+        <div class="field"><div class="field-label">Categorie</div><div class="field-value">${eq.categorie || '-'}</div></div>
+        <div class="field"><div class="field-label">Fabricant</div><div class="field-value">${eq.fabricant || '-'}</div></div>
+        <div class="field"><div class="field-label">Modele</div><div class="field-value">${eq.modele || '-'}</div></div>
+        <div class="field"><div class="field-label">N de serie</div><div class="field-value">${eq.numero_serie || '-'}</div></div>
+        <div class="field"><div class="field-label">N de lot</div><div class="field-value">${eq.numero_lot || '-'}</div></div>
+        <div class="field"><div class="field-label">Date MES</div><div class="field-value">${eq.date_mes || '-'}</div></div>
+        <div class="field"><div class="field-label">Fin de garantie</div><div class="field-value">${eq.fin_garantie || '-'}</div></div>
+        ${eq.date_retrait ? '<div class="field"><div class="field-label">Date retrait</div><div class="field-value">' + eq.date_retrait + '</div></div>' : ''}
+        ${eq.motif_retrait ? '<div class="field"><div class="field-label">Motif retrait</div><div class="field-value">' + eq.motif_retrait + '</div></div>' : ''}
       </div>
     </div>
     <div class="section">
-      <div class="section-title">Bloc 2 — Localisation</div>
+      <div class="section-title">Bloc 2 - Localisation</div>
       <div class="grid">
-        <div class="field"><div class="field-label">Établissement</div><div class="field-value">${etabNom || '—'}</div></div>
-        <div class="field"><div class="field-label">Service</div><div class="field-value">${eq.service || '—'}</div></div>
-        <div class="field"><div class="field-label">Étage</div><div class="field-value">${eq.etage || '—'}</div></div>
-        <div class="field"><div class="field-label">Chambre / Zone</div><div class="field-value">${eq.localisation || '—'}</div></div>
-        <div class="field"><div class="field-label">Responsable référent</div><div class="field-value">${eq.responsable_referent || '—'}</div></div>
-        <div class="field"><div class="field-label">Date installation</div><div class="field-value">${eq.date_installation || '—'}</div></div>
+        <div class="field"><div class="field-label">Etablissement</div><div class="field-value">${etabNom || '-'}</div></div>
+        <div class="field"><div class="field-label">Service</div><div class="field-value">${eq.service || '-'}</div></div>
+        <div class="field"><div class="field-label">Etage</div><div class="field-value">${eq.etage || '-'}</div></div>
+        <div class="field"><div class="field-label">Chambre / Zone</div><div class="field-value">${eq.localisation || '-'}</div></div>
+        <div class="field"><div class="field-label">Responsable referent</div><div class="field-value">${eq.responsable_referent || '-'}</div></div>
+        <div class="field"><div class="field-label">Date installation</div><div class="field-value">${eq.date_installation || '-'}</div></div>
       </div>
     </div>
     <div class="section">
-      <div class="section-title">Bloc 3 — Fournisseur / Contrat</div>
+      <div class="section-title">Bloc 3 - Fournisseur / Contrat</div>
       <div class="grid">
-        <div class="field"><div class="field-label">Fournisseur</div><div class="field-value">${eq.fournisseur || '—'}</div></div>
+        <div class="field"><div class="field-label">Fournisseur</div><div class="field-value">${eq.fournisseur || '-'}</div></div>
         <div class="field"><div class="field-label">Mode</div><div class="field-value">${eq.mode_dispo === 'location' ? 'Location' : eq.mode_dispo === 'achat' ? 'Achat' : 'MAD'}</div></div>
-        <div class="field"><div class="field-label">Date livraison</div><div class="field-value">${eq.date_achat || '—'}</div></div>
-        <div class="field"><div class="field-label">Prochaine révision</div><div class="field-value">${eq.date_revision || '—'}</div></div>
+        <div class="field"><div class="field-label">Date livraison</div><div class="field-value">${eq.date_achat || '-'}</div></div>
+        <div class="field"><div class="field-label">Prochaine revision</div><div class="field-value">${eq.date_revision || '-'}</div></div>
       </div>
     </div>
     <div class="section">
-      <div class="section-title">Bloc 4 — Documents associés</div>
-      ${docs.length > 0 ? docs.map(d => `<div class="doc-item"><a href="${d.url}" target="_blank" style="color:#1A56DB;text-decoration:none;">📄 ${d.nom}</a></div>`).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun document associé</div>`}
+      <div class="section-title">Bloc 4 - Documents associes</div>
+      ${docs.length > 0 ? docs.map(function(d) { return '<div class="doc-item"><a href="' + d.url + '" target="_blank" style="color:#1A56DB;text-decoration:none;">document: ' + d.nom + '</a></div>'; }).join('') : '<div style="color:#999;font-size:11px;padding:8px;">Aucun document associe</div>'}
     </div>
     <div class="section">
-      <div class="section-title">Bloc 5 — Historique des déplacements</div>
-      ${historique.length > 0 ? historique.map(h => `<div class="hist-item"><span style="color:#999;text-decoration:line-through;">${h.ancienne_localisation || '—'}</span><span style="color:#999;">→</span><span style="font-weight:500;">${h.nouvelle_localisation || '—'}</span><span style="margin-left:auto;color:#999;font-size:10px;">${new Date(h.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>`).join('') : `<div style="color:#999;font-size:11px;padding:8px;">Aucun déplacement enregistré</div>`}
+      <div class="section-title">Bloc 5 - Historique des deplacements</div>
+      ${historique.length > 0 ? historique.map(function(h) { return '<div class="hist-item"><span style="color:#999;text-decoration:line-through;">' + (h.ancienne_localisation || '-') + '</span><span style="color:#999;">-></span><span style="font-weight:500;">' + (h.nouvelle_localisation || '-') + '</span><span style="margin-left:auto;color:#999;font-size:10px;">' + new Date(h.created_at).toLocaleDateString('fr-FR') + '</span></div>'; }).join('') : '<div style="color:#999;font-size:11px;padding:8px;">Aucun deplacement enregistre</div>'}
     </div>
     <div class="section">
-      <div class="section-title">Bloc 6 — Commentaires</div>
-      <div style="min-height:60px;background:#f9f9f9;border-radius:5px;padding:10px;font-size:12px;color:#1a1a1a;">${eq.commentaires || '<span style="color:#ccc;">Aucun commentaire</span>'}</div>
+      <div class="section-title">Bloc 6 - Commentaires</div>
+      <div style="min-height:60px;background:#f9f9f9;border-radius:5px;padding:10px;font-size:12px;color:#1a1a1a;">${eq.commentaires || 'Aucun commentaire'}</div>
     </div>
     <div class="footer">
-      <span>MediTrack · Plateforme de gestion PSDM · www.meditrack-app.fr</span>
-      <span>Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+      <span>MediTrack - Plateforme de gestion PSDM - www.meditrack-app.fr</span>
+      <span>Genere le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
     </div>
   </body></html>`
   const w = window.open('', '_blank')
@@ -136,6 +136,7 @@ export default function MaterielPage() {
   const [filterClient, setFilterClient] = useState('')
   const [filterMois, setFilterMois] = useState('')
   const [selected, setSelected] = useState<Equipement | null>(null)
+  const [historique, setHistorique] = useState<any[]>([])
   const [showEditModal, setShowEditModal] = useState(false)
   const [editForm, setEditForm] = useState<Partial<Equipement>>({})
   const [editSaving, setEditSaving] = useState(false)
@@ -175,12 +176,18 @@ export default function MaterielPage() {
 
   useEffect(() => {
     async function checkRole() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: prof } = await supabase.from('profiles').select('role, etablissement_id').eq('id', user.id).single()
-      setRole(prof?.role || 'client')
-      setEtablissementId(prof?.etablissement_id || null)
-      setRoleLoaded(true)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setRole('client'); setRoleLoaded(true); return }
+        const { data: prof } = await supabase.from('profiles').select('role, etablissement_id').eq('id', user.id).single()
+        setRole(prof?.role || 'client')
+        setEtablissementId(prof?.etablissement_id || null)
+        setRoleLoaded(true)
+      } catch (err) {
+        console.error('Erreur checkRole:', err)
+        setRole('client')
+        setRoleLoaded(true)
+      }
     }
     checkRole()
   }, [])
@@ -203,9 +210,7 @@ export default function MaterielPage() {
     setLoading(false)
   }
 
-  useEffect(() => {
-    if (roleLoaded && role === 'admin') load()
-  }, [roleLoaded, role])
+  useEffect(() => { if (roleLoaded && role === 'admin') load() }, [roleLoaded, role])
 
   useEffect(() => {
     let r = equipements
@@ -222,6 +227,11 @@ export default function MaterielPage() {
     setDocuments(data || [])
   }
 
+  async function loadHistorique(equipId: string) {
+    const { data } = await supabase.from('historique_localisation').select('*').eq('equipement_id', equipId).order('created_at', { ascending: false })
+    setHistorique(data || [])
+  }
+
   async function openFiche(eq: Equipement) {
     setSelected(eq)
     setPannDesc('')
@@ -229,6 +239,7 @@ export default function MaterielPage() {
     setEditingCommentaire(false)
     setNewCommentaire(eq.commentaires || '')
     loadDocs(eq.id)
+    loadHistorique(eq.id)
   }
 
   function openEditModal(eq: Equipement) {
@@ -236,40 +247,32 @@ export default function MaterielPage() {
     setShowEditModal(true)
   }
 
+  function openIAForEquipement(eq: Equipement) {
+    const msg = `Donne-moi un rapport complet sur cet equipement : ${eq.designation} (Ref: ${eq.reference || '-'} | N Serie: ${eq.numero_serie || '-'}) - Localisation: ${eq.localisation || '-'} - Statut: ${eq.statut}`
+    window.location.href = `/dashboard/assistant?q=${encodeURIComponent(msg)}`
+  }
+
   async function handleEdit() {
     if (!editForm.id || !editForm.designation) return
     setEditSaving(true)
     const payload = {
-      designation: editForm.designation,
-      reference: editForm.reference || null,
-      categorie: editForm.categorie || null,
-      fabricant: editForm.fabricant || null,
-      modele: editForm.modele || null,
-      numero_serie: editForm.numero_serie || null,
-      numero_lot: editForm.numero_lot || null,
-      mode_dispo: editForm.mode_dispo || 'location',
-      statut: editForm.statut || 'en_service',
-      localisation: editForm.localisation || null,
-      service: editForm.service || null,
-      etage: editForm.etage || null,
+      designation: editForm.designation, reference: editForm.reference || null,
+      categorie: editForm.categorie || null, fabricant: editForm.fabricant || null,
+      modele: editForm.modele || null, numero_serie: editForm.numero_serie || null,
+      numero_lot: editForm.numero_lot || null, mode_dispo: editForm.mode_dispo || 'location',
+      statut: editForm.statut || 'en_service', localisation: editForm.localisation || null,
+      service: editForm.service || null, etage: editForm.etage || null,
       responsable_referent: editForm.responsable_referent || null,
-      fournisseur: editForm.fournisseur || null,
-      date_achat: editForm.date_achat || null,
-      date_mes: editForm.date_mes || null,
-      date_revision: editForm.date_revision || null,
-      fin_garantie: editForm.fin_garantie || null,
-      date_installation: editForm.date_installation || null,
-      date_retrait: editForm.date_retrait || null,
-      motif_retrait: editForm.motif_retrait || null,
-      commentaires: editForm.commentaires || null,
-      etablissement_id: editForm.etablissement_id || null,
+      fournisseur: editForm.fournisseur || null, date_achat: editForm.date_achat || null,
+      date_mes: editForm.date_mes || null, date_revision: editForm.date_revision || null,
+      fin_garantie: editForm.fin_garantie || null, date_installation: editForm.date_installation || null,
+      date_retrait: editForm.date_retrait || null, motif_retrait: editForm.motif_retrait || null,
+      commentaires: editForm.commentaires || null, etablissement_id: editForm.etablissement_id || null,
     }
     await supabase.from('equipements').update(payload).eq('id', editForm.id)
     setShowEditModal(false)
     setEditSaving(false)
-    if (selected?.id === editForm.id) {
-      setSelected({ ...selected, ...payload } as Equipement)
-    }
+    if (selected?.id === editForm.id) setSelected({ ...selected, ...payload } as Equipement)
     load()
   }
 
@@ -296,68 +299,32 @@ export default function MaterielPage() {
     if (!addForm.designation) return
     setAddSaving(true)
     setAddError('')
-
     if (addForm.numero_serie) {
       const { data: existing } = await supabase.from('equipements').select('id, reference, designation').eq('numero_serie', addForm.numero_serie).maybeSingle()
-      if (existing) {
-        setAddError(`Ce numéro de série existe déjà — ${existing.reference} · ${existing.designation}`)
-        setAddSaving(false)
-        return
-      }
+      if (existing) { setAddError(`Ce numero de serie existe deja - ${existing.reference} · ${existing.designation}`); setAddSaving(false); return }
     }
-
     if (addForm.reference) {
       const { data: existingRef } = await supabase.from('equipements').select('id, designation').eq('reference', addForm.reference).maybeSingle()
-      if (existingRef) {
-        setAddError(`Cette référence existe déjà — ${existingRef.designation}`)
-        setAddSaving(false)
-        return
-      }
+      if (existingRef) { setAddError(`Cette reference existe deja - ${existingRef.designation}`); setAddSaving(false); return }
     }
-
     const payload = {
-      designation: addForm.designation,
-      reference: addForm.reference || null,
-      categorie: addForm.categorie || null,
-      fabricant: addForm.fabricant || null,
-      modele: addForm.modele || null,
-      numero_serie: addForm.numero_serie || null,
-      numero_lot: addForm.numero_lot || null,
-      mode_dispo: addForm.mode_dispo || 'location',
-      statut: addForm.statut || 'en_service',
-      localisation: addForm.localisation || null,
-      service: addForm.service || null,
-      etage: addForm.etage || null,
+      designation: addForm.designation, reference: addForm.reference || null,
+      categorie: addForm.categorie || null, fabricant: addForm.fabricant || null,
+      modele: addForm.modele || null, numero_serie: addForm.numero_serie || null,
+      numero_lot: addForm.numero_lot || null, mode_dispo: addForm.mode_dispo || 'location',
+      statut: addForm.statut || 'en_service', localisation: addForm.localisation || null,
+      service: addForm.service || null, etage: addForm.etage || null,
       responsable_referent: addForm.responsable_referent || null,
-      fournisseur: addForm.fournisseur || null,
-      date_achat: addForm.date_achat || null,
-      date_mes: addForm.date_mes || null,
-      date_revision: addForm.date_revision || null,
-      fin_garantie: addForm.fin_garantie || null,
-      date_installation: addForm.date_installation || null,
-      date_retrait: addForm.date_retrait || null,
-      motif_retrait: addForm.motif_retrait || null,
-      commentaires: addForm.commentaires || null,
-      etablissement_id: addForm.etablissement_id || null,
+      fournisseur: addForm.fournisseur || null, date_achat: addForm.date_achat || null,
+      date_mes: addForm.date_mes || null, date_revision: addForm.date_revision || null,
+      fin_garantie: addForm.fin_garantie || null, date_installation: addForm.date_installation || null,
+      date_retrait: addForm.date_retrait || null, motif_retrait: addForm.motif_retrait || null,
+      commentaires: addForm.commentaires || null, etablissement_id: addForm.etablissement_id || null,
     }
-
     const { error } = await supabase.from('equipements').insert([payload])
-    if (error) {
-      setAddError(`Erreur : ${error.message}`)
-      setAddSaving(false)
-      return
-    }
-
+    if (error) { setAddError(`Erreur : ${error.message}`); setAddSaving(false); return }
     setShowAddModal(false)
-    setAddForm({
-      reference: '', designation: '', categorie: '', fabricant: '',
-      modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location',
-      statut: 'en_service', localisation: '', service: '', etage: '',
-      responsable_referent: '', fournisseur: '', date_achat: '',
-      date_mes: '', date_revision: '', fin_garantie: '',
-      date_installation: '', date_retrait: '', motif_retrait: '',
-      commentaires: '', etablissement_id: ''
-    })
+    setAddForm({ reference: '', designation: '', categorie: '', fabricant: '', modele: '', numero_serie: '', numero_lot: '', mode_dispo: 'location', statut: 'en_service', localisation: '', service: '', etage: '', responsable_referent: '', fournisseur: '', date_achat: '', date_mes: '', date_revision: '', fin_garantie: '', date_installation: '', date_retrait: '', motif_retrait: '', commentaires: '', etablissement_id: '' })
     setAddError('')
     setAddSaving(false)
     load()
@@ -381,15 +348,12 @@ export default function MaterielPage() {
 
   function handleExport() {
     const data = equipements.map(e => ({
-      reference: e.reference, designation: e.designation,
-      categorie: e.categorie || '', fabricant: e.fabricant || '',
-      modele: e.modele || '', numero_serie: e.numero_serie || '',
-      numero_lot: e.numero_lot || '', mode_dispo: e.mode_dispo || '',
-      statut: e.statut || '', localisation: e.localisation || '',
-      service: e.service || '', etage: e.etage || '',
-      responsable_referent: e.responsable_referent || '',
-      fournisseur: e.fournisseur || '', date_achat: e.date_achat || '',
-      date_mes: e.date_mes || '', date_revision: e.date_revision || '',
+      reference: e.reference, designation: e.designation, categorie: e.categorie || '',
+      fabricant: e.fabricant || '', modele: e.modele || '', numero_serie: e.numero_serie || '',
+      numero_lot: e.numero_lot || '', mode_dispo: e.mode_dispo || '', statut: e.statut || '',
+      localisation: e.localisation || '', service: e.service || '', etage: e.etage || '',
+      responsable_referent: e.responsable_referent || '', fournisseur: e.fournisseur || '',
+      date_achat: e.date_achat || '', date_mes: e.date_mes || '', date_revision: e.date_revision || '',
       fin_garantie: e.fin_garantie || '', date_installation: e.date_installation || '',
       commentaires: e.commentaires || '', etablissement_id: e.etablissement_id || ''
     }))
@@ -407,17 +371,15 @@ export default function MaterielPage() {
     for (const row of rows) {
       if (!row.designation) { errors++; continue }
       const { error } = await supabase.from('equipements').upsert([{
-        reference: row.reference || null, designation: row.designation,
-        categorie: row.categorie || null, fabricant: row.fabricant || null,
-        modele: row.modele || null, numero_serie: row.numero_serie || null,
+        reference: row.reference || null, designation: row.designation, categorie: row.categorie || null,
+        fabricant: row.fabricant || null, modele: row.modele || null, numero_serie: row.numero_serie || null,
         numero_lot: row.numero_lot || null, mode_dispo: row.mode_dispo || 'location',
         statut: row.statut || 'en_service', localisation: row.localisation || null,
         service: row.service || null, etage: row.etage || null,
-        responsable_referent: row.responsable_referent || null,
-        fournisseur: row.fournisseur || null, date_achat: row.date_achat || null,
-        date_mes: row.date_mes || null, date_revision: row.date_revision || null,
-        fin_garantie: row.fin_garantie || null, date_installation: row.date_installation || null,
-        commentaires: row.commentaires || null,
+        responsable_referent: row.responsable_referent || null, fournisseur: row.fournisseur || null,
+        date_achat: row.date_achat || null, date_mes: row.date_mes || null,
+        date_revision: row.date_revision || null, fin_garantie: row.fin_garantie || null,
+        date_installation: row.date_installation || null, commentaires: row.commentaires || null,
         etablissement_id: row.etablissement_id || null
       }], { onConflict: 'reference' })
       if (error) errors++; else success++
@@ -429,7 +391,7 @@ export default function MaterielPage() {
   }
 
   const filterBtn = (label: string, active: boolean, onClick: () => void) => (
-    <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+    <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
       {label}
     </button>
   )
@@ -437,57 +399,55 @@ export default function MaterielPage() {
   const hasFilters = !!(search || filterStatut !== 'tous' || filterMode !== 'tous' || filterClient || filterMois)
   const statutOptions = [
     { value: 'en_service', label: 'En service' },
-    { value: 'en_preparation', label: 'En préparation / Livraison planifiée' },
+    { value: 'en_preparation', label: 'En preparation / Livraison planifiee' },
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'hors_service', label: 'Hors service' },
   ]
 
   if (!roleLoaded) return <div style={{ padding: '32px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
   if (role === 'client' && etablissementId) return <MaterielClientPage etablissementId={etablissementId} />
-  if (loading) return <div style={{ padding: '32px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
+  if (role === 'admin' && loading) return <div style={{ padding: '32px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
+      {/* BARRE ACTIONS */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} équipement{filtered.length > 1 ? 's' : ''}</div>
+        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} equipement{filtered.length > 1 ? 's' : ''}</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {importResult && (
             <div style={{ fontSize: '12px', padding: '6px 12px', borderRadius: 'var(--radius-sm)', background: importResult.errors > 0 ? 'var(--warning-light)' : 'var(--success-light)', color: importResult.errors > 0 ? 'var(--warning)' : 'var(--success)', border: `1px solid ${importResult.errors > 0 ? 'rgba(158,94,0,0.2)' : 'rgba(10,124,78,0.2)'}` }}>
-              ✓ {importResult.success} importés {importResult.errors > 0 ? `· ${importResult.errors} erreurs` : ''}
+              {importResult.success} importes {importResult.errors > 0 ? `· ${importResult.errors} erreurs` : ''}
             </div>
           )}
-          <button onClick={handleExport} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'}>
-            <i className="ti ti-download" style={{ fontSize: '14px' }} aria-hidden="true" />Export CSV
+          <button onClick={handleExport} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-download" style={{ fontSize: '14px' }} />Export CSV
           </button>
           <label style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <i className="ti ti-upload" style={{ fontSize: '14px' }} aria-hidden="true" />
+            <i className="ti ti-upload" style={{ fontSize: '14px' }} />
             {importLoading ? 'Import...' : 'Import CSV'}
             <input type='file' accept='.csv' style={{ display: 'none' }} onChange={handleImport} />
           </label>
-          <button onClick={() => setShowCatModal(true)} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface)'}>
-            <i className="ti ti-tags" style={{ fontSize: '14px' }} aria-hidden="true" />Catégories
+          <button onClick={() => setShowCatModal(true)} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-tags" style={{ fontSize: '14px' }} />Categories
           </button>
           <button onClick={() => { setShowAddModal(true); setAddError('') }} style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-            <i className="ti ti-plus" style={{ fontSize: '14px' }} aria-hidden="true" />Ajouter
+            <i className="ti ti-plus" style={{ fontSize: '14px' }} />Ajouter
           </button>
         </div>
       </div>
 
+      {/* FILTRES */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
-          <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'var(--text-tertiary)' }} aria-hidden="true" />
+          <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'var(--text-tertiary)' }} />
           <input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inputStyle, width: '180px', paddingLeft: '32px' }} />
         </div>
         <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
           {filterBtn('En service', filterStatut === 'en_service', () => setFilterStatut('en_service'))}
-          {filterBtn('En préparation', filterStatut === 'en_preparation', () => setFilterStatut('en_preparation'))}
+          {filterBtn('En preparation', filterStatut === 'en_preparation', () => setFilterStatut('en_preparation'))}
           {filterBtn('Maintenance', filterStatut === 'maintenance', () => setFilterStatut('maintenance'))}
           {filterBtn('Hors service', filterStatut === 'hors_service', () => setFilterStatut('hors_service'))}
         </div>
@@ -506,16 +466,17 @@ export default function MaterielPage() {
         {hasFilters && (
           <button onClick={() => { setSearch(''); setFilterStatut('tous'); setFilterMode('tous'); setFilterClient(''); setFilterMois('') }}
             style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-secondary)', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-            ✕ Réinitialiser
+            x Reinitialiser
           </button>
         )}
       </div>
 
+      {/* TABLEAU */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'var(--surface-hover)' }}>
-              {['Référence', 'Désignation', 'Catégorie', 'Fabricant', 'Client', 'Localisation', 'Mode', 'MES', 'Statut', ''].map(h => (
+              {['Reference', 'Designation', 'Categorie', 'Fabricant', 'Client', 'Localisation', 'Mode', 'MES', 'Statut', ''].map(h => (
                 <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', letterSpacing: '0.4px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -523,38 +484,37 @@ export default function MaterielPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={10} style={{ padding: '48px', textAlign: 'center' }}>
-                <i className="ti ti-box-off" style={{ fontSize: '28px', display: 'block', marginBottom: '8px', color: 'var(--text-tertiary)', opacity: 0.4 }} aria-hidden="true" />
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>Aucun équipement trouvé</div>
+                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>Aucun equipement trouve</div>
               </td></tr>
             ) : filtered.map((eq, i) => {
               const st = statutStyle(eq.statut)
               const etab = etablissements.find(e => e.id === eq.etablissement_id)
               return (
-                <tr key={eq.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background 0.1s' }}
+                <tr key={eq.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}
                   onMouseEnter={e => (e.currentTarget as HTMLTableRowElement).style.background = 'var(--surface-hover)'}
                   onMouseLeave={e => (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'}>
-                  <td style={{ padding: '12px 14px', cursor: 'pointer' }} onClick={() => openFiche(eq)}>
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent)', fontFamily: 'monospace' }}>{eq.reference || '—'}</span>
+                  <td style={{ padding: '12px 14px' }} onClick={() => openFiche(eq)}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent)', fontFamily: 'monospace' }}>{eq.reference || '-'}</span>
                   </td>
-                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{eq.designation}</td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{eq.categorie || '—'}</td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{eq.fabricant} {eq.modele}</td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{etab?.nom || <span style={{ color: 'var(--warning)', fontStyle: 'italic' }}>Non affecté</span>}</td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{eq.localisation || '—'}</td>
-                  <td style={{ padding: '12px 14px', cursor: 'pointer' }} onClick={() => openFiche(eq)}>
+                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }} onClick={() => openFiche(eq)}>{eq.designation}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }} onClick={() => openFiche(eq)}>{eq.categorie || '-'}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }} onClick={() => openFiche(eq)}>{eq.fabricant} {eq.modele}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }} onClick={() => openFiche(eq)}>{etab?.nom || <span style={{ color: 'var(--warning)', fontStyle: 'italic' }}>Non affecte</span>}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }} onClick={() => openFiche(eq)}>{eq.localisation || '-'}</td>
+                  <td style={{ padding: '12px 14px' }} onClick={() => openFiche(eq)}>
                     <span style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '500', border: '1px solid var(--border)' }}>{modeLabel(eq.mode_dispo)}</span>
                   </td>
-                  <td style={{ padding: '12px 14px', fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => openFiche(eq)}>{eq.date_mes || '—'}</td>
-                  <td style={{ padding: '12px 14px', cursor: 'pointer' }} onClick={() => openFiche(eq)}>
+                  <td style={{ padding: '12px 14px', fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }} onClick={() => openFiche(eq)}>{eq.date_mes || '-'}</td>
+                  <td style={{ padding: '12px 14px' }} onClick={() => openFiche(eq)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color, flexShrink: 0 }} />
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: st.color }} />
                       <span style={{ fontSize: '12px', color: st.color, fontWeight: '500', whiteSpace: 'nowrap' }}>{st.label}</span>
                     </div>
                   </td>
                   <td style={{ padding: '12px 14px' }}>
                     <button onClick={e => { e.stopPropagation(); openEditModal(eq) }}
                       style={{ padding: '5px 10px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-edit" style={{ fontSize: '12px' }} aria-hidden="true" />Modifier
+                      <i className="ti ti-edit" style={{ fontSize: '12px' }} />Modifier
                     </button>
                   </td>
                 </tr>
@@ -569,31 +529,34 @@ export default function MaterielPage() {
         <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
+
+            {/* Header fiche */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="ti ti-device-heart-monitor" style={{ fontSize: '20px', color: 'var(--accent)' }} aria-hidden="true" />
+                  <i className="ti ti-device-heart-monitor" style={{ fontSize: '20px', color: 'var(--accent)' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{selected.designation}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{selected.reference || '—'} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom || 'Non affecté'}</div>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>{selected.designation}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{selected.reference || '-'} · {etablissements.find(e => e.id === selected.etablissement_id)?.nom || 'Non affecte'}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
+                <button onClick={() => openIAForEquipement(selected)}
+                  style={{ padding: '6px 12px', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <i className="ti ti-sparkles" style={{ fontSize: '14px' }} />IA
+                </button>
                 <button onClick={() => { setSelected(null); openEditModal(selected) }}
                   style={{ padding: '6px 12px', background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <i className="ti ti-edit" style={{ fontSize: '14px' }} aria-hidden="true" />Modifier
+                  <i className="ti ti-edit" style={{ fontSize: '14px' }} />Modifier
                 </button>
-                <button onClick={async () => {
-                  const { data: hist } = await supabase.from('historique_localisation').select('*').eq('equipement_id', selected.id).order('created_at', { ascending: false })
-                  generateFicheEquipementPDF(selected, etablissements.find(e => e.id === selected.etablissement_id)?.nom || '', documents, hist || [])
-                }}
+                <button onClick={() => generateFicheEquipementPDF(selected, etablissements.find(e => e.id === selected.etablissement_id)?.nom || '', documents, historique)}
                   style={{ padding: '6px 12px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <i className="ti ti-file-type-pdf" style={{ fontSize: '14px' }} aria-hidden="true" />PDF
+                  <i className="ti ti-file-type-pdf" style={{ fontSize: '14px' }} />PDF
                 </button>
                 <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
                   style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                  <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+                  <i className="ti ti-x" style={{ fontSize: '14px' }} />
                 </button>
               </div>
             </div>
@@ -603,10 +566,11 @@ export default function MaterielPage() {
                 {(() => { const st = statutStyle(selected.statut); return <span style={{ background: st.bg, color: st.color, padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>{st.label}</span> })()}
               </div>
 
+              {/* Bloc 1 */}
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 1 — Identification</div>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 1 - Identification</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[['Référence', selected.reference || '—'], ['Catégorie', selected.categorie || '—'], ['N° de série', selected.numero_serie || '—'], ['N° de lot', selected.numero_lot || '—'], ['Fabricant', selected.fabricant || '—'], ['Modèle', selected.modele || '—'], ['Fin de garantie', selected.fin_garantie || '—'], ['Date MES', selected.date_mes || '—']].map(([label, value]) => (
+                  {[['Reference', selected.reference || '-'], ['Categorie', selected.categorie || '-'], ['N de serie', selected.numero_serie || '-'], ['N de lot', selected.numero_lot || '-'], ['Fabricant', selected.fabricant || '-'], ['Modele', selected.modele || '-'], ['Fin de garantie', selected.fin_garantie || '-'], ['Date MES', selected.date_mes || '-']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -615,10 +579,11 @@ export default function MaterielPage() {
                 </div>
               </div>
 
+              {/* Bloc 2 */}
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 2 — Localisation</div>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 2 - Localisation</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[['Service', selected.service || '—'], ['Étage', selected.etage || '—'], ['Chambre / Zone', selected.localisation || '—'], ['Responsable', selected.responsable_referent || '—']].map(([label, value]) => (
+                  {[['Service', selected.service || '-'], ['Etage', selected.etage || '-'], ['Chambre / Zone', selected.localisation || '-'], ['Responsable', selected.responsable_referent || '-']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -627,10 +592,11 @@ export default function MaterielPage() {
                 </div>
               </div>
 
+              {/* Bloc 3 */}
               <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 3 — Fournisseur / Contrat</div>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 3 - Fournisseur / Contrat</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {[['Fournisseur', selected.fournisseur || '—'], ['Mode', modeLabel(selected.mode_dispo)], ['Date livraison', selected.date_achat || '—'], ['Date installation', selected.date_installation || '—'], ['Prochaine révision', selected.date_revision || '—']].map(([label, value]) => (
+                  {[['Fournisseur', selected.fournisseur || '-'], ['Mode', modeLabel(selected.mode_dispo)], ['Date livraison', selected.date_achat || '-'], ['Date installation', selected.date_installation || '-'], ['Prochaine revision', selected.date_revision || '-']].map(([label, value]) => (
                     <div key={label} style={{ background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{value}</div>
@@ -639,40 +605,53 @@ export default function MaterielPage() {
                 </div>
               </div>
 
+              {/* Bloc 4 Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 4 — Documents</div>
+                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 4 - Documents</div>
                   <label style={{ fontSize: '12px', color: 'var(--accent)', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <i className="ti ti-upload" style={{ fontSize: '13px' }} aria-hidden="true" />
+                    <i className="ti ti-upload" style={{ fontSize: '13px' }} />
                     {uploadLoading ? 'Upload...' : 'Ajouter'}
                     <input type='file' style={{ display: 'none' }} onChange={handleUpload} accept='.pdf,.jpg,.jpeg,.png,.doc,.docx' />
                   </label>
                 </div>
                 {documents.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-tertiary)', fontSize: '12px' }}>
-                    <i className="ti ti-folder-open" style={{ fontSize: '20px', display: 'block', marginBottom: '4px', opacity: 0.4 }} aria-hidden="true" />Aucun document
-                  </div>
+                  <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-tertiary)', fontSize: '12px' }}>Aucun document</div>
                 ) : documents.map(doc => (
                   <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: '6px' }}>
-                    <i className={`ti ${doc.type_doc?.includes('pdf') ? 'ti-file-type-pdf' : 'ti-file-description'}`} style={{ fontSize: '16px', color: doc.type_doc?.includes('pdf') ? 'var(--danger)' : 'var(--accent)', flexShrink: 0 }} aria-hidden="true" />
+                    <i className={`ti ${doc.type_doc?.includes('pdf') ? 'ti-file-type-pdf' : 'ti-file-description'}`} style={{ fontSize: '16px', color: doc.type_doc?.includes('pdf') ? 'var(--danger)' : 'var(--accent)', flexShrink: 0 }} />
                     <a href={doc.url} target='_blank' rel='noreferrer' style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500', flex: 1, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom}</a>
-                    <a href={doc.url} target='_blank' rel='noreferrer' style={{ color: 'var(--text-tertiary)', display: 'flex' }}><i className="ti ti-external-link" style={{ fontSize: '13px' }} aria-hidden="true" /></a>
-                    <button onClick={() => handleDeleteDoc(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)', display: 'flex' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}>
-                      <i className="ti ti-trash" style={{ fontSize: '14px' }} aria-hidden="true" />
+                    <a href={doc.url} target='_blank' rel='noreferrer' style={{ color: 'var(--text-tertiary)', display: 'flex' }}><i className="ti ti-external-link" style={{ fontSize: '13px' }} /></a>
+                    <button onClick={() => handleDeleteDoc(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)', display: 'flex' }}>
+                      <i className="ti ti-trash" style={{ fontSize: '14px' }} />
                     </button>
                   </div>
                 ))}
               </div>
 
+              {/* Bloc 5 Historique */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 5 - Historique des deplacements</div>
+                {historique.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '12px', color: 'var(--text-tertiary)', fontSize: '12px', fontStyle: 'italic' }}>Aucun deplacement enregistre</div>
+                ) : historique.map((h, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{h.ancienne_localisation || '-'}</span>
+                    <i className="ti ti-arrow-right" style={{ fontSize: '13px', color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                    <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', flex: 1 }}>{h.nouvelle_localisation || '-'}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', flexShrink: 0 }}>{new Date(h.created_at).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bloc 6 Commentaires */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 6 — Commentaires</div>
+                  <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 6 - Commentaires</div>
                   {!editingCommentaire && (
                     <button onClick={() => { setEditingCommentaire(true); setNewCommentaire(selected.commentaires || '') }}
                       style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-edit" style={{ fontSize: '13px' }} aria-hidden="true" />Modifier
+                      <i className="ti ti-edit" style={{ fontSize: '13px' }} />Modifier
                     </button>
                   )}
                 </div>
@@ -705,17 +684,18 @@ export default function MaterielPage() {
                 )}
               </div>
 
+              {/* Signaler panne */}
               <div>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Signaler une panne</div>
                 {panneSuccess ? (
                   <div style={{ padding: '14px', background: 'var(--success-light)', border: '1px solid rgba(10,124,78,0.2)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <i className="ti ti-check" style={{ fontSize: '16px', color: 'var(--success)' }} aria-hidden="true" />
-                    <div style={{ fontSize: '13px', color: 'var(--success)', fontWeight: '500' }}>Panne signalée avec succès</div>
+                    <i className="ti ti-check" style={{ fontSize: '16px', color: 'var(--success)' }} />
+                    <div style={{ fontSize: '13px', color: 'var(--success)', fontWeight: '500' }}>Panne signalee avec succes</div>
                   </div>
                 ) : (
                   <>
                     <textarea value={pannDesc} onChange={e => setPannDesc(e.target.value)} rows={3}
-                      placeholder="Décrivez le problème observé..." style={{ ...inputStyle, resize: 'none', marginBottom: '10px' }} />
+                      placeholder="Decrivez le probleme observe..." style={{ ...inputStyle, resize: 'none', marginBottom: '10px' }} />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={async () => {
                         if (!pannDesc) return
@@ -726,7 +706,7 @@ export default function MaterielPage() {
                         setTimeout(() => { setSelected(null); setPanneSuccess(false); setPannDesc('') }, 2000)
                       }} disabled={panneSaving || !pannDesc}
                         style={{ flex: 1, padding: '10px', background: panneSaving || !pannDesc ? 'var(--surface-hover)' : 'var(--danger-light)', border: `1px solid ${panneSaving || !pannDesc ? 'var(--border)' : 'rgba(194,54,42,0.3)'}`, borderRadius: 'var(--radius-md)', color: panneSaving || !pannDesc ? 'var(--text-tertiary)' : 'var(--danger)', fontSize: '13px', fontWeight: '500', cursor: panneSaving || !pannDesc ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                        {panneSaving ? 'Envoi...' : '🚨 Signaler la panne'}
+                        {panneSaving ? 'Envoi...' : 'Signaler la panne'}
                       </button>
                       <button onClick={() => { setSelected(null); setPannDesc(''); setPanneSuccess(false) }}
                         style={{ flex: 1, padding: '10px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
@@ -742,32 +722,32 @@ export default function MaterielPage() {
       )}
 
       {/* MODAL MODIFIER */}
-      {showEditModal && editForm && (
+      {showEditModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowEditModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Modifier l'équipement</div>
+                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Modifier l equipement</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{editForm.designation}</div>
               </div>
               <button onClick={() => setShowEditModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+                <i className="ti ti-x" style={{ fontSize: '14px' }} />
               </button>
             </div>
             <div style={{ padding: '20px 24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 — Identification</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 - Identification</div>
                 </div>
                 {[
-                  { label: 'Désignation *', key: 'designation', placeholder: 'Lit médicalisé' },
-                  { label: 'Référence', key: 'reference', placeholder: 'LIT-2024-004' },
+                  { label: 'Designation *', key: 'designation', placeholder: 'Lit medicalise' },
+                  { label: 'Reference', key: 'reference', placeholder: 'LIT-2024-004' },
                   { label: 'Fabricant', key: 'fabricant', placeholder: 'Invacare' },
                   { label: 'Fournisseur / PSDM', key: 'fournisseur', placeholder: 'GLOBAL MEDICAL' },
-                  { label: 'Modèle', key: 'modele', placeholder: 'Sonata Electric' },
-                  { label: 'N° de série', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
-                  { label: 'N° de lot', key: 'numero_lot', placeholder: 'LOT-2024-001' },
+                  { label: 'Modele', key: 'modele', placeholder: 'Sonata Electric' },
+                  { label: 'N de serie', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
+                  { label: 'N de lot', key: 'numero_lot', placeholder: 'LOT-2024-001' },
                 ].map(f => (
                   <div key={f.key}>
                     <label style={labelStyle}>{f.label}</label>
@@ -775,9 +755,9 @@ export default function MaterielPage() {
                   </div>
                 ))}
                 <div>
-                  <label style={labelStyle}>Catégorie</label>
+                  <label style={labelStyle}>Categorie</label>
                   <select value={editForm.categorie || ''} onChange={e => setEditForm(p => ({ ...p, categorie: e.target.value }))} style={inputStyle}>
-                    <option value=''>Sélectionner...</option>
+                    <option value=''>Selectionner...</option>
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -787,90 +767,64 @@ export default function MaterielPage() {
                     {statutOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>Date MES</label>
-                  <input type='date' value={editForm.date_mes || ''} onChange={e => setEditForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Fin de garantie</label>
-                  <input type='date' value={editForm.fin_garantie || ''} onChange={e => setEditForm(p => ({ ...p, fin_garantie: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Date retrait</label>
-                  <input type='date' value={editForm.date_retrait || ''} onChange={e => setEditForm(p => ({ ...p, date_retrait: e.target.value }))} style={inputStyle} />
-                </div>
+                <div><label style={labelStyle}>Date MES</label><input type='date' value={editForm.date_mes || ''} onChange={e => setEditForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Fin de garantie</label><input type='date' value={editForm.fin_garantie || ''} onChange={e => setEditForm(p => ({ ...p, fin_garantie: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Date retrait</label><input type='date' value={editForm.date_retrait || ''} onChange={e => setEditForm(p => ({ ...p, date_retrait: e.target.value }))} style={inputStyle} /></div>
                 <div>
                   <label style={labelStyle}>Motif retrait</label>
                   <select value={editForm.motif_retrait || ''} onChange={e => setEditForm(p => ({ ...p, motif_retrait: e.target.value }))} style={inputStyle}>
-                    <option value=''>—</option>
+                    <option value=''>-</option>
                     <option value='panne'>Panne</option>
                     <option value='remplacement'>Remplacement</option>
                     <option value='obsolescence'>Obsolescence</option>
                     <option value='restitution'>Restitution</option>
                   </select>
                 </div>
-
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 — Localisation</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 - Localisation</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Établissement</label>
+                  <label style={labelStyle}>Etablissement</label>
                   <select value={editForm.etablissement_id || ''} onChange={e => setEditForm(p => ({ ...p, etablissement_id: e.target.value }))} style={inputStyle}>
-                    <option value=''>Non affecté</option>
+                    <option value=''>Non affecte</option>
                     {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
                   </select>
                 </div>
                 {[
                   { label: 'Service', key: 'service', placeholder: 'Soins intensifs' },
-                  { label: 'Étage', key: 'etage', placeholder: '2ème étage' },
+                  { label: 'Etage', key: 'etage', placeholder: '2eme etage' },
                   { label: 'Chambre / Zone', key: 'localisation', placeholder: 'Chambre 12' },
-                  { label: 'Responsable référent', key: 'responsable_referent', placeholder: 'Dr. Martin' },
+                  { label: 'Responsable referent', key: 'responsable_referent', placeholder: 'Dr. Martin' },
                 ].map(f => (
                   <div key={f.key}>
                     <label style={labelStyle}>{f.label}</label>
                     <input value={(editForm as any)[f.key] || ''} onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inputStyle} />
                   </div>
                 ))}
-
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 — Fournisseur / Contrat</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 - Fournisseur / Contrat</div>
                 </div>
                 <div>
                   <label style={labelStyle}>Mode</label>
                   <select value={editForm.mode_dispo || 'location'} onChange={e => setEditForm(p => ({ ...p, mode_dispo: e.target.value }))} style={inputStyle}>
                     <option value='location'>Location</option>
                     <option value='achat'>Achat</option>
-                    <option value='mad'>Mise à disposition</option>
+                    <option value='mad'>Mise a disposition</option>
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>Date livraison</label>
-                  <input type='date' value={editForm.date_achat || ''} onChange={e => setEditForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Date installation</label>
-                  <input type='date' value={editForm.date_installation || ''} onChange={e => setEditForm(p => ({ ...p, date_installation: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Prochaine révision</label>
-                  <input type='date' value={editForm.date_revision || ''} onChange={e => setEditForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} />
-                </div>
-
+                <div><label style={labelStyle}>Date livraison</label><input type='date' value={editForm.date_achat || ''} onChange={e => setEditForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Date installation</label><input type='date' value={editForm.date_installation || ''} onChange={e => setEditForm(p => ({ ...p, date_installation: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Prochaine revision</label><input type='date' value={editForm.date_revision || ''} onChange={e => setEditForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} /></div>
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 — Commentaires</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 - Commentaires</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Observations / Notes</label>
-                  <textarea value={editForm.commentaires || ''} onChange={e => setEditForm(p => ({ ...p, commentaires: e.target.value }))}
-                    placeholder="Observations, notes techniques..." rows={3} style={{ ...inputStyle, resize: 'none' }} />
+                  <textarea value={editForm.commentaires || ''} onChange={e => setEditForm(p => ({ ...p, commentaires: e.target.value }))} placeholder="Observations, notes techniques..." rows={3} style={{ ...inputStyle, resize: 'none' }} />
                 </div>
               </div>
-
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => setShowEditModal(false)}
-                  style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                  Annuler
-                </button>
+                <button onClick={() => setShowEditModal(false)} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
                 <button onClick={handleEdit} disabled={editSaving || !editForm.designation}
                   style={{ flex: 1, padding: '11px', background: editSaving || !editForm.designation ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: editSaving || !editForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
                   {editSaving ? 'Enregistrement...' : 'Sauvegarder'}
@@ -887,24 +841,24 @@ export default function MaterielPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
-              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Ajouter un équipement</div>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Ajouter un equipement</div>
               <button onClick={() => { setShowAddModal(false); setAddError('') }} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+                <i className="ti ti-x" style={{ fontSize: '14px' }} />
               </button>
             </div>
             <div style={{ padding: '20px 24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 — Identification</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 1 - Identification</div>
                 </div>
                 {[
-                  { label: 'Désignation *', key: 'designation', placeholder: 'Lit médicalisé' },
-                  { label: 'Référence', key: 'reference', placeholder: 'LIT-2024-004' },
+                  { label: 'Designation *', key: 'designation', placeholder: 'Lit medicalise' },
+                  { label: 'Reference', key: 'reference', placeholder: 'LIT-2024-004' },
                   { label: 'Fabricant', key: 'fabricant', placeholder: 'Invacare' },
                   { label: 'Fournisseur / PSDM', key: 'fournisseur', placeholder: 'GLOBAL MEDICAL' },
-                  { label: 'Modèle', key: 'modele', placeholder: 'Sonata Electric' },
-                  { label: 'N° de série', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
-                  { label: 'N° de lot', key: 'numero_lot', placeholder: 'LOT-2024-001' },
+                  { label: 'Modele', key: 'modele', placeholder: 'Sonata Electric' },
+                  { label: 'N de serie', key: 'numero_serie', placeholder: 'SN-XXX-2024' },
+                  { label: 'N de lot', key: 'numero_lot', placeholder: 'LOT-2024-001' },
                 ].map(f => (
                   <div key={f.key}>
                     <label style={labelStyle}>{f.label}</label>
@@ -912,9 +866,9 @@ export default function MaterielPage() {
                   </div>
                 ))}
                 <div>
-                  <label style={labelStyle}>Catégorie</label>
+                  <label style={labelStyle}>Categorie</label>
                   <select value={addForm.categorie} onChange={e => setAddForm(p => ({ ...p, categorie: e.target.value }))} style={inputStyle}>
-                    <option value=''>Sélectionner...</option>
+                    <option value=''>Selectionner...</option>
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -924,109 +878,75 @@ export default function MaterielPage() {
                     {statutOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>Date MES</label>
-                  <input type='date' value={addForm.date_mes} onChange={e => setAddForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Fin de garantie</label>
-                  <input type='date' value={addForm.fin_garantie} onChange={e => setAddForm(p => ({ ...p, fin_garantie: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Date retrait</label>
-                  <input type='date' value={addForm.date_retrait} onChange={e => setAddForm(p => ({ ...p, date_retrait: e.target.value }))} style={inputStyle} />
-                </div>
+                <div><label style={labelStyle}>Date MES</label><input type='date' value={addForm.date_mes} onChange={e => setAddForm(p => ({ ...p, date_mes: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Fin de garantie</label><input type='date' value={addForm.fin_garantie} onChange={e => setAddForm(p => ({ ...p, fin_garantie: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Date retrait</label><input type='date' value={addForm.date_retrait} onChange={e => setAddForm(p => ({ ...p, date_retrait: e.target.value }))} style={inputStyle} /></div>
                 <div>
                   <label style={labelStyle}>Motif retrait</label>
                   <select value={addForm.motif_retrait} onChange={e => setAddForm(p => ({ ...p, motif_retrait: e.target.value }))} style={inputStyle}>
-                    <option value=''>—</option>
+                    <option value=''>-</option>
                     <option value='panne'>Panne</option>
                     <option value='remplacement'>Remplacement</option>
                     <option value='obsolescence'>Obsolescence</option>
                     <option value='restitution'>Restitution</option>
                   </select>
                 </div>
-
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 — Localisation</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 - Localisation</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ ...labelStyle, color: !addForm.etablissement_id ? 'var(--warning)' : 'var(--text-secondary)' }}>
-                    Établissement — requis pour que le client voit le matériel
-                  </label>
-                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))}
-                    style={{ ...inputStyle, borderColor: !addForm.etablissement_id ? 'var(--warning)' : 'var(--border)' }}>
-                    <option value=''>Non affecté</option>
+                  <label style={{ ...labelStyle, color: !addForm.etablissement_id ? 'var(--warning)' : 'var(--text-secondary)' }}>Etablissement - requis pour que le client voit le materiel</label>
+                  <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))} style={{ ...inputStyle, borderColor: !addForm.etablissement_id ? 'var(--warning)' : 'var(--border)' }}>
+                    <option value=''>Non affecte</option>
                     {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
                   </select>
                   {!addForm.etablissement_id && (
-                    <div style={{ fontSize: '11px', color: 'var(--warning)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-alert-triangle" style={{ fontSize: '12px' }} aria-hidden="true" />
-                      Sans établissement, l'équipement n'apparaîtra pas chez le client
-                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--warning)', marginTop: '4px' }}>Sans etablissement, l equipement n apparaitra pas chez le client</div>
                   )}
                 </div>
                 {[
                   { label: 'Service', key: 'service', placeholder: 'Soins intensifs' },
-                  { label: 'Étage', key: 'etage', placeholder: '2ème étage' },
+                  { label: 'Etage', key: 'etage', placeholder: '2eme etage' },
                   { label: 'Chambre / Zone', key: 'localisation', placeholder: 'Chambre 12' },
-                  { label: 'Responsable référent', key: 'responsable_referent', placeholder: 'Dr. Martin' },
+                  { label: 'Responsable referent', key: 'responsable_referent', placeholder: 'Dr. Martin' },
                 ].map(f => (
                   <div key={f.key}>
                     <label style={labelStyle}>{f.label}</label>
                     <input value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={inputStyle} />
                   </div>
                 ))}
-
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 — Fournisseur / Contrat</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 3 - Fournisseur / Contrat</div>
                 </div>
                 <div>
                   <label style={labelStyle}>Mode</label>
                   <select value={addForm.mode_dispo} onChange={e => setAddForm(p => ({ ...p, mode_dispo: e.target.value }))} style={inputStyle}>
                     <option value='location'>Location</option>
                     <option value='achat'>Achat</option>
-                    <option value='mad'>Mise à disposition</option>
+                    <option value='mad'>Mise a disposition</option>
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>Date livraison</label>
-                  <input type='date' value={addForm.date_achat} onChange={e => setAddForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Date installation</label>
-                  <input type='date' value={addForm.date_installation} onChange={e => setAddForm(p => ({ ...p, date_installation: e.target.value }))} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Prochaine révision</label>
-                  <input type='date' value={addForm.date_revision} onChange={e => setAddForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} />
-                </div>
-
+                <div><label style={labelStyle}>Date livraison</label><input type='date' value={addForm.date_achat} onChange={e => setAddForm(p => ({ ...p, date_achat: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Date installation</label><input type='date' value={addForm.date_installation} onChange={e => setAddForm(p => ({ ...p, date_installation: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Prochaine revision</label><input type='date' value={addForm.date_revision} onChange={e => setAddForm(p => ({ ...p, date_revision: e.target.value }))} style={inputStyle} /></div>
                 <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 — Commentaires</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 6 - Commentaires</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Observations / Notes</label>
-                  <textarea value={addForm.commentaires} onChange={e => setAddForm(p => ({ ...p, commentaires: e.target.value }))}
-                    placeholder="Observations, notes techniques..." rows={3} style={{ ...inputStyle, resize: 'none' }} />
+                  <textarea value={addForm.commentaires} onChange={e => setAddForm(p => ({ ...p, commentaires: e.target.value }))} placeholder="Observations, notes techniques..." rows={3} style={{ ...inputStyle, resize: 'none' }} />
                 </div>
               </div>
-
               {addError && (
-                <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <i className="ti ti-alert-circle" style={{ fontSize: '14px', flexShrink: 0 }} aria-hidden="true" />
+                <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginTop: '12px' }}>
                   {addError}
                 </div>
               )}
-
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => { setShowAddModal(false); setAddError('') }}
-                  style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                  Annuler
-                </button>
+                <button onClick={() => { setShowAddModal(false); setAddError('') }} style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
                 <button onClick={handleAddEquip} disabled={addSaving || !addForm.designation}
                   style={{ flex: 1, padding: '11px', background: addSaving || !addForm.designation ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: addSaving || !addForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                  {addSaving ? 'Enregistrement...' : 'Ajouter l\'équipement'}
+                  {addSaving ? 'Enregistrement...' : "Ajouter l'equipement"}
                 </button>
               </div>
             </div>
@@ -1041,18 +961,17 @@ export default function MaterielPage() {
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '420px', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
             <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Catégories</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{categoriesFull.length} catégorie{categoriesFull.length > 1 ? 's' : ''}</div>
+                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>Categories</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{categoriesFull.length} categorie{categoriesFull.length > 1 ? 's' : ''}</div>
               </div>
               <button onClick={() => setShowCatModal(false)} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                <i className="ti ti-x" style={{ fontSize: '14px' }} aria-hidden="true" />
+                <i className="ti ti-x" style={{ fontSize: '14px' }} />
               </button>
             </div>
             <div style={{ padding: '20px 24px' }}>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCat()} placeholder="Nouvelle catégorie..." style={{ ...inputStyle, flex: 1 }} />
-                <button onClick={handleAddCat} disabled={catSaving || !newCat.trim()}
-                  style={{ padding: '9px 16px', background: catSaving || !newCat.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: catSaving || !newCat.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
+                <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCat()} placeholder="Nouvelle categorie..." style={{ ...inputStyle, flex: 1 }} />
+                <button onClick={handleAddCat} disabled={catSaving || !newCat.trim()} style={{ padding: '9px 16px', background: catSaving || !newCat.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '500', cursor: catSaving || !newCat.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
                   {catSaving ? '...' : '+ Ajouter'}
                 </button>
               </div>
@@ -1061,11 +980,8 @@ export default function MaterielPage() {
                   <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', opacity: 0.5, flexShrink: 0 }} />
                     <span style={{ flex: 1, fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{cat.nom}</span>
-                    <button onClick={() => handleDeleteCat(cat.id)} disabled={catDeleting === cat.id}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-tertiary)', display: 'flex' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'}>
-                      <i className="ti ti-trash" style={{ fontSize: '15px' }} aria-hidden="true" />
+                    <button onClick={() => handleDeleteCat(cat.id)} disabled={catDeleting === cat.id} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-tertiary)', display: 'flex' }}>
+                      <i className="ti ti-trash" style={{ fontSize: '15px' }} />
                     </button>
                   </div>
                 ))}
