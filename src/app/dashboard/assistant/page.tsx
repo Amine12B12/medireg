@@ -37,6 +37,7 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('Analyse de votre demande...')
   const [confirming, setConfirming] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -64,7 +65,6 @@ export default function AssistantPage() {
     loadUser()
   }, [])
 
-  // Lit le parametre ?q= dans l URL et envoie le message auto
   useEffect(() => {
     if (!userLoaded) return
     const params = new URLSearchParams(window.location.search)
@@ -88,6 +88,21 @@ export default function AssistantPage() {
     setInput('')
     setLoading(true)
 
+    const loadingSteps = [
+      'Analyse de votre demande...',
+      'Consultation des donnees MediTrack...',
+      'Recherche sur ansm.sante.fr...',
+      'Verification sur has-sante.fr...',
+      'Consultation des sources fabricants...',
+      'Redaction de la reponse...'
+    ]
+    let stepIndex = 0
+    setLoadingMessage(loadingSteps[0])
+    const interval = setInterval(() => {
+      stepIndex = (stepIndex + 1) % loadingSteps.length
+      setLoadingMessage(loadingSteps[stepIndex])
+    }, 1800)
+
     try {
       const response = await fetch('/api/assistant', {
         method: 'POST',
@@ -102,7 +117,6 @@ export default function AssistantPage() {
       const data = await response.json()
       const responseText = data.content?.[0]?.text || ''
 
-      // Detecte si la reponse contient une action JSON
       const actionMatch = responseText.match(/```action\n([\s\S]*?)\n```/)
       let action: ActionPayload | undefined
       let displayText = responseText
@@ -123,6 +137,7 @@ export default function AssistantPage() {
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Une erreur est survenue. Veuillez reessayer.' }])
     }
+    clearInterval(interval)
     setLoading(false)
   }
 
@@ -271,12 +286,13 @@ export default function AssistantPage() {
                   <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #1A56DB 0%, #7C3AED 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <i className="ti ti-sparkles" style={{ fontSize: '14px', color: '#fff' }} aria-hidden="true" />
                   </div>
-                  <div style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                       {[0, 1, 2].map(i => (
                         <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', animation: `bounce 1s ${i * 0.15}s infinite` }} />
                       ))}
                     </div>
+                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{loadingMessage}</span>
                   </div>
                 </div>
               )}

@@ -97,39 +97,24 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} - ${n
     console.error('Erreur chargement donnees:', err)
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      system: `Tu es l assistant MediTrack, un expert en gestion de materiel medical a domicile (PSDM) et en reglementation des dispositifs medicaux en France.
+  const systemPrompt = `Tu es l assistant MediTrack, un expert en gestion de materiel medical a domicile (PSDM) et en reglementation des dispositifs medicaux en France.
 
 ${contextData ? `Tu as acces aux donnees reelles de MediTrack ci-dessous. Utilise-les pour repondre aux questions sur le parc, les maintenances, les pannes et les etablissements.
 
 ${contextData}` : ''}
 
-SOURCES REGLEMENTAIRES a mentionner dans tes reponses :
-- ANSM (ansm.sante.fr) -> autorisation, surveillance, materiovigilance
-- HAS (has-sante.fr) -> recommandations, evaluations
-- Legifrance (legifrance.gouv.fr) -> textes de loi
-- ARS -> obligations locales
-- CPAM / Ameli -> remboursement PSDM
-
-FABRICANTS a mentionner si pertinent :
-- Invacare, Winncare, Sunrise Medical, Vermeiren, Arjo, Hartmann, Systam, ResMed
+RECHERCHE WEB :
+Tu as acces a un outil de recherche web. Utilise-le systematiquement pour toute question concernant :
+- La reglementation des dispositifs medicaux (ANSM ansm.sante.fr, HAS has-sante.fr, Legifrance legifrance.gouv.fr, ARS, CPAM/Ameli)
+- Les fabricants (Invacare, Winncare, Sunrise Medical, Vermeiren, Arjo, Hartmann, Systam, ResMed) : fiches techniques, notices, nouveautes produits
+- Toute information que tu ne trouves pas dans les donnees MediTrack ci-dessus
 
 REGLES DE FORMATAGE :
 - Reponds en francais, de facon concise et professionnelle
 - Utilise des listes a puces avec des tirets (-) pour les enumerations
-- Utilise des emojis pour les statuts : OK En service, STOP Hors service, OUTIL Maintenance
-- N utilise JAMAIS de tableaux Markdown avec des |
 - Mets en gras les informations importantes avec **texte**
-- Si une info n est pas dans les donnees MediTrack, dis-le clairement
+- N utilise JAMAIS de tableaux Markdown avec des |
+- Cite la source quand tu utilises la recherche web
 - Tu ne fournis pas de conseils medicaux aux patients
 
 RAPPORTS PAR EQUIPEMENT :
@@ -143,18 +128,49 @@ MODIFICATIONS DIRECTES (admin uniquement) :
 - Ne genere l action QUE si tu as trouve l equipement exact dans les donnees
 - Champs modifiables : localisation, statut, commentaires, date_revision, responsable_referent, service, etage
 - Valeurs de statut valides : en_service, maintenance, hors_service, en_preparation
-- Ne propose JAMAIS de supprimer quoi que ce soit`,
-      messages
+- Ne propose JAMAIS de supprimer quoi que ce soit`
+
+  async function callClaude(msgs: any[]) {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: systemPrompt,
+        messages: msgs
+      })
     })
-  })
+    return r.json()
+  }
 
-  const data = await response.json()
+  let data = await callClaude(messages)
 
-  if (!response.ok) {
-    console.error('Erreur API Anthropic:', data)
+  if (!data.content) {
+    console.error('Erreur API Anthropic:', JSON.stringify(data))
     return NextResponse.json({
-      content: [{ type: 'text', text: 'Erreur de connexion a l IA. Verifiez la cle API.' }]
+      content: [{ type: 'text', text: 'Erreur de connexion a l IA. ' + (data.error?.message || 'Verifiez la cle API et le credit disponible.') }]
     })
+  }
+
+  // Boucle pour gerer les appels d'outils (web_search) — Claude peut faire plusieurs recherches
+  let workingMessages = [...messages]
+  let safety = 0
+  while (data.stop_reason === 'tool_use' && safety < 5) {
+    safety++
+    workingMessages = [...workingMessages, { role: 'assistant', content: data.content }]
+
+    // Le web_search server-side gere ses propres resultats automatiquement,
+    // mais si le modele attend un tool_result on le relance simplement
+    const toolUseBlocks = data.content.filter((c: any) => c.type === 'tool_use')
+    if (toolUseBlocks.length === 0) break
+
+    data = await callClaude(workingMessages)
   }
 
   const textContent = data.content
