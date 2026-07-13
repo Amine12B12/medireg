@@ -20,7 +20,7 @@ type Equipement = {
 const statutStyle = (s: string) => {
   if (s === 'en_service') return { color: 'var(--success)', bg: 'var(--success-light)', label: 'En service' }
   if (s === 'maintenance') return { color: 'var(--warning)', bg: 'var(--warning-light)', label: 'Maintenance' }
-  if (s === 'en_preparation') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'En préparation' }
+  if (s === 'en_preparation') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'En preparation' }
   return { color: 'var(--danger)', bg: 'var(--danger-light)', label: 'Hors service' }
 }
 
@@ -286,7 +286,6 @@ export default function MaterielPage() {
       const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
       const { data: doc } = await supabase.from('documents').insert([{ equipement_id: selected.id, nom: file.name, type_doc: file.type, url: urlData.publicUrl }]).select().single()
       loadDocs(selected.id)
-      // Indexation automatique si c est un PDF
       if (doc && file.type === 'application/pdf') {
         fetch('/api/index-document', {
           method: 'POST',
@@ -355,16 +354,20 @@ export default function MaterielPage() {
   }
 
   function handleExport() {
-    const data = equipements.map(e => ({
-      reference: e.reference, designation: e.designation, categorie: e.categorie || '',
-      fabricant: e.fabricant || '', modele: e.modele || '', numero_serie: e.numero_serie || '',
-      numero_lot: e.numero_lot || '', mode_dispo: e.mode_dispo || '', statut: e.statut || '',
-      localisation: e.localisation || '', service: e.service || '', etage: e.etage || '',
-      responsable_referent: e.responsable_referent || '', fournisseur: e.fournisseur || '',
-      date_achat: e.date_achat || '', date_mes: e.date_mes || '', date_revision: e.date_revision || '',
-      fin_garantie: e.fin_garantie || '', date_installation: e.date_installation || '',
-      commentaires: e.commentaires || '', etablissement_id: e.etablissement_id || ''
-    }))
+    const data = equipements.map(e => {
+      const etab = etablissements.find(et => et.id === e.etablissement_id)
+      return {
+        reference: e.reference, designation: e.designation, categorie: e.categorie || '',
+        fabricant: e.fabricant || '', modele: e.modele || '', numero_serie: e.numero_serie || '',
+        numero_lot: e.numero_lot || '', mode_dispo: e.mode_dispo || '', statut: e.statut || '',
+        localisation: e.localisation || '', service: e.service || '', etage: e.etage || '',
+        responsable_referent: e.responsable_referent || '', fournisseur: e.fournisseur || '',
+        date_achat: e.date_achat || '', date_mes: e.date_mes || '', date_revision: e.date_revision || '',
+        fin_garantie: e.fin_garantie || '', date_installation: e.date_installation || '',
+        commentaires: e.commentaires || '',
+        client: etab?.nom || ''
+      }
+    })
     exportToCSV(data, `meditrack_equipements_${new Date().toISOString().slice(0, 10)}.csv`)
   }
 
@@ -376,19 +379,45 @@ export default function MaterielPage() {
     const text = await file.text()
     const rows = parseCSV(text)
     let success = 0; let errors = 0
+
+    // Charge les etablissements pour resoudre les noms
+    const { data: etabs } = await supabase.from('etablissements').select('id, nom')
+    const etabsList = etabs || []
+
     for (const row of rows) {
       if (!row.designation) { errors++; continue }
+
+      // Resout l'etablissement par nom (colonne "client") ou par UUID (colonne "etablissement_id")
+      let etablissementId = row.etablissement_id || null
+      if (!etablissementId && row.client) {
+        const found = etabsList.find((et: any) =>
+          et.nom.toLowerCase().trim() === row.client.toLowerCase().trim()
+        )
+        if (found) etablissementId = found.id
+      }
+
       const { error } = await supabase.from('equipements').upsert([{
-        reference: row.reference || null, designation: row.designation, categorie: row.categorie || null,
-        fabricant: row.fabricant || null, modele: row.modele || null, numero_serie: row.numero_serie || null,
-        numero_lot: row.numero_lot || null, mode_dispo: row.mode_dispo || 'location',
-        statut: row.statut || 'en_service', localisation: row.localisation || null,
-        service: row.service || null, etage: row.etage || null,
-        responsable_referent: row.responsable_referent || null, fournisseur: row.fournisseur || null,
-        date_achat: row.date_achat || null, date_mes: row.date_mes || null,
-        date_revision: row.date_revision || null, fin_garantie: row.fin_garantie || null,
-        date_installation: row.date_installation || null, commentaires: row.commentaires || null,
-        etablissement_id: row.etablissement_id || null
+        reference: row.reference || null,
+        designation: row.designation,
+        categorie: row.categorie || null,
+        fabricant: row.fabricant || null,
+        modele: row.modele || null,
+        numero_serie: row.numero_serie || null,
+        numero_lot: row.numero_lot || null,
+        mode_dispo: row.mode_dispo || 'location',
+        statut: row.statut || 'en_service',
+        localisation: row.localisation || null,
+        service: row.service || null,
+        etage: row.etage || null,
+        responsable_referent: row.responsable_referent || null,
+        fournisseur: row.fournisseur || null,
+        date_achat: row.date_achat || null,
+        date_mes: row.date_mes || null,
+        date_revision: row.date_revision || null,
+        fin_garantie: row.fin_garantie || null,
+        date_installation: row.date_installation || null,
+        commentaires: row.commentaires || null,
+        etablissement_id: etablissementId
       }], { onConflict: 'reference' })
       if (error) errors++; else success++
     }
@@ -419,7 +448,6 @@ export default function MaterielPage() {
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
 
-      {/* BARRE ACTIONS */}
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} equipement{filtered.length > 1 ? 's' : ''}</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -445,7 +473,6 @@ export default function MaterielPage() {
         </div>
       </div>
 
-      {/* FILTRES */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
           <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'var(--text-tertiary)' }} />
@@ -479,7 +506,6 @@ export default function MaterielPage() {
         )}
       </div>
 
-      {/* TABLEAU */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -532,13 +558,10 @@ export default function MaterielPage() {
         </table>
       </div>
 
-      {/* FICHE MODALE */}
       {selected && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) { setSelected(null); setPannDesc(''); setPanneSuccess(false) } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '560px', maxHeight: '88vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
-
-            {/* Header fiche */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -568,13 +591,10 @@ export default function MaterielPage() {
                 </button>
               </div>
             </div>
-
             <div style={{ padding: '20px 24px' }}>
               <div style={{ marginBottom: '20px' }}>
                 {(() => { const st = statutStyle(selected.statut); return <span style={{ background: st.bg, color: st.color, padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' }}>{st.label}</span> })()}
               </div>
-
-              {/* Bloc 1 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 1 - Identification</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -586,8 +606,6 @@ export default function MaterielPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Bloc 2 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 2 - Localisation</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -599,8 +617,6 @@ export default function MaterielPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Bloc 3 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 3 - Fournisseur / Contrat</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -612,8 +628,6 @@ export default function MaterielPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Bloc 4 Documents */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 4 - Documents</div>
@@ -636,8 +650,6 @@ export default function MaterielPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Bloc 5 Historique */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Bloc 5 - Historique des deplacements</div>
                 {historique.length === 0 ? (
@@ -651,8 +663,6 @@ export default function MaterielPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Bloc 6 Commentaires */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Bloc 6 - Commentaires</div>
@@ -691,8 +701,6 @@ export default function MaterielPage() {
                   </div>
                 )}
               </div>
-
-              {/* Signaler panne */}
               <div>
                 <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>Signaler une panne</div>
                 {panneSuccess ? (
@@ -729,7 +737,6 @@ export default function MaterielPage() {
         </div>
       )}
 
-      {/* MODAL MODIFIER */}
       {showEditModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowEditModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
@@ -843,7 +850,6 @@ export default function MaterielPage() {
         </div>
       )}
 
-      {/* MODAL AJOUT */}
       {showAddModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) { setShowAddModal(false); setAddError('') } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
@@ -903,14 +909,11 @@ export default function MaterielPage() {
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>Bloc 2 - Localisation</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ ...labelStyle, color: !addForm.etablissement_id ? 'var(--warning)' : 'var(--text-secondary)' }}>Etablissement - requis pour que le client voit le materiel</label>
+                  <label style={{ ...labelStyle, color: !addForm.etablissement_id ? 'var(--warning)' : 'var(--text-secondary)' }}>Etablissement</label>
                   <select value={addForm.etablissement_id} onChange={e => setAddForm(p => ({ ...p, etablissement_id: e.target.value }))} style={{ ...inputStyle, borderColor: !addForm.etablissement_id ? 'var(--warning)' : 'var(--border)' }}>
                     <option value=''>Non affecte</option>
                     {etablissements.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
                   </select>
-                  {!addForm.etablissement_id && (
-                    <div style={{ fontSize: '11px', color: 'var(--warning)', marginTop: '4px' }}>Sans etablissement, l equipement n apparaitra pas chez le client</div>
-                  )}
                 </div>
                 {[
                   { label: 'Service', key: 'service', placeholder: 'Soins intensifs' },
@@ -962,7 +965,6 @@ export default function MaterielPage() {
         </div>
       )}
 
-      {/* MODAL CATEGORIES */}
       {showCatModal && (
         <div onMouseDown={e => { if (e.target === e.currentTarget) setShowCatModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
