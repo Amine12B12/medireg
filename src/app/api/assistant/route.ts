@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+async function generateEmbedding(text: string): Promise<number[]> {
+  const res = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({ model: 'text-embedding-3-small', input: text })
+  })
+  const data = await res.json()
+  return data.data?.[0]?.embedding || []
+}
+
 export async function POST(request: Request) {
   const { messages, etablissement_id, role } = await request.json()
 
@@ -10,6 +23,7 @@ export async function POST(request: Request) {
   )
 
   let contextData = ''
+  let ragContext = ''
 
   try {
     if (role === 'admin') {
@@ -97,11 +111,38 @@ ${pannes?.map(p => `- [${p.statut}] ${(p.equipements as any)?.designation} - ${n
     console.error('Erreur chargement donnees:', err)
   }
 
+  // RAG — recherche dans les documents uploades
+  try {
+    const lastUserMessage = messages[messages.length - 1]?.content || ''
+    if (lastUserMessage.length > 10) {
+      const embedding = await generateEmbedding(lastUserMessage)
+      const { data: chunks } = await supabaseAdmin.rpc('search_document_chunks', {
+        query_embedding: embedding,
+        match_equipement_id: null,
+        match_count: 5
+      })
+      if (chunks && chunks.length > 0) {
+        ragContext = `
+=== EXTRAITS DES DOCUMENTS UPLOADES DANS MEDITRACK ===
+Les informations suivantes proviennent des notices et fiches techniques uploadees :
+
+${chunks.map((c: any, i: number) => `[Extrait ${i + 1}] ${c.contenu}`).join('\n\n')}
+`
+      }
+    }
+  } catch (err) {
+    console.error('Erreur RAG:', err)
+  }
+
   const systemPrompt = `Tu es l assistant MediTrack, un expert en gestion de materiel medical a domicile (PSDM) et en reglementation des dispositifs medicaux en France.
 
 ${contextData ? `Tu as acces aux donnees reelles de MediTrack ci-dessous. Utilise-les pour repondre aux questions sur le parc, les maintenances, les pannes et les etablissements.
 
 ${contextData}` : ''}
+
+${ragContext ? `${ragContext}
+
+Quand tu utilises ces extraits de documents pour repondre, precise que l information provient des documents uploades dans MediTrack.` : ''}
 
 RECHERCHE WEB :
 Tu as acces a un outil de recherche web. Utilise-le systematiquement pour toute question concernant :
@@ -114,7 +155,7 @@ REGLES DE FORMATAGE :
 - Utilise des listes a puces avec des tirets (-) pour les enumerations
 - Mets en gras les informations importantes avec **texte**
 - N utilise JAMAIS de tableaux Markdown avec des |
-- Cite la source quand tu utilises la recherche web
+- Cite la source quand tu utilises la recherche web ou les documents uploades
 - Tu ne fournis pas de conseils medicaux aux patients
 
 RAPPORTS PAR EQUIPEMENT :
@@ -158,18 +199,13 @@ MODIFICATIONS DIRECTES (admin uniquement) :
     })
   }
 
-  // Boucle pour gerer les appels d'outils (web_search) — Claude peut faire plusieurs recherches
   let workingMessages = [...messages]
   let safety = 0
   while (data.stop_reason === 'tool_use' && safety < 5) {
     safety++
     workingMessages = [...workingMessages, { role: 'assistant', content: data.content }]
-
-    // Le web_search server-side gere ses propres resultats automatiquement,
-    // mais si le modele attend un tool_result on le relance simplement
     const toolUseBlocks = data.content.filter((c: any) => c.type === 'tool_use')
     if (toolUseBlocks.length === 0) break
-
     data = await callClaude(workingMessages)
   }
 

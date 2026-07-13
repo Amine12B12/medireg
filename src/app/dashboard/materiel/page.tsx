@@ -284,8 +284,16 @@ export default function MaterielPage() {
     const { error } = await supabase.storage.from('documents').upload(path, file)
     if (!error) {
       const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-      await supabase.from('documents').insert([{ equipement_id: selected.id, nom: file.name, type_doc: file.type, url: urlData.publicUrl }])
+      const { data: doc } = await supabase.from('documents').insert([{ equipement_id: selected.id, nom: file.name, type_doc: file.type, url: urlData.publicUrl }]).select().single()
       loadDocs(selected.id)
+      // Indexation automatique si c est un PDF
+      if (doc && file.type === 'application/pdf') {
+        fetch('/api/index-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_id: doc.id, equipement_id: selected.id, url: urlData.publicUrl, nom: file.name })
+        }).catch(err => console.error('Erreur indexation:', err))
+      }
     }
     setUploadLoading(false)
   }
