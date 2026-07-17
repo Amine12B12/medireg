@@ -2,10 +2,10 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
-  const { email, etablissement_id, nom } = await request.json()
+  const { email, client_id, nom, role } = await request.json()
 
-  if (!email || !etablissement_id) {
-    return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
+  if (!email) {
+    return NextResponse.json({ error: 'Email manquant' }, { status: 400 })
   }
 
   const supabaseAdmin = createClient(
@@ -13,23 +13,22 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Invite le user par email — il reçoit un lien pour créer son mot de passe
   const { data: userData, error: userError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: 'https://www.meditrack-app.fr/set-password'
+    redirectTo: 'https://medireg1.vercel.app/set-password'
   })
 
   if (userError) {
     return NextResponse.json({ error: userError.message }, { status: 400 })
   }
 
-  // Crée le profil
   const { error: profileError } = await supabaseAdmin
     .from('profiles')
     .insert([{
       id: userData.user.id,
-      role: 'client',
+      role: role || 'client',
       nom: nom || email,
-      etablissement_id
+      email,
+      client_id: client_id || null
     }])
 
   if (profileError) {
