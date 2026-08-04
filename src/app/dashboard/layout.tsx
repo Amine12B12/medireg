@@ -20,6 +20,7 @@ const navConsultant = [
   { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
   { path: '/dashboard/clients', icon: 'ti-building-hospital', label: 'Clients' },
   { path: '/dashboard/audits', icon: 'ti-clipboard-check', label: 'Audits' },
+  { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Taches' },
   { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Bibliotheque' },
   { path: '/dashboard/referentiel', icon: 'ti-book', label: 'Referentiel' },
   { path: '/dashboard/pilotage', icon: 'ti-chart-bar', label: 'Pilotage' },
