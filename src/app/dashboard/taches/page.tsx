@@ -54,10 +54,10 @@ function TacheCard({ tache, role, onUpdateStatut, onDelete }: { tache: any; role
             <i className="ti ti-building-hospital" style={{ fontSize: '12px' }} />{tache.clients.nom}
           </span>
         )}
-        {tache.profiles && (
+        {tache.assignee && (
           <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <i className="ti ti-user" style={{ fontSize: '12px' }} />
-            {tache.profiles.prenom || ''} {tache.profiles.nom || tache.profiles.email}
+            {tache.assignee.prenom || ''} {tache.assignee.nom || tache.assignee.email}
           </span>
         )}
         {tache.echeance && (
@@ -139,10 +139,17 @@ export default function TachesPage() {
 
   async function load(r?: string, cId?: string) {
     if (r === 'consultant') {
-      const { data } = await supabase.from('taches').select('*, clients(nom), profiles(nom, prenom, email)').order('echeance', { ascending: true })
+      const { data } = await supabase
+        .from('taches')
+        .select('*, clients(nom), assignee:assignee_id(nom, prenom, email)')
+        .order('echeance', { ascending: true })
       setTaches(data || [])
     } else {
-      const { data } = await supabase.from('taches').select('*, clients(nom), profiles(nom, prenom, email)').eq('client_id', cId || '').order('echeance', { ascending: true })
+      const { data } = await supabase
+        .from('taches')
+        .select('*, clients(nom), assignee:assignee_id(nom, prenom, email)')
+        .eq('client_id', cId || '')
+        .order('echeance', { ascending: true })
       setTaches(data || [])
     }
     setLoading(false)
