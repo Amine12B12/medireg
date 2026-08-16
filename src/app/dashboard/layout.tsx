@@ -14,6 +14,9 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/taches': { title: 'Mes actions', sub: 'Taches et echeances' },
   '/dashboard/conformite': { title: 'Conformite', sub: 'Obligations et criteres' },
   '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert reglementaire' },
+  '/dashboard/certification': { title: 'Certification', sub: '60 criteres HAS PSDM' },
+  '/dashboard/onboarding': { title: 'Configuration', sub: 'Mise en place de votre profil' },
+  '/dashboard/profil': { title: 'Mon profil', sub: 'Informations etablissement' },
 }
 
 const navConsultant = [
@@ -29,18 +32,22 @@ const navConsultant = [
 
 const navAdmin = [
   { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
+  { path: '/dashboard/certification', icon: 'ti-shield-check', label: 'Certification' },
   { path: '/dashboard/conformite', icon: 'ti-clipboard-check', label: 'Conformite' },
   { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Mes actions' },
   { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Documents' },
   { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
+  { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
 ]
 
 const navClient = [
   { path: '/dashboard', icon: 'ti-home', label: 'Accueil' },
+  { path: '/dashboard/certification', icon: 'ti-shield-check', label: 'Certification' },
   { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Mes actions' },
   { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Mes documents' },
   { path: '/dashboard/conformite', icon: 'ti-chart-pie', label: 'Ma conformite' },
   { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
+  { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -71,13 +78,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!prof) return
       setRole(prof.role)
       setUserName(`${prof.prenom || ''} ${prof.nom || ''}`.trim() || user.email || '')
+
       if (prof.client_id) {
         const { data: client } = await supabase.from('clients').select('nom').eq('id', prof.client_id).single()
         setClientNom(client?.nom || '')
       }
+
+      // Rediriger vers onboarding si client sans societe creee
+      if (prof.role !== 'consultant' && prof.client_id && pathname !== '/dashboard/onboarding') {
+        const { data: societe } = await supabase
+          .from('societes')
+          .select('id')
+          .eq('client_id', prof.client_id)
+          .single()
+        if (!societe) {
+          router.push('/dashboard/onboarding')
+          return
+        }
+      }
     }
     load()
-  }, [])
+  }, [pathname])
 
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
@@ -98,6 +119,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     </div>
   )
+
+  // Page onboarding sans sidebar
+  if (pathname === '/dashboard/onboarding') {
+    return <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font)' }}>{children}</div>
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font)' }}>
@@ -146,7 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {nav.map(item => {
             const active = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
             return (
-              <button key={item.path} onClick={() => router.push(item.path)}
+              <button key={item.path + item.label} onClick={() => router.push(item.path)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: 'var(--radius-md)', border: 'none', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)', marginBottom: '2px', textAlign: 'left', transition: 'all 0.1s' }}
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}>
