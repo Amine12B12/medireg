@@ -4,323 +4,239 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const inputStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }
-const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '600' as const, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
-
-const ACTIVITES = ['MAD', 'Handicap', 'Oxygene', 'VPH', 'Nutrition', 'Stomie', 'Continence', 'Diabete', 'Autre']
+const RESPONSABILITES_LABELS: Record<string, string> = {
+  direction: 'Direction / Representant legal',
+  garant_psdm: 'Garant PSDM',
+  materiovigilance: 'Correspondant materiovigilance',
+  pharmacien: 'Pharmacien responsable',
+  responsable_etablissement: 'Responsable etablissement',
+  desinfection: 'Desinfection / Hygiene',
+  sav_maintenance: 'SAV / Maintenance',
+  reclamations: 'Reclamations',
+  pilote_certification: 'Pilote certification MediReg',
+  dpo: 'DPO / Interlocuteur RGPD',
+}
 
 export default function ProfilPage() {
-  const [profil, setProfil] = useState<any>(null)
-  const [clientId, setClientId] = useState<string | null>(null)
-  const [role, setRole] = useState<string | null>(null)
+  const [societe, setSociete] = useState<any>(null)
+  const [etablissements, setEtablissements] = useState<any[]>([])
+  const [personnes, setPersonnes] = useState<any[]>([])
+  const [responsabilites, setResponsabilites] = useState<any[]>([])
+  const [activites, setActivites] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [isNew, setIsNew] = useState(false)
-  const [form, setForm] = useState({
-    raison_sociale: '',
-    siret: '',
-    adresse: '',
-    code_postal: '',
-    ville: '',
-    telephone: '',
-    email: '',
-    dirigeant: '',
-    responsable_qualite: '',
-    logo_url: '',
-    activites: [] as string[],
-    date_creation_entreprise: '',
-    numero_autorisation: '',
-  })
   const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      if (!user) return
       const { data: prof } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
-      setRole(prof?.role || 'client')
 
-      let cId = prof?.client_id
+      let clientId = prof?.client_id
       if (prof?.role === 'consultant') {
         const params = new URLSearchParams(window.location.search)
-        cId = params.get('client_id') || null
+        clientId = params.get('client_id') || null
+        if (!clientId) { router.push('/dashboard/clients'); return }
       }
-      setClientId(cId)
 
-      if (cId) {
-        const { data: profilEtab } = await supabase.from('profils_etablissement').select('*').eq('client_id', cId).single()
-        if (profilEtab) {
-          setProfil(profilEtab)
-          setForm({
-            raison_sociale: profilEtab.raison_sociale || '',
-            siret: profilEtab.siret || '',
-            adresse: profilEtab.adresse || '',
-            code_postal: profilEtab.code_postal || '',
-            ville: profilEtab.ville || '',
-            telephone: profilEtab.telephone || '',
-            email: profilEtab.email || '',
-            dirigeant: profilEtab.dirigeant || '',
-            responsable_qualite: profilEtab.responsable_qualite || '',
-            logo_url: profilEtab.logo_url || '',
-            activites: profilEtab.activites || [],
-            date_creation_entreprise: profilEtab.date_creation_entreprise || '',
-            numero_autorisation: profilEtab.numero_autorisation || '',
-          })
-        } else {
-          setIsNew(true)
-          // Pre-remplir avec les infos du client
-          const { data: client } = await supabase.from('clients').select('*').eq('id', cId).single()
-          if (client) {
-            setForm(prev => ({
-              ...prev,
-              raison_sociale: client.nom || '',
-              ville: client.ville || '',
-              email: client.contact_email || '',
-              dirigeant: client.contact_nom || '',
-            }))
-          }
-        }
+      if (!clientId) { router.push('/dashboard'); return }
+
+      // Societe
+      const { data: soc } = await supabase.from('societes').select('*').eq('client_id', clientId).single()
+      if (!soc) { router.push('/dashboard/onboarding'); return }
+      setSociete(soc)
+
+      // Etablissements
+      const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', soc.id).order('created_at')
+      setEtablissements(etabs || [])
+
+      // Personnes
+      const { data: pers } = await supabase.from('personnes').select('*').eq('societe_id', soc.id).order('created_at')
+      setPersonnes(pers || [])
+
+      // Responsabilites avec personnes
+      if (pers && pers.length > 0) {
+        const { data: resps } = await supabase
+          .from('responsabilites_personnes')
+          .select('*, personnes(nom, prenom, fonction_reelle), etablissements_psdm(nom)')
+          .in('personne_id', pers.map(p => p.id))
+          .eq('actif', true)
+        setResponsabilites(resps || [])
       }
+
+      // Activites
+      if (etabs && etabs.length > 0) {
+        const { data: acts } = await supabase
+          .from('activites_etablissement')
+          .select('*, etablissements_psdm(nom)')
+          .in('etablissement_id', etabs.map(e => e.id))
+        setActivites(acts || [])
+      }
+
       setLoading(false)
     }
     load()
   }, [])
 
-  async function handleUploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files || !clientId) return
-    const file = e.target.files[0]
-    setUploadingLogo(true)
-    const path = `logos/${clientId}_${Date.now()}_${file.name}`
-    const { error } = await supabase.storage.from('documents').upload(path, file)
-    if (!error) {
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-      setForm(prev => ({ ...prev, logo_url: urlData.publicUrl }))
-    }
-    setUploadingLogo(false)
-    e.target.value = ''
-  }
-
-  function toggleActivite(act: string) {
-    setForm(prev => ({
-      ...prev,
-      activites: prev.activites.includes(act)
-        ? prev.activites.filter(a => a !== act)
-        : [...prev.activites, act]
-    }))
-  }
-
-  async function handleSave() {
-    if (!clientId) return
-    setSaving(true)
-    const payload = { ...form, client_id: clientId, updated_at: new Date().toISOString() }
-
-    if (isNew) {
-      await supabase.from('profils_etablissement').insert([payload])
-      setIsNew(false)
-    } else {
-      await supabase.from('profils_etablissement').update(payload).eq('client_id', clientId)
-    }
-
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const modeStyle = (mode: string) => {
+    if (mode === 'interne') return { color: 'var(--success)', bg: 'var(--success-light)', label: 'Interne' }
+    if (mode === 'sous_traite') return { color: 'var(--warning)', bg: 'var(--warning-light)', label: 'Sous-traite' }
+    if (mode === 'mixte') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'Mixte' }
+    return { color: 'var(--text-tertiary)', bg: 'var(--surface-hover)', label: 'Non concerne' }
   }
 
   if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
-  if (!clientId) return (
-    <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '48px', textAlign: 'center' }}>
-        <i className="ti ti-building-hospital" style={{ fontSize: '36px', display: 'block', marginBottom: '12px', color: 'var(--text-tertiary)', opacity: 0.4 }} />
-        <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun etablissement associe</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Selectionnez un client depuis la page Clients</div>
-      </div>
-    </div>
-  )
-
   return (
-    <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '800px' }}>
+    <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '900px' }}>
 
-      {isNew && (
-        <div style={{ background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.3)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <i className="ti ti-info-circle" style={{ fontSize: '18px', color: 'var(--accent)', flexShrink: 0 }} />
+      {/* Header avec bouton modifier */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {societe?.logo_url && (
+            <img src={societe.logo_url} alt="Logo" style={{ height: '48px', objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '4px', background: '#fff' }} />
+          )}
           <div>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent)' }}>Premiere configuration</div>
-            <div style={{ fontSize: '12px', color: 'var(--accent)', opacity: 0.8, marginTop: '2px' }}>Ces informations seront automatiquement integrees dans tous vos documents qualite generes.</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>{societe?.raison_sociale}</div>
+            {societe?.nom_commercial && societe.nom_commercial !== societe.raison_sociale && (
+              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{societe.nom_commercial}</div>
+            )}
           </div>
         </div>
-      )}
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>Profil etablissement</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>Ces informations apparaissent automatiquement sur tous vos documents</div>
-        </div>
-        <button onClick={handleSave} disabled={saving}
-          style={{ padding: '10px 20px', background: saved ? 'var(--success)' : saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-          <i className={`ti ${saved ? 'ti-check' : 'ti-device-floppy'}`} style={{ fontSize: '15px' }} />
-          {saved ? 'Enregistre !' : saving ? 'Enregistrement...' : 'Sauvegarder'}
+        <button onClick={() => router.push('/dashboard/onboarding')}
+          style={{ padding: '8px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-md)', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <i className="ti ti-edit" style={{ fontSize: '14px' }} />
+          Modifier le profil
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Societe */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="ti ti-building" style={{ fontSize: '14px' }} />
+          Identite de la societe
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+          {[
+            { label: 'Forme juridique', value: societe?.forme_juridique },
+            { label: 'SIREN', value: societe?.siren },
+            { label: 'Code APE', value: societe?.code_ape },
+            { label: 'Adresse siege', value: [societe?.adresse_siege, societe?.code_postal, societe?.ville].filter(Boolean).join(', ') },
+            { label: 'Telephone', value: societe?.telephone },
+            { label: 'Email', value: societe?.email },
+          ].map(f => f.value ? (
+            <div key={f.label}>
+              <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>{f.label}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{f.value}</div>
+            </div>
+          ) : null)}
+        </div>
+      </div>
 
-        {/* Section Logo */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-            Logo de l etablissement
+      {/* Etablissements */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="ti ti-building-hospital" style={{ fontSize: '14px' }} />
+            Etablissements
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ width: '100px', height: '80px', border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-hover)', flexShrink: 0, overflow: 'hidden' }}>
-              {form.logo_url ? (
-                <img src={form.logo_url} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <i className="ti ti-photo" style={{ fontSize: '24px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '4px' }} />
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Logo</div>
+          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{etablissements.length}</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {etablissements.map((etab, i) => (
+            <div key={etab.id} style={{ padding: '14px 16px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{etab.nom}</div>
+                {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px', fontWeight: '500' }}>Siege</span>}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {etab.siret && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>SIRET </span>{etab.siret}</span>}
+                {etab.ville && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>Ville </span>{etab.ville}</span>}
+                {etab.telephone && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>Tel </span>{etab.telephone}</span>}
+              </div>
+
+              {/* Activites de cet etablissement */}
+              {(() => {
+                const actsEtab = activites.filter(a => a.etablissement_id === etab.id && a.mode !== 'non_concerne')
+                if (actsEtab.length === 0) return null
+                return (
+                  <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {actsEtab.map(act => {
+                      const ms = modeStyle(act.mode)
+                      return (
+                        <span key={act.id} style={{ fontSize: '10px', fontWeight: '500', color: ms.color, background: ms.bg, padding: '2px 8px', borderRadius: '20px' }}>
+                          {act.activite}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Personnes et responsabilites */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="ti ti-users" style={{ fontSize: '14px' }} />
+            Personnes et responsabilites
+          </div>
+          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{personnes.length}</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {personnes.map(pers => {
+            const persResps = responsabilites.filter(r => r.personne_id === pers.id)
+            return (
+              <div key={pers.id} style={{ padding: '14px 16px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#7C3AED' }}>
+                    {pers.prenom.charAt(0)}{pers.nom.charAt(0)}
+                  </span>
                 </div>
-              )}
-            </div>
-            <div>
-              <label style={{ padding: '8px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <i className="ti ti-upload" style={{ fontSize: '14px' }} />
-                {uploadingLogo ? 'Upload...' : 'Choisir un logo'}
-                <input type='file' accept='image/*' style={{ display: 'none' }} onChange={handleUploadLogo} disabled={uploadingLogo} />
-              </label>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>PNG, JPG — Le logo apparaitra sur tous vos documents qualite</div>
-              {form.logo_url && (
-                <button onClick={() => setForm(prev => ({ ...prev, logo_url: '' }))}
-                  style={{ marginTop: '6px', fontSize: '11px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <i className="ti ti-trash" style={{ fontSize: '12px' }} />Supprimer le logo
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Section Identite */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-            Identite de l etablissement
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Raison sociale *</label>
-              <input value={form.raison_sociale} onChange={e => setForm(prev => ({ ...prev, raison_sociale: e.target.value }))} placeholder="SARL Global Medical" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>SIRET</label>
-              <input value={form.siret} onChange={e => setForm(prev => ({ ...prev, siret: e.target.value }))} placeholder="123 456 789 00012" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Date creation</label>
-              <input type='date' value={form.date_creation_entreprise} onChange={e => setForm(prev => ({ ...prev, date_creation_entreprise: e.target.value }))} style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>N autorisation ARS</label>
-              <input value={form.numero_autorisation} onChange={e => setForm(prev => ({ ...prev, numero_autorisation: e.target.value }))} placeholder="ARS-2024-XXXX" style={inputStyle} />
-            </div>
-          </div>
-        </div>
-
-        {/* Section Contact */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-            Coordonnees
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Adresse</label>
-              <input value={form.adresse} onChange={e => setForm(prev => ({ ...prev, adresse: e.target.value }))} placeholder="12 rue de la Paix" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Code postal</label>
-              <input value={form.code_postal} onChange={e => setForm(prev => ({ ...prev, code_postal: e.target.value }))} placeholder="75001" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Ville</label>
-              <input value={form.ville} onChange={e => setForm(prev => ({ ...prev, ville: e.target.value }))} placeholder="Paris" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Telephone</label>
-              <input value={form.telephone} onChange={e => setForm(prev => ({ ...prev, telephone: e.target.value }))} placeholder="01 23 45 67 89" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input type='email' value={form.email} onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))} placeholder="contact@entreprise.fr" style={inputStyle} />
-            </div>
-          </div>
-        </div>
-
-        {/* Section Responsables */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-            Responsables
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Dirigeant / Gerant</label>
-              <input value={form.dirigeant} onChange={e => setForm(prev => ({ ...prev, dirigeant: e.target.value }))} placeholder="M. Jean Dupont" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Responsable qualite</label>
-              <input value={form.responsable_qualite} onChange={e => setForm(prev => ({ ...prev, responsable_qualite: e.target.value }))} placeholder="Mme Marie Martin" style={inputStyle} />
-            </div>
-          </div>
-        </div>
-
-        {/* Section Activites */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-            Activites exercees
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '14px' }}>
-            Ces activites determinent quels criteres du referentiel HAS s appliquent a votre etablissement
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {ACTIVITES.map(act => (
-              <button key={act} onClick={() => toggleActivite(act)}
-                style={{ padding: '8px 16px', border: `1px solid ${form.activites.includes(act) ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-md)', background: form.activites.includes(act) ? 'var(--accent-light)' : 'transparent', color: form.activites.includes(act) ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: form.activites.includes(act) ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {form.activites.includes(act) && <i className="ti ti-check" style={{ fontSize: '13px' }} />}
-                {act}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Preview document */}
-        <div style={{ background: 'var(--surface-hover)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>
-            Apercu dans les documents
-          </div>
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {form.logo_url ? (
-              <img src={form.logo_url} alt="Logo" style={{ height: '50px', objectFit: 'contain', flexShrink: 0 }} />
-            ) : (
-              <div style={{ width: '80px', height: '50px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>LOGO</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{pers.prenom} {pers.nom}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>{pers.fonction_reelle}</div>
+                  {persResps.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {persResps.map(r => (
+                        <span key={r.id} style={{ fontSize: '10px', fontWeight: '500', color: '#7C3AED', background: '#F5F3FF', padding: '3px 8px', borderRadius: '20px', border: '1px solid rgba(124,58,237,0.2)' }}>
+                          {RESPONSABILITES_LABELS[r.responsabilite] || r.responsabilite}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '6px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                    {pers.telephone && <span><i className="ti ti-phone" style={{ fontSize: '11px' }} /> {pers.telephone}</span>}
+                    {pers.email && <span><i className="ti ti-mail" style={{ fontSize: '11px' }} /> {pers.email}</span>}
+                  </div>
+                </div>
               </div>
-            )}
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#1a1a1a' }}>{form.raison_sociale || 'Raison sociale'}</div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
-                {[form.adresse, form.code_postal, form.ville].filter(Boolean).join(' ') || 'Adresse'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#666' }}>
-                {[form.telephone, form.email].filter(Boolean).join(' | ') || 'Contact'}
-              </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
+      </div>
 
-        <button onClick={handleSave} disabled={saving}
-          style={{ padding: '13px', background: saved ? 'var(--success)' : saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-          <i className={`ti ${saved ? 'ti-check' : 'ti-device-floppy'}`} style={{ fontSize: '16px' }} />
-          {saved ? 'Profil enregistre !' : saving ? 'Enregistrement...' : 'Sauvegarder le profil'}
-        </button>
+      {/* Variables disponibles pour les documents */}
+      <div style={{ background: 'var(--surface-hover)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="ti ti-code" style={{ fontSize: '14px' }} />
+          Variables disponibles dans vos documents
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            '{{logo}}', '{{raison_sociale}}', '{{siren}}', '{{adresse_siege}}',
+            '{{dirigeant_nom}}', '{{garant_psdm}}', '{{correspondant_materiovigilance}}',
+            '{{responsable_desinfection}}', '{{responsable_sav}}', '{{responsable_reclamations}}',
+            '{{pilote_certification}}', '{{nom_etablissement}}', '{{siret_etablissement}}',
+          ].map(v => (
+            <span key={v} style={{ fontSize: '11px', fontFamily: 'monospace', background: '#fff', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '4px', color: 'var(--accent)' }}>{v}</span>
+          ))}
+        </div>
       </div>
     </div>
   )

@@ -1,452 +1,366 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
-type Client = {
-  id: string; nom: string; type: string; ville: string; pays: string
-  contact_nom: string; contact_email: string; contact_tel: string
-  statut: string; created_at: string
+const FORFAITS = {
+  starter: { label: 'Starter', color: '#6B7280', bg: '#F3F4F6', price: '40€/mois' },
+  pro: { label: 'Pro', color: '#1A56DB', bg: '#EBF2FF', price: '89€/mois' },
+  premium: { label: 'Premium', color: '#7C3AED', bg: '#F5F3FF', price: '149€/mois' },
 }
 
-const TYPES_CLIENT = ['Hopital', 'Clinique', 'PSDM', 'EHPAD', 'Pharmacie', 'Centre de soins', 'Autre']
-
-const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)' }
-const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as const, color: 'var(--text-secondary)', marginBottom: '5px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
-
-function Modal({ onClose, children, maxWidth = '480px' }: { onClose: () => void; children: React.ReactNode; maxWidth?: string }) {
-  return (
-    <div onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ModalHeader({ title, sub, onClose }: { title: string; sub?: string; onClose: () => void }) {
-  return (
-    <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--surface)' }}>
-      <div>
-        <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>{title}</div>
-        {sub && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>{sub}</div>}
-      </div>
-      <button onClick={onClose} style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-        <i className="ti ti-x" style={{ fontSize: '14px' }} />
-      </button>
-    </div>
-  )
-}
+const CHAPITRES = ['1', '2', '3', '4']
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([])
-  const [auditCount, setAuditCount] = useState<Record<string, number>>({})
-  const [ncCount, setNcCount] = useState<Record<string, number>>({})
+  const [clients, setClients] = useState<any[]>([])
+  const [kpis, setKpis] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
+  const [selectedClient, setSelectedClient] = useState<any>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showAccessModal, setShowAccessModal] = useState(false)
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [showForfaitModal, setShowForfaitModal] = useState<any>(null)
+  const [search, setSearch] = useState('')
+  const [filterForfait, setFilterForfait] = useState('tous')
+  const [form, setForm] = useState({ nom: '', email: '', forfait: 'starter' })
   const [saving, setSaving] = useState(false)
-  const [editSaving, setEditSaving] = useState(false)
-  const [deleteSaving, setDeleteSaving] = useState(false)
-  const [accessSaving, setAccessSaving] = useState(false)
-  const [accessSuccess, setAccessSuccess] = useState(false)
-  const [accessError, setAccessError] = useState('')
-  const [accessEmail, setAccessEmail] = useState('')
-  const [filterStatut, setFilterStatut] = useState('tous')
-  const [filterType, setFilterType] = useState('tous')
-  const [editForm, setEditForm] = useState({ nom: '', ville: '', pays: 'France', type: 'EHPAD', contact_nom: '', contact_email: '', contact_tel: '' })
-  const nomRef = useRef<HTMLInputElement>(null)
-  const villeRef = useRef<HTMLInputElement>(null)
-  const paysRef = useRef<HTMLInputElement>(null)
-  const contactNomRef = useRef<HTMLInputElement>(null)
-  const contactEmailRef = useRef<HTMLInputElement>(null)
-  const contactTelRef = useRef<HTMLInputElement>(null)
-  const typeRef = useRef<HTMLSelectElement>(null)
   const supabase = createClient()
+  const router = useRouter()
 
-  async function load() {
-    const { data } = await supabase.from('clients').select('*').order('nom')
-    const { data: audits } = await supabase.from('audits').select('client_id')
-    const { data: ncs } = await supabase.from('non_conformites').select('client_id').eq('statut', 'ouverte')
-    const ac: Record<string, number> = {}
-    audits?.forEach(a => { ac[a.client_id] = (ac[a.client_id] || 0) + 1 })
-    const nc: Record<string, number> = {}
-    ncs?.forEach(n => { nc[n.client_id] = (nc[n.client_id] || 0) + 1 })
-    setClients(data || [])
-    setAuditCount(ac)
-    setNcCount(nc)
+  useEffect(() => { loadClients() }, [])
+
+  async function loadClients() {
+    setLoading(true)
+    const { data: cls } = await supabase.from('clients').select('*').order('created_at', { ascending: false })
+    setClients(cls || [])
+
+    // Charger KPI certification pour chaque client
+    const kpiMap: Record<string, any> = {}
+    for (const client of cls || []) {
+      const { data: soc } = await supabase.from('societes').select('id').eq('client_id', client.id).single()
+      if (!soc) { kpiMap[client.id] = { score: 0, chapitres: {}, docs: 0, lastActivity: null }; continue }
+
+      const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
+      const etabId = etabs?.[0]?.id
+      if (!etabId) { kpiMap[client.id] = { score: 0, chapitres: {}, docs: 0, lastActivity: null }; continue }
+
+      const { data: crits } = await supabase.from('criteres_psdm').select('id, chapitre').order('code')
+      const { data: reps } = await supabase.from('reponses_criteres').select('*').eq('etablissement_id', etabId)
+      const { count: docsCount } = await supabase.from('documents_qualite').select('*', { count: 'exact', head: true }).eq('etablissement_id', etabId)
+
+      const total = crits?.length || 0
+      const conformes = reps?.filter(r => r.statut === 'conforme').length || 0
+      const score = total > 0 ? Math.round((conformes / total) * 100) : 0
+
+      // Score par chapitre
+      const chapScores: Record<string, { score: number; conformes: number; total: number }> = {}
+      for (const chap of CHAPITRES) {
+        const critChap = crits?.filter(c => c.chapitre === chap) || []
+        const confChap = reps?.filter(r => critChap.find(c => c.id === r.critere_id) && r.statut === 'conforme').length || 0
+        chapScores[chap] = { score: critChap.length > 0 ? Math.round((confChap / critChap.length) * 100) : 0, conformes: confChap, total: critChap.length }
+      }
+
+      const lastRep = reps?.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())[0]
+
+      kpiMap[client.id] = { score, chapitres: chapScores, docs: docsCount || 0, lastActivity: lastRep?.updated_at || lastRep?.created_at || null }
+    }
+    setKpis(kpiMap)
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
-
   async function handleAdd() {
-    const nom = nomRef.current?.value?.trim()
-    if (!nom) return
+    if (!form.nom || !form.email) return
     setSaving(true)
-    await supabase.from('clients').insert([{
-      nom,
-      ville: villeRef.current?.value || '',
-      pays: paysRef.current?.value || 'France',
-      type: typeRef.current?.value || 'EHPAD',
-      contact_nom: contactNomRef.current?.value || '',
-      contact_email: contactEmailRef.current?.value || '',
-      contact_tel: contactTelRef.current?.value || '',
-      statut: 'actif'
-    }])
-    setShowAddModal(false)
+    try {
+      const res = await fetch('/api/create-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom: form.nom, email: form.email, forfait: form.forfait })
+      })
+      const data = await res.json()
+      if (!res.ok) { alert('Erreur : ' + data.error); return }
+      setShowAddModal(false)
+      setForm({ nom: '', email: '', forfait: 'starter' })
+      loadClients()
+    } catch (e: any) {
+      alert('Erreur : ' + e.message)
+    }
     setSaving(false)
-    load()
   }
 
-  async function handleEdit() {
-    if (!selectedClient || !editForm.nom.trim()) return
-    setEditSaving(true)
-    await supabase.from('clients').update({
-      nom: editForm.nom.trim(),
-      ville: editForm.ville,
-      pays: editForm.pays,
-      type: editForm.type,
-      contact_nom: editForm.contact_nom,
-      contact_email: editForm.contact_email,
-      contact_tel: editForm.contact_tel
-    }).eq('id', selectedClient.id)
-    setShowEditModal(false)
-    setEditSaving(false)
-    load()
-  }
-
-  async function handleDelete() {
-    if (!selectedClient) return
-    setDeleteSaving(true)
-    await supabase.from('clients').delete().eq('id', selectedClient.id)
-    setShowDeleteConfirm(false)
-    setDeleteSaving(false)
-    setSelectedClient(null)
-    load()
-  }
-
-  async function handleBloquer(client: Client) {
-    const nouveauStatut = client.statut === 'actif' ? 'inactif' : 'actif'
-    await supabase.from('clients').update({ statut: nouveauStatut }).eq('id', client.id)
-    load()
-  }
-
-  async function handleCreateAccess() {
-    if (!accessEmail || !selectedClient) return
-    setAccessSaving(true)
-    setAccessError('')
-    const res = await fetch('/api/create-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: accessEmail, client_id: selectedClient.id, nom: selectedClient.nom })
-    })
-    const data = await res.json()
-    if (data.error) { setAccessError(data.error); setAccessSaving(false); return }
-    setAccessSuccess(true)
-    setAccessSaving(false)
-    setTimeout(() => { setShowAccessModal(false); setAccessSuccess(false) }, 3000)
-  }
-
-  function openEditModal(client: Client) {
-    setSelectedClient(client)
-    setEditForm({ nom: client.nom, ville: client.ville || '', pays: client.pays || 'France', type: client.type || 'EHPAD', contact_nom: client.contact_nom || '', contact_email: client.contact_email || '', contact_tel: client.contact_tel || '' })
-    setShowEditModal(true)
+  async function updateForfait(clientId: string, forfait: string, actif: boolean) {
+    await supabase.from('clients').update({ forfait, forfait_actif: actif }).eq('id', clientId)
+    setShowForfaitModal(null)
+    loadClients()
   }
 
   const filtered = clients
-    .filter(c => filterStatut === 'tous' || c.statut === filterStatut)
-    .filter(c => filterType === 'tous' || c.type === filterType)
+    .filter(c => filterForfait === 'tous' || c.forfait === filterForfait)
+    .filter(c => !search || c.nom?.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase()))
 
-  const filterBtn = (label: string, active: boolean, onClick: () => void) => (
-    <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '20px', border: active ? '1px solid var(--accent)' : '1px solid var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-      {label}
-    </button>
+  const scoreColor = (s: number) => s >= 75 ? '#10B981' : s >= 50 ? '#F59E0B' : s >= 25 ? '#F97316' : '#EF4444'
+
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+      Chargement des clients...
+    </div>
   )
 
-  const typeColors: Record<string, { color: string; bg: string }> = {
-    'Hopital': { color: 'var(--danger)', bg: 'var(--danger-light)' },
-    'Clinique': { color: '#7C3AED', bg: '#F5F3FF' },
-    'PSDM': { color: 'var(--accent)', bg: 'var(--accent-light)' },
-    'EHPAD': { color: 'var(--success)', bg: 'var(--success-light)' },
-    'Pharmacie': { color: 'var(--warning)', bg: 'var(--warning-light)' },
-    'Centre de soins': { color: '#0891B2', bg: '#E0F2FE' },
-  }
-
-  if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
-
   return (
-    <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
+    <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '1200px' }}>
 
-      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{filtered.length} client{filtered.length > 1 ? 's' : ''}</div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Clients</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{clients.length} client{clients.length > 1 ? 's' : ''} · {clients.filter(c => c.forfait_actif).length} actifs</div>
+        </div>
         <button onClick={() => setShowAddModal(true)}
-          style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-          <i className="ti ti-plus" style={{ fontSize: '14px' }} />
+          style={{ padding: '9px 18px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px', boxShadow: '0 1px 4px rgba(26,86,219,0.25)' }}>
+          <i className="ti ti-user-plus" style={{ fontSize: '15px' }} />
           Ajouter un client
         </button>
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {filterBtn('Tous', filterStatut === 'tous', () => setFilterStatut('tous'))}
-          {filterBtn('Actif', filterStatut === 'actif', () => setFilterStatut('actif'))}
-          {filterBtn('Inactif', filterStatut === 'inactif', () => setFilterStatut('inactif'))}
+      {/* Stats forfaits */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
+        {Object.entries(FORFAITS).map(([key, f]) => {
+          const count = clients.filter(c => c.forfait === key && c.forfait_actif).length
+          return (
+            <div key={key} style={{ background: 'var(--surface)', border: `1px solid ${f.bg}`, borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: f.color }}>{f.label.toUpperCase()}</span>
+              </div>
+              <div>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: f.color, letterSpacing: '-0.5px', lineHeight: 1 }}>{count}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{f.label} · {f.price}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Filtres */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative' }}>
+          <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} />
+          <input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+            style={{ padding: '8px 12px 8px 32px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', width: '200px' }} />
         </div>
-        <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}
-          style={{ padding: '5px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', cursor: 'pointer' }}>
-          <option value='tous'>Tous les types</option>
-          {TYPES_CLIENT.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
+        {['tous', 'starter', 'pro', 'premium'].map(f => (
+          <button key={f} onClick={() => setFilterForfait(f)}
+            style={{ padding: '7px 14px', borderRadius: '20px', border: `1px solid ${filterForfait === f ? '#1A56DB' : 'var(--border)'}`, background: filterForfait === f ? '#EBF2FF' : 'var(--surface)', color: filterForfait === f ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filterForfait === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', textTransform: 'capitalize' }}>
+            {f === 'tous' ? 'Tous' : f}
+          </button>
+        ))}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: 'var(--surface-hover)' }}>
-              {['Client', 'Type', 'Contact', 'Pays', 'Audits', 'Non-conformites', 'Statut', 'Actions'].map(h => (
-                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '500', color: 'var(--text-tertiary)', letterSpacing: '0.4px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>Aucun client</td></tr>
-            ) : filtered.map((client, i) => {
-              const tc = typeColors[client.type] || { color: 'var(--text-secondary)', bg: 'var(--surface-hover)' }
-              const isInactif = client.statut === 'inactif'
-              const audits = auditCount[client.id] || 0
-              const ncs = ncCount[client.id] || 0
-              return (
-                <tr key={client.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', opacity: isInactif ? 0.6 : 1 }}>
-                  <td style={{ padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', background: tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: tc.color, flexShrink: 0 }}>
-                        {client.nom.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{client.nom}</div>
-                        {client.ville && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{client.ville}</div>}
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ background: tc.bg, color: tc.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>{client.type}</span>
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{client.contact_nom || '-'}</div>
-                    {client.contact_email && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{client.contact_email}</div>}
-                  </td>
-                  <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>{client.pays || 'France'}</td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: audits > 0 ? '#7C3AED' : 'var(--text-tertiary)' }}>{audits}</span>
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    {ncs > 0 ? (
-                      <span style={{ background: 'var(--danger-light)', color: 'var(--danger)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>{ncs} ouverte{ncs > 1 ? 's' : ''}</span>
-                    ) : (
-                      <span style={{ background: 'var(--success-light)', color: 'var(--success)', padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' }}>OK</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isInactif ? 'var(--danger)' : 'var(--success)' }} />
-                      <span style={{ fontSize: '12px', color: isInactif ? 'var(--danger)' : 'var(--success)', fontWeight: '500' }}>{isInactif ? 'Inactif' : 'Actif'}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      {[
-                        { icon: 'ti-key', label: 'Acces', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => { setSelectedClient(client); setAccessEmail(client.contact_email || ''); setShowAccessModal(true); setAccessSuccess(false); setAccessError('') } },
-                        { icon: 'ti-edit', label: 'Modifier', color: 'var(--warning)', bg: 'var(--warning-light)', onClick: () => openEditModal(client) },
-                        { icon: isInactif ? 'ti-lock-open' : 'ti-lock', label: isInactif ? 'Activer' : 'Desactiver', color: isInactif ? 'var(--success)' : 'var(--danger)', bg: isInactif ? 'var(--success-light)' : 'var(--danger-light)', onClick: () => handleBloquer(client) },
-                        { icon: 'ti-trash', label: 'Supprimer', color: 'var(--danger)', bg: 'var(--danger-light)', onClick: () => { setSelectedClient(client); setShowDeleteConfirm(true) } },
-                      ].map(btn => (
-                        <button key={btn.label} onClick={btn.onClick}
-                          style={{ padding: '5px 8px', background: btn.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '11px', fontWeight: '500', color: btn.color, cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
-                          <i className={`ti ${btn.icon}`} style={{ fontSize: '12px' }} />
-                          {btn.label}
-                        </button>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      {/* Table clients */}
+      {filtered.length === 0 ? (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '64px', textAlign: 'center' }}>
+          <i className="ti ti-users" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
+          <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun client</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Ajoutez votre premier client pour commencer</div>
+          <button onClick={() => setShowAddModal(true)}
+            style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            Ajouter un client
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filtered.map(client => {
+            const kpi = kpis[client.id] || { score: 0, chapitres: {}, docs: 0, lastActivity: null }
+            const forfait = FORFAITS[client.forfait as keyof typeof FORFAITS] || FORFAITS.starter
+            const isActif = client.forfait_actif !== false
 
-      {/* Modal Ajout */}
+            return (
+              <div key={client.id}
+                style={{ background: 'var(--surface)', border: `1px solid ${isActif ? 'var(--border)' : '#FEE2E2'}`, borderRadius: '12px', padding: '16px 20px', opacity: isActif ? 1 : 0.7, transition: 'all 0.1s' }}
+                onMouseEnter={e => { if (isActif) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+
+                  {/* Avatar + nom */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 220px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: forfait.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: '14px', fontWeight: '800', color: forfait.color }}>{client.nom?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.nom}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</div>
+                    </div>
+                  </div>
+
+                  {/* Forfait badge */}
+                  <div style={{ flex: '0 0 100px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: forfait.color, background: forfait.bg, padding: '3px 10px', borderRadius: '20px' }}>
+                      {isActif ? forfait.label : '⏸ Suspendu'}
+                    </span>
+                  </div>
+
+                  {/* Score global */}
+                  <div style={{ flex: '0 0 80px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
+                      <svg width="36" height="36" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                        <circle cx="18" cy="18" r="14" fill="none"
+                          stroke={scoreColor(kpi.score)}
+                          strokeWidth="4"
+                          strokeDasharray={`${2 * Math.PI * 14}`}
+                          strokeDashoffset={`${2 * Math.PI * 14 * (1 - kpi.score / 100)}`}
+                          strokeLinecap="round" transform="rotate(-90 18 18)" />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '9px', fontWeight: '800', color: scoreColor(kpi.score) }}>{kpi.score}%</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Score</div>
+                  </div>
+
+                  {/* KPI chapitres */}
+                  <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {CHAPITRES.map(chap => {
+                      const chapData = kpi.chapitres?.[chap] || { score: 0, conformes: 0, total: 0 }
+                      const colors = ['#7C3AED', '#1A56DB', '#0A7C4E', '#B45309']
+                      const color = colors[parseInt(chap) - 1]
+                      return (
+                        <div key={chap} style={{ flex: 1, minWidth: '60px', background: '#F9FAFB', borderRadius: '8px', padding: '6px 8px' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '700', color, marginBottom: '3px' }}>Ch.{chap}</div>
+                          <div style={{ height: '3px', background: '#E5E7EB', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${chapData.score}%`, background: color, borderRadius: '2px' }} />
+                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{chapData.conformes}/{chapData.total}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Docs + activite */}
+                  <div style={{ flex: '0 0 80px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#1A56DB' }}>{kpi.docs}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>docs</div>
+                  </div>
+
+                  {/* Derniere activite */}
+                  <div style={{ flex: '0 0 100px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                      {kpi.lastActivity
+                        ? new Date(kpi.lastActivity).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+                        : 'Aucune activité'}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                    <button onClick={() => router.push(`/dashboard/certification?client_id=${client.id}`)}
+                      style={{ height: '32px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="ti ti-eye" style={{ fontSize: '13px' }} />
+                      Voir
+                    </button>
+                    <button onClick={() => setShowForfaitModal(client)}
+                      style={{ height: '32px', padding: '0 12px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="ti ti-settings" style={{ fontSize: '13px' }} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Modal ajout client */}
       {showAddModal && (
-        <Modal onClose={() => setShowAddModal(false)}>
-          <ModalHeader title="Ajouter un client" onClose={() => setShowAddModal(false)} />
-          <div style={{ padding: '20px 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Nom *</label>
-                <input ref={nomRef} type='text' placeholder='CHU de Paris' style={inputStyle} autoFocus />
-              </div>
-              <div>
-                <label style={labelStyle}>Type</label>
-                <select ref={typeRef} style={inputStyle}>
-                  {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Ville</label>
-                <input ref={villeRef} type='text' placeholder='Paris' style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Pays</label>
-                <input ref={paysRef} type='text' placeholder='France' defaultValue='France' style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Contact</label>
-                <input ref={contactNomRef} type='text' placeholder='Dr. Martin' style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Email</label>
-                <input ref={contactEmailRef} type='email' placeholder='contact@etab.fr' style={inputStyle} />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Telephone</label>
-                <input ref={contactTelRef} type='tel' placeholder='+33 1 23 45 67 89' style={inputStyle} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+        <div onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '480px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Ajouter un client</div>
               <button onClick={() => setShowAddModal(false)}
-                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                Annuler
-              </button>
-              <button onClick={handleAdd} disabled={saving}
-                style={{ flex: 1, padding: '11px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                {saving ? 'Enregistrement...' : 'Ajouter'}
+                style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>
+                <i className="ti ti-x" style={{ fontSize: '14px' }} />
               </button>
             </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Modal Modifier */}
-      {showEditModal && selectedClient && (
-        <Modal onClose={() => setShowEditModal(false)}>
-          <ModalHeader title="Modifier le client" sub={selectedClient.nom} onClose={() => setShowEditModal(false)} />
-          <div style={{ padding: '20px 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Nom *</label>
-                <input type='text' value={editForm.nom} onChange={e => setEditForm(p => ({ ...p, nom: e.target.value }))} style={inputStyle} />
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>Nom de l'entreprise *</label>
+                <input value={form.nom} onChange={e => setForm(p => ({ ...p, nom: e.target.value }))}
+                  placeholder="SARL Medical Services"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={labelStyle}>Type</label>
-                <select value={editForm.type} onChange={e => setEditForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}>
-                  {TYPES_CLIENT.map(t => <option key={t}>{t}</option>)}
-                </select>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>Email de connexion *</label>
+                <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                  placeholder="contact@medical-services.fr" type="email"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={labelStyle}>Ville</label>
-                <input type='text' value={editForm.ville} onChange={e => setEditForm(p => ({ ...p, ville: e.target.value }))} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Pays</label>
-                <input type='text' value={editForm.pays} onChange={e => setEditForm(p => ({ ...p, pays: e.target.value }))} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Contact</label>
-                <input type='text' value={editForm.contact_nom} onChange={e => setEditForm(p => ({ ...p, contact_nom: e.target.value }))} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Email</label>
-                <input type='email' value={editForm.contact_email} onChange={e => setEditForm(p => ({ ...p, contact_email: e.target.value }))} style={inputStyle} />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Telephone</label>
-                <input type='tel' value={editForm.contact_tel} onChange={e => setEditForm(p => ({ ...p, contact_tel: e.target.value }))} style={inputStyle} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowEditModal(false)}
-                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                Annuler
-              </button>
-              <button onClick={handleEdit} disabled={editSaving || !editForm.nom.trim()}
-                style={{ flex: 1, padding: '11px', background: editSaving || !editForm.nom.trim() ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: editSaving || !editForm.nom.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', boxShadow: '0 1px 4px rgba(26,86,219,0.3)' }}>
-                {editSaving ? 'Enregistrement...' : 'Sauvegarder'}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Modal Suppression */}
-      {showDeleteConfirm && selectedClient && (
-        <Modal onClose={() => setShowDeleteConfirm(false)} maxWidth="400px">
-          <ModalHeader title="Supprimer le client" onClose={() => setShowDeleteConfirm(false)} />
-          <div style={{ padding: '24px' }}>
-            <div style={{ padding: '16px', background: 'var(--danger-light)', borderRadius: 'var(--radius-md)', marginBottom: '20px', display: 'flex', gap: '12px' }}>
-              <i className="ti ti-alert-triangle" style={{ fontSize: '20px', color: 'var(--danger)', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--danger)', marginBottom: '4px' }}>Action irreversible</div>
-                <div style={{ fontSize: '12px', color: 'var(--danger)', opacity: 0.8 }}>
-                  Supprimer <strong>{selectedClient.nom}</strong> supprimera aussi tous ses audits, non-conformites et plans d actions associes.
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Forfait</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {Object.entries(FORFAITS).map(([key, f]) => (
+                    <button key={key} onClick={() => setForm(p => ({ ...p, forfait: key }))}
+                      style={{ flex: 1, padding: '10px 8px', border: `2px solid ${form.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: form.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: form.forfait === key ? f.color : '#6B7280' }}>{f.label}</div>
+                      <div style={{ fontSize: '11px', color: form.forfait === key ? f.color : '#9CA3AF', marginTop: '2px' }}>{f.price}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
+              <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: '#92400E' }}>
+                <i className="ti ti-mail" style={{ fontSize: '13px', marginRight: '6px' }} />
+                Un email de connexion sera envoyé automatiquement au client.
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowDeleteConfirm(false)}
-                style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #F3F4F6', display: 'flex', gap: '10px' }}>
+              <button onClick={() => setShowAddModal(false)}
+                style={{ flex: 1, padding: '10px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 Annuler
               </button>
-              <button onClick={handleDelete} disabled={deleteSaving}
-                style={{ flex: 1, padding: '11px', background: 'var(--danger)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: deleteSaving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {deleteSaving ? 'Suppression...' : 'Supprimer'}
+              <button onClick={handleAdd} disabled={saving || !form.nom || !form.email}
+                style={{ flex: 1, padding: '10px', background: !form.nom || !form.email ? 'rgba(26,86,219,0.3)' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !form.nom || !form.email ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                {saving ? 'Création...' : 'Créer le client'}
               </button>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
 
-      {/* Modal Acces */}
-      {showAccessModal && selectedClient && (
-        <Modal onClose={() => setShowAccessModal(false)} maxWidth="400px">
-          <ModalHeader title="Inviter un utilisateur" sub={selectedClient.nom} onClose={() => setShowAccessModal(false)} />
-          <div style={{ padding: '20px 24px' }}>
-            {accessSuccess ? (
-              <div style={{ padding: '20px', background: 'var(--success-light)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <i className="ti ti-mail-check" style={{ fontSize: '32px', color: 'var(--success)', display: 'block', marginBottom: '10px' }} />
-                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--success)', marginBottom: '6px' }}>Invitation envoyee</div>
-                <div style={{ fontSize: '12px', color: 'var(--success)', opacity: 0.8 }}>L utilisateur va recevoir un email pour acceder a son espace MediReg.</div>
+      {/* Modal gestion forfait */}
+      {showForfaitModal && (
+        <div onClick={e => { if (e.target === e.currentTarget) setShowForfaitModal(null) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '440px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gérer le forfait</div>
+                <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>{showForfaitModal.nom}</div>
               </div>
-            ) : (
-              <>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={labelStyle}>Email *</label>
-                  <input type='email' value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder='contact@etablissement.fr' style={inputStyle} autoFocus />
-                </div>
-                {accessError && (
-                  <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--danger)', marginBottom: '14px' }}>{accessError}</div>
-                )}
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => setShowAccessModal(false)}
-                    style={{ flex: 1, padding: '11px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                    Annuler
-                  </button>
-                  <button onClick={handleCreateAccess} disabled={accessSaving || !accessEmail}
-                    style={{ flex: 1, padding: '11px', background: accessSaving || !accessEmail ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: accessSaving || !accessEmail ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    <i className="ti ti-send" style={{ fontSize: '14px' }} />
-                    {accessSaving ? 'Envoi...' : 'Envoyer'}
-                  </button>
-                </div>
-              </>
-            )}
+              <button onClick={() => setShowForfaitModal(null)}
+                style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>
+                <i className="ti ti-x" style={{ fontSize: '14px' }} />
+              </button>
+            </div>
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Changer de forfait</div>
+              {Object.entries(FORFAITS).map(([key, f]) => (
+                <button key={key} onClick={() => updateForfait(showForfaitModal.id, key, true)}
+                  style={{ padding: '12px 16px', border: `2px solid ${showForfaitModal.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: showForfaitModal.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.1s' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: showForfaitModal.forfait === key ? f.color : '#374151' }}>{f.label}</div>
+                    <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{f.price}</div>
+                  </div>
+                  {showForfaitModal.forfait === key && <i className="ti ti-check" style={{ fontSize: '16px', color: f.color }} />}
+                </button>
+              ))}
+              <div style={{ height: '1px', background: '#F3F4F6', margin: '4px 0' }} />
+              <button onClick={() => updateForfait(showForfaitModal.id, showForfaitModal.forfait, !showForfaitModal.forfait_actif)}
+                style={{ padding: '10px 16px', border: `1px solid ${showForfaitModal.forfait_actif ? '#FEE2E2' : '#D1FAE5'}`, borderRadius: '9px', background: showForfaitModal.forfait_actif ? '#FEF2F2' : '#ECFDF5', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '13px', fontWeight: '600', color: showForfaitModal.forfait_actif ? '#DC2626' : '#059669', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <i className={`ti ${showForfaitModal.forfait_actif ? 'ti-player-pause' : 'ti-player-play'}`} style={{ fontSize: '14px' }} />
+                {showForfaitModal.forfait_actif ? 'Suspendre l\'accès' : 'Réactiver l\'accès'}
+              </button>
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   )

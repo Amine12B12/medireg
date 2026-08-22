@@ -5,16 +5,11 @@ import { createClient } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 
 const pageTitles: Record<string, { title: string; sub: string }> = {
-  '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale' },
+  '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale de votre certification' },
   '/dashboard/clients': { title: 'Clients', sub: 'Etablissements accompagnes' },
-  '/dashboard/audits': { title: 'Audits', sub: 'Preparation a la certification' },
-  '/dashboard/bibliotheque': { title: 'Bibliotheque', sub: 'Documents et modeles' },
-  '/dashboard/referentiel': { title: 'Referentiel', sub: 'HAS, ANSM, Normes' },
-  '/dashboard/pilotage': { title: 'Pilotage', sub: 'Scores et KPI' },
-  '/dashboard/taches': { title: 'Mes actions', sub: 'Taches et echeances' },
-  '/dashboard/conformite': { title: 'Conformite', sub: 'Obligations et criteres' },
-  '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert reglementaire' },
   '/dashboard/certification': { title: 'Certification', sub: '60 criteres HAS PSDM' },
+  '/dashboard/documents': { title: 'Documents', sub: 'Vos documents qualite' },
+  '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert reglementaire' },
   '/dashboard/onboarding': { title: 'Configuration', sub: 'Mise en place de votre profil' },
   '/dashboard/profil': { title: 'Mon profil', sub: 'Informations etablissement' },
 }
@@ -22,30 +17,13 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
 const navConsultant = [
   { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
   { path: '/dashboard/clients', icon: 'ti-building-hospital', label: 'Clients' },
-  { path: '/dashboard/audits', icon: 'ti-clipboard-check', label: 'Audits' },
-  { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Taches' },
-  { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Bibliotheque' },
-  { path: '/dashboard/referentiel', icon: 'ti-book', label: 'Referentiel' },
-  { path: '/dashboard/pilotage', icon: 'ti-chart-bar', label: 'Pilotage' },
   { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
-]
-
-const navAdmin = [
-  { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
-  { path: '/dashboard/certification', icon: 'ti-shield-check', label: 'Certification' },
-  { path: '/dashboard/conformite', icon: 'ti-clipboard-check', label: 'Conformite' },
-  { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Mes actions' },
-  { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Documents' },
-  { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
-  { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
 ]
 
 const navClient = [
-  { path: '/dashboard', icon: 'ti-home', label: 'Accueil' },
+  { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
   { path: '/dashboard/certification', icon: 'ti-shield-check', label: 'Certification' },
-  { path: '/dashboard/taches', icon: 'ti-checklist', label: 'Mes actions' },
-  { path: '/dashboard/bibliotheque', icon: 'ti-books', label: 'Mes documents' },
-  { path: '/dashboard/conformite', icon: 'ti-chart-pie', label: 'Ma conformite' },
+  { path: '/dashboard/documents', icon: 'ti-files', label: 'Documents' },
   { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
   { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
 ]
@@ -84,17 +62,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setClientNom(client?.nom || '')
       }
 
-      // Rediriger vers onboarding si client sans societe creee
       if (prof.role !== 'consultant' && prof.client_id && pathname !== '/dashboard/onboarding') {
-        const { data: societe } = await supabase
-          .from('societes')
-          .select('id')
-          .eq('client_id', prof.client_id)
-          .single()
-        if (!societe) {
-          router.push('/dashboard/onboarding')
-          return
-        }
+        const { data: societe } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
+        if (!societe) { router.push('/dashboard/onboarding'); return }
       }
     }
     load()
@@ -102,12 +72,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => { setSidebarOpen(false) }, [pathname])
 
-  const nav = role === 'consultant' ? navConsultant : role === 'admin' ? navAdmin : navClient
+  const nav = role === 'consultant' ? navConsultant : navClient
   const page = pageTitles[pathname] || { title: 'MediReg', sub: '' }
-
-  const roleLabel = role === 'consultant' ? 'Consultant' : role === 'admin' ? 'Administrateur' : 'Client'
-  const roleColor = role === 'consultant' ? '#7C3AED' : role === 'admin' ? '#1A56DB' : '#0A7C4E'
-  const roleBg = role === 'consultant' ? '#F5F3FF' : role === 'admin' ? '#EBF2FF' : '#E8F5EE'
+  const roleLabel = role === 'consultant' ? 'Consultant' : 'Administrateur'
+  const roleColor = role === 'consultant' ? '#7C3AED' : '#1A56DB'
+  const roleBg = role === 'consultant' ? '#F5F3FF' : '#EBF2FF'
 
   if (!role) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
@@ -120,7 +89,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   )
 
-  // Page onboarding sans sidebar
   if (pathname === '/dashboard/onboarding') {
     return <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font)' }}>{children}</div>
   }
@@ -151,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>MediReg</div>
-              <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '1px' }}>Conformite reglementaire</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '1px' }}>Certification PSDM</div>
             </div>
           </div>
         </div>
@@ -159,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Role badge */}
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: roleBg, borderRadius: 'var(--radius-md)', border: `1px solid ${roleColor}22` }}>
-            <i className={`ti ${role === 'consultant' ? 'ti-user-star' : role === 'admin' ? 'ti-user-cog' : 'ti-user'}`} style={{ fontSize: '14px', color: roleColor }} />
+            <i className={`ti ${role === 'consultant' ? 'ti-user-star' : 'ti-user-cog'}`} style={{ fontSize: '14px', color: roleColor }} />
             <div>
               <div style={{ fontSize: '11px', fontWeight: '600', color: roleColor }}>{roleLabel}</div>
               {clientNom && <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{clientNom}</div>}
@@ -172,8 +140,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {nav.map(item => {
             const active = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
             return (
-              <button key={item.path + item.label} onClick={() => router.push(item.path)}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: 'var(--radius-md)', border: 'none', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: active ? '500' : '400', cursor: 'pointer', fontFamily: 'var(--font)', marginBottom: '2px', textAlign: 'left', transition: 'all 0.1s' }}
+              <button key={item.path} onClick={() => router.push(item.path)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: 'var(--radius-md)', border: 'none', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: active ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', marginBottom: '2px', textAlign: 'left', transition: 'all 0.1s' }}
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-hover)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}>
                 <i className={`ti ${item.icon}`} style={{ fontSize: '17px', flexShrink: 0 }} />
@@ -187,9 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>
-                {userName.charAt(0).toUpperCase()}
-              </span>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--accent)' }}>{userName.charAt(0).toUpperCase()}</span>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
@@ -219,10 +185,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {!isMobile && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{page.sub}</div>}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ padding: '4px 10px', background: roleBg, borderRadius: '20px', border: `1px solid ${roleColor}22` }}>
-              <span style={{ fontSize: '11px', fontWeight: '500', color: roleColor }}>{roleLabel}</span>
-            </div>
+          <div style={{ padding: '4px 10px', background: roleBg, borderRadius: '20px', border: `1px solid ${roleColor}22` }}>
+            <span style={{ fontSize: '11px', fontWeight: '500', color: roleColor }}>{roleLabel}</span>
           </div>
         </div>
 

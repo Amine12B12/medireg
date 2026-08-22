@@ -4,107 +4,59 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+const CHAPITRES = [
+  { num: '1', label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', total: 7 },
+  { num: '2', label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', total: 20 },
+  { num: '3', label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', total: 24 },
+  { num: '4', label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', total: 9 },
+]
+
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null)
-  const [stats, setStats] = useState({ clients: 0, audits: 0, nonConformites: 0, plansActions: 0, taches: 0, documents: 0 })
-  const [auditsRecents, setAuditsRecents] = useState<any[]>([])
-  const [tachesUrgentes, setTachesUrgentes] = useState<any[]>([])
-  const [ncMajeures, setNcMajeures] = useState<any[]>([])
-  const [actionsEnRetard, setActionsEnRetard] = useState<any[]>([])
-  const [clientsSansObligations, setClientsSansObligations] = useState<any[]>([])
-  const [prochainesEcheances, setProchainesEcheances] = useState<any[]>([])
+  const [societe, setSociete] = useState<any>(null)
+  const [clients, setClients] = useState<any[]>([])
+  const [reponses, setReponses] = useState<any[]>([])
+  const [criteres, setCriteres] = useState<any[]>([])
+  const [docsCount, setDocsCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
-  const today = new Date()
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(prof)
 
       if (prof?.role === 'consultant') {
-        // Stats globales
-        const { count: cClients } = await supabase.from('clients').select('*', { count: 'exact', head: true }).eq('statut', 'actif')
-        const { count: cAudits } = await supabase.from('audits').select('*', { count: 'exact', head: true })
-        const { count: cNC } = await supabase.from('non_conformites').select('*', { count: 'exact', head: true }).eq('statut', 'ouverte')
-        const { count: cPA } = await supabase.from('plans_actions').select('*', { count: 'exact', head: true }).eq('statut', 'a_faire')
-        const { count: cDocs } = await supabase.from('documents').select('*', { count: 'exact', head: true })
-        setStats({ clients: cClients || 0, audits: cAudits || 0, nonConformites: cNC || 0, plansActions: cPA || 0, taches: 0, documents: cDocs || 0 })
+        const { data: cls } = await supabase.from('clients').select('id, nom, statut').eq('statut', 'actif').order('nom')
+        setClients(cls || [])
+      } else if (prof?.client_id) {
+        // Charger la societe
+        const { data: soc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
+        setSociete(soc)
 
-        // NC majeures ouvertes — priorité absolue
-        const { data: nc } = await supabase.from('non_conformites')
-          .select('*, clients(nom, ville)')
-          .eq('statut', 'ouverte')
-          .eq('niveau', 'majeure')
-          .order('created_at', { ascending: false })
-          .limit(6)
-        setNcMajeures(nc || [])
+        if (soc) {
+          // Charger etablissement
+          const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
+          const etabId = etabs?.[0]?.id
 
-        // Actions en retard (echeance depassee)
-        const { data: paRetard } = await supabase.from('plans_actions')
-          .select('*, non_conformites(titre), clients(nom)')
-          .neq('statut', 'termine')
-          .lt('echeance', today.toISOString().split('T')[0])
-          .order('echeance', { ascending: true })
-          .limit(5)
-        setActionsEnRetard(paRetard || [])
+          if (etabId) {
+            // Reponses criteres
+            const { data: reps } = await supabase.from('reponses_criteres').select('*').eq('etablissement_id', etabId)
+            setReponses(reps || [])
 
-        // Prochaines echeances (7 prochains jours)
-        const in7days = new Date(today)
-        in7days.setDate(in7days.getDate() + 7)
-        const { data: echeances } = await supabase.from('plans_actions')
-          .select('*, clients(nom)')
-          .neq('statut', 'termine')
-          .gte('echeance', today.toISOString().split('T')[0])
-          .lte('echeance', in7days.toISOString().split('T')[0])
-          .order('echeance', { ascending: true })
-          .limit(5)
-        setProchainesEcheances(echeances || [])
+            // Docs generes
+            const { count } = await supabase.from('documents_qualite').select('*', { count: 'exact', head: true }).eq('etablissement_id', etabId)
+            setDocsCount(count || 0)
+          }
 
-        // Audits recents
-        const { data: audits } = await supabase.from('audits')
-          .select('*, clients(nom, ville)')
-          .order('created_at', { ascending: false })
-          .limit(5)
-        setAuditsRecents(audits || [])
-
-        // Clients sans audits (manquent a leurs obligations)
-        const { data: allClients } = await supabase.from('clients').select('id, nom, type, ville, statut').eq('statut', 'actif').order('nom')
-        const { data: allAudits } = await supabase.from('audits').select('client_id')
-        const clientsAvecAudits = new Set((allAudits || []).map((a: any) => a.client_id))
-        const sansPrepare = (allClients || []).filter(c => !clientsAvecAudits.has(c.id))
-        setClientsSansObligations(sansPrepare)
-
-      } else if (prof?.role === 'admin' && prof?.client_id) {
-        const { count: cAudits } = await supabase.from('audits').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id)
-        const { count: cNC } = await supabase.from('non_conformites').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id).eq('statut', 'ouverte')
-        const { count: cPA } = await supabase.from('plans_actions').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id).neq('statut', 'termine')
-        const { count: cTaches } = await supabase.from('taches').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id).eq('statut', 'a_faire')
-        setStats({ clients: 0, audits: cAudits || 0, nonConformites: cNC || 0, plansActions: cPA || 0, taches: cTaches || 0, documents: 0 })
-
-        const { data: nc } = await supabase.from('non_conformites').select('*').eq('client_id', prof.client_id).eq('statut', 'ouverte').eq('niveau', 'majeure').order('created_at', { ascending: false }).limit(4)
-        setNcMajeures(nc || [])
-
-        const { data: paRetard } = await supabase.from('plans_actions').select('*, non_conformites(titre)').eq('client_id', prof.client_id).neq('statut', 'termine').lt('echeance', today.toISOString().split('T')[0]).order('echeance', { ascending: true }).limit(5)
-        setActionsEnRetard(paRetard || [])
-
-        const { data: audits } = await supabase.from('audits').select('*').eq('client_id', prof.client_id).order('created_at', { ascending: false }).limit(3)
-        setAuditsRecents(audits || [])
-
-        const { data: taches } = await supabase.from('taches').select('*').eq('client_id', prof.client_id).eq('statut', 'a_faire').order('echeance', { ascending: true }).limit(4)
-        setTachesUrgentes(taches || [])
-
-      } else if (prof?.role === 'client' && prof?.client_id) {
-        const { count: cTaches } = await supabase.from('taches').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id).eq('statut', 'a_faire')
-        const { count: cDocs } = await supabase.from('documents').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id)
-        const { count: cPA } = await supabase.from('plans_actions').select('*', { count: 'exact', head: true }).eq('client_id', prof.client_id).neq('statut', 'termine')
-        setStats({ clients: 0, audits: 0, nonConformites: 0, plansActions: cPA || 0, taches: cTaches || 0, documents: cDocs || 0 })
-
-        const { data: taches } = await supabase.from('taches').select('*').eq('client_id', prof.client_id).neq('statut', 'termine').order('echeance', { ascending: true }).limit(5)
-        setTachesUrgentes(taches || [])
+          // Criteres
+          const { data: crits } = await supabase.from('criteres_psdm').select('*').order('code')
+          setCriteres(crits || [])
+        }
       }
 
       setLoading(false)
@@ -112,383 +64,280 @@ export default function Dashboard() {
     load()
   }, [])
 
-  const scoreColor = (s: number) => s >= 80 ? 'var(--success)' : s >= 60 ? 'var(--warning)' : 'var(--danger)'
-
-  const prioriteTache = (p: string) => {
-    if (p === 'urgente') return { color: 'var(--danger)', bg: 'var(--danger-light)' }
-    if (p === 'haute') return { color: 'var(--warning)', bg: 'var(--warning-light)' }
-    return { color: 'var(--accent)', bg: 'var(--accent-light)' }
-  }
-
-  const typeColors: Record<string, { color: string; bg: string }> = {
-    'Hopital': { color: 'var(--danger)', bg: 'var(--danger-light)' },
-    'Clinique': { color: '#7C3AED', bg: '#F5F3FF' },
-    'PSDM': { color: 'var(--accent)', bg: 'var(--accent-light)' },
-    'EHPAD': { color: 'var(--success)', bg: 'var(--success-light)' },
-    'Pharmacie': { color: 'var(--warning)', bg: 'var(--warning-light)' },
-    'Centre de soins': { color: '#0891B2', bg: '#E0F2FE' },
-  }
-
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-      Chargement...
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+          <i className="ti ti-shield-check" style={{ fontSize: '20px', color: '#fff' }} />
+        </div>
+        Chargement...
+      </div>
     </div>
   )
 
-  return (
-    <div style={{ padding: '24px', fontFamily: 'var(--font)', maxWidth: '1400px' }}>
+  // Stats certification
+  const total = criteres.length
+  const conformes = reponses.filter(r => r.statut === 'conforme').length
+  const enCours = reponses.filter(r => r.statut === 'en_cours').length
+  const nonConformes = reponses.filter(r => r.statut === 'non_conforme').length
+  const nonTraites = total - conformes - enCours - nonConformes
+  const score = total > 0 ? Math.round((conformes / total) * 100) : 0
 
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-          Bonjour {profile?.prenom || ''} 👋
+  // Prochains criteres a traiter (non traites en premier)
+  const criteresNonTraites = criteres.filter(c => {
+    const rep = reponses.find(r => r.critere_id === c.id)
+    return !rep || rep.statut === 'non_traite'
+  }).slice(0, 4)
+
+  // Stats par chapitre
+  const statsByChap = CHAPITRES.map(ch => {
+    const critChap = criteres.filter(c => c.chapitre === ch.num)
+    const conformesChap = critChap.filter(c => reponses.find(r => r.critere_id === c.id && r.statut === 'conforme')).length
+    const enCoursChap = critChap.filter(c => reponses.find(r => r.critere_id === c.id && r.statut === 'en_cours')).length
+    return { ...ch, criteres: critChap.length || ch.total, conformes: conformesChap, enCours: enCoursChap }
+  })
+
+  // Vue CONSULTANT
+  if (profile?.role === 'consultant') {
+    return (
+      <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '1100px' }}>
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+            Bonjour {profile?.prenom || ''} 👋
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+
+        {/* Stats globales */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { icon: 'ti-building-hospital', color: '#1A56DB', bg: '#EBF2FF', value: clients.length, label: 'Clients actifs' },
+            { icon: 'ti-shield-check', color: '#7C3AED', bg: '#F5F3FF', value: clients.length, label: 'Certifications suivies' },
+            { icon: 'ti-sparkles', color: '#0A7C4E', bg: '#E8F5EE', value: '—', label: 'Score moyen' },
+          ].map(k => (
+            <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={`ti ${k.icon}`} style={{ fontSize: '20px', color: k.color }} />
+              </div>
+              <div>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: k.color, letterSpacing: '-0.5px', lineHeight: 1 }}>{k.value}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{k.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Liste clients */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Mes clients</div>
+            <button onClick={() => router.push('/dashboard/clients')}
+              style={{ padding: '6px 14px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              Gérer les clients
+            </button>
+          </div>
+          {clients.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center' }}>
+              <i className="ti ti-building-hospital" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
+              <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>Aucun client pour le moment</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '16px' }}>Ajoutez votre premier client pour commencer</div>
+              <button onClick={() => router.push('/dashboard/clients')}
+                style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                Ajouter un client
+              </button>
+            </div>
+          ) : (
+            <div>
+              {clients.map((c, i) => (
+                <div key={c.id} style={{ padding: '14px 20px', borderBottom: i < clients.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}
+                  onClick={() => router.push(`/dashboard/certification?client_id=${c.id}`)}
+                  onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-hover)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1A56DB' }}>{c.nom.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{c.nom}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Certification PSDM HAS</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#059669', background: '#D1FAE5', padding: '3px 10px', borderRadius: '20px', fontWeight: '500' }}>Actif</span>
+                    <i className="ti ti-chevron-right" style={{ fontSize: '14px', color: 'var(--text-tertiary)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Vue CLIENT/ADMIN — pas de societe encore
+  if (!societe) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '70vh', fontFamily: 'var(--font)' }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+          <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <i className="ti ti-shield-check" style={{ fontSize: '28px', color: '#fff' }} />
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            Bienvenue sur MediReg
+          </div>
+          <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', lineHeight: '1.6', marginBottom: '24px' }}>
+            Configurez votre profil pour commencer votre parcours de certification HAS PSDM.
+          </div>
+          <button onClick={() => router.push('/dashboard/onboarding')}
+            style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
+            Configurer mon profil
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Vue CLIENT/ADMIN — avec certification
+  return (
+    <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '1000px' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '28px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+            Bonjour {profile?.prenom || ''} 👋
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+            {societe.raison_sociale} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+        </div>
+        <button onClick={() => router.push('/dashboard/certification')}
+          style={{ padding: '10px 20px', background: '#1A56DB', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(26,86,219,0.25)' }}>
+          <i className="ti ti-shield-check" style={{ fontSize: '15px' }} />
+          Continuer ma certification
+        </button>
+      </div>
+
+      {/* Score hero */}
+      <div style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #1e3a5f 100%)', borderRadius: '16px', padding: '28px 32px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+        {/* Cercle score */}
+        <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" />
+            <circle cx="50" cy="50" r="42" fill="none"
+              stroke={score >= 75 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6366F1'}
+              strokeWidth="10"
+              strokeDasharray={`${2 * Math.PI * 42}`}
+              strokeDashoffset={`${2 * Math.PI * 42 * (1 - score / 100)}`}
+              strokeLinecap="round"
+              transform="rotate(-90 50 50)" />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+            <span style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>{score}%</span>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, minWidth: '200px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>Score de certification HAS PSDM</div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '14px' }}>
+            {score === 0 ? 'Commencez votre certification' : score < 30 ? 'Bon début — continuez !' : score < 60 ? 'Bonne progression' : score < 80 ? 'Presque prêt' : 'Excellent niveau !'}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Conformes', value: conformes, color: '#10B981' },
+              { label: 'En cours', value: enCours, color: '#F59E0B' },
+              { label: 'Non conformes', value: nonConformes, color: '#EF4444' },
+              { label: 'À traiter', value: nonTraites, color: 'rgba(255,255,255,0.4)' },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.color }} />
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>{s.value} {s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+          <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{docsCount}</div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>Documents générés</div>
+          </div>
+          <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff' }}>{total}</div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>Critères total</div>
+          </div>
         </div>
       </div>
 
-      {/* ===== CONSULTANT ===== */}
-      {profile?.role === 'consultant' && (
-        <>
-          {/* Alerte NC majeures — visible immediatement */}
-          {ncMajeures.length > 0 && (
-            <div style={{ background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.3)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="ti ti-alert-triangle" style={{ fontSize: '18px', color: '#fff' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--danger)', marginBottom: '2px' }}>
-                  {ncMajeures.length} non-conformite{ncMajeures.length > 1 ? 's' : ''} majeure{ncMajeures.length > 1 ? 's' : ''} ouverte{ncMajeures.length > 1 ? 's' : ''}
+      {/* Progression par chapitre */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
+        {statsByChap.map(ch => {
+          const pct = ch.criteres > 0 ? Math.round((ch.conformes / ch.criteres) * 100) : 0
+          return (
+            <div key={ch.num} onClick={() => router.push('/dashboard/certification')}
+              style={{ background: 'var(--surface)', border: `1px solid ${ch.border}`, borderRadius: '12px', padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: ch.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: ch.color }}>Ch.{ch.num}</span>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--danger)', opacity: 0.8 }}>
-                  {ncMajeures.slice(0, 3).map(nc => (nc.clients as any)?.nom || '-').join(', ')}
-                  {ncMajeures.length > 3 ? ` + ${ncMajeures.length - 3} autre(s)` : ''}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ch.label}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{ch.conformes}/{ch.criteres} conformes</div>
                 </div>
+                <span style={{ fontSize: '14px', fontWeight: '700', color: ch.color }}>{pct}%</span>
               </div>
-              <button onClick={() => router.push('/dashboard/audits')}
-                style={{ padding: '7px 14px', background: 'var(--danger)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', flexShrink: 0 }}>
-                Voir tout
-              </button>
+              <div style={{ height: '5px', background: ch.border, borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: ch.color, borderRadius: '3px', transition: 'width 0.5s' }} />
+              </div>
             </div>
-          )}
+          )
+        })}
+      </div>
 
-          {/* Alerte actions en retard */}
-          {actionsEnRetard.length > 0 && (
-            <div style={{ background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.3)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="ti ti-clock-exclamation" style={{ fontSize: '18px', color: '#fff' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--warning)', marginBottom: '2px' }}>
-                  {actionsEnRetard.length} action{actionsEnRetard.length > 1 ? 's' : ''} en retard
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--warning)', opacity: 0.8 }}>
-                  Echeance{actionsEnRetard.length > 1 ? 's' : ''} depassee{actionsEnRetard.length > 1 ? 's' : ''} — action requise
-                </div>
-              </div>
-              <button onClick={() => router.push('/dashboard/conformite')}
-                style={{ padding: '7px 14px', background: 'var(--warning)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', flexShrink: 0 }}>
-                Traiter
-              </button>
+      {/* Prochains criteres a traiter */}
+      {criteresNonTraites.length > 0 && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="ti ti-arrow-right" style={{ fontSize: '15px', color: '#1A56DB' }} />
+              Prochaines étapes
             </div>
-          )}
-
-          {/* KPI row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-            {[
-              { icon: 'ti-building-hospital', color: 'var(--accent)', bg: 'var(--accent-light)', value: stats.clients, label: 'Clients actifs', path: '/dashboard/clients' },
-              { icon: 'ti-clipboard-check', color: '#7C3AED', bg: '#F5F3FF', value: stats.audits, label: 'Audits', path: '/dashboard/audits' },
-              { icon: 'ti-alert-triangle', color: 'var(--danger)', bg: 'var(--danger-light)', value: stats.nonConformites, label: 'NC ouvertes', path: '/dashboard/audits' },
-              { icon: 'ti-list-check', color: 'var(--warning)', bg: 'var(--warning-light)', value: actionsEnRetard.length, label: 'Actions retard', path: '/dashboard/conformite' },
-              { icon: 'ti-books', color: 'var(--success)', bg: 'var(--success-light)', value: stats.documents, label: 'Documents', path: '/dashboard/bibliotheque' },
-            ].map(k => (
-              <div key={k.label} onClick={() => router.push(k.path)}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-md)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: 'var(--radius-sm)', background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-                  <i className={`ti ${k.icon}`} style={{ fontSize: '15px', color: k.color }} />
-                </div>
-                <div style={{ fontSize: '26px', fontWeight: '700', color: k.color, letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '4px' }}>{k.value}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{k.label}</div>
-              </div>
-            ))}
+            <button onClick={() => router.push('/dashboard/certification')}
+              style={{ fontSize: '12px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Voir tout <i className="ti ti-arrow-right" style={{ fontSize: '12px' }} />
+            </button>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-
-            {/* Actions en retard detail */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-clock-exclamation" style={{ fontSize: '15px', color: 'var(--danger)' }} />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Actions en retard</span>
-                  {actionsEnRetard.length > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontSize: '10px', fontWeight: '600', padding: '1px 6px', borderRadius: '10px' }}>{actionsEnRetard.length}</span>}
+          {criteresNonTraites.map((c, i) => {
+            const chap = CHAPITRES.find(ch => ch.num === c.chapitre)
+            return (
+              <div key={c.id} onClick={() => router.push('/dashboard/certification')}
+                style={{ padding: '14px 20px', borderBottom: i < criteresNonTraites.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+                onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-hover)'}
+                onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '7px', background: chap?.bg || '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '10px', fontWeight: '700', color: chap?.color || '#6B7280' }}>{c.code}</span>
                 </div>
-                <button onClick={() => router.push('/dashboard/conformite')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Voir tout</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.titre}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Chapitre {c.chapitre} · Non traité</div>
+                </div>
+                <i className="ti ti-chevron-right" style={{ fontSize: '14px', color: 'var(--text-tertiary)', flexShrink: 0 }} />
               </div>
-              {actionsEnRetard.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center' }}>
-                  <i className="ti ti-check" style={{ fontSize: '22px', display: 'block', marginBottom: '6px', color: 'var(--success)' }} />
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Aucune action en retard</div>
-                </div>
-              ) : actionsEnRetard.map((pa, i) => {
-                const joursRetard = Math.floor((today.getTime() - new Date(pa.echeance).getTime()) / (1000 * 60 * 60 * 24))
-                return (
-                  <div key={pa.id} style={{ padding: '10px 16px', borderBottom: i < actionsEnRetard.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pa.titre}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{(pa.clients as any)?.nom || '-'}</div>
-                    </div>
-                    <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--danger)', background: 'var(--danger-light)', padding: '2px 8px', borderRadius: '20px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                      +{joursRetard}j
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Prochaines echeances */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-calendar-due" style={{ fontSize: '15px', color: 'var(--warning)' }} />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Echeances 7 jours</span>
-                </div>
-              </div>
-              {prochainesEcheances.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>Aucune echeance cette semaine</div>
-              ) : prochainesEcheances.map((pa, i) => {
-                const joursRestants = Math.floor((new Date(pa.echeance).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                return (
-                  <div key={pa.id} style={{ padding: '10px 16px', borderBottom: i < prochainesEcheances.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pa.titre}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{(pa.clients as any)?.nom || '-'} · {new Date(pa.echeance).toLocaleDateString('fr-FR')}</div>
-                    </div>
-                    <span style={{ fontSize: '10px', fontWeight: '600', color: joursRestants <= 2 ? 'var(--danger)' : 'var(--warning)', background: joursRestants <= 2 ? 'var(--danger-light)' : 'var(--warning-light)', padding: '2px 8px', borderRadius: '20px', flexShrink: 0 }}>
-                      J-{joursRestants}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-
-            {/* Audits recents */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-clipboard-check" style={{ fontSize: '15px', color: '#7C3AED' }} />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Audits recents</span>
-                </div>
-                <button onClick={() => router.push('/dashboard/audits')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Voir tout</button>
-              </div>
-              {auditsRecents.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>Aucun audit</div>
-              ) : auditsRecents.map((a, i) => (
-                <div key={a.id} style={{ padding: '10px 16px', borderBottom: i < auditsRecents.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.titre}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{(a.clients as any)?.nom || '-'}</div>
-                  </div>
-                  {a.score !== null && <div style={{ fontSize: '14px', fontWeight: '700', color: scoreColor(a.score), flexShrink: 0 }}>{a.score}%</div>}
-                  <span style={{ fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', flexShrink: 0,
-                    color: a.statut === 'termine' ? 'var(--success)' : a.statut === 'en_cours' ? 'var(--warning)' : 'var(--text-tertiary)',
-                    background: a.statut === 'termine' ? 'var(--success-light)' : a.statut === 'en_cours' ? 'var(--warning-light)' : 'var(--surface-hover)' }}>
-                    {a.statut === 'termine' ? 'Termine' : a.statut === 'en_cours' ? 'En cours' : 'Archive'}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Clients sans preparation */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-building-off" style={{ fontSize: '15px', color: 'var(--danger)' }} />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Sans audit planifie</span>
-                  {clientsSansObligations.length > 0 && <span style={{ background: 'var(--warning)', color: '#fff', fontSize: '10px', fontWeight: '600', padding: '1px 6px', borderRadius: '10px' }}>{clientsSansObligations.length}</span>}
-                </div>
-                <button onClick={() => router.push('/dashboard/clients')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Clients</button>
-              </div>
-              {clientsSansObligations.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center' }}>
-                  <i className="ti ti-check" style={{ fontSize: '22px', display: 'block', marginBottom: '6px', color: 'var(--success)' }} />
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Tous les clients ont un audit</div>
-                </div>
-              ) : clientsSansObligations.slice(0, 5).map((c, i) => {
-                const tc = typeColors[c.type] || { color: 'var(--text-secondary)', bg: 'var(--surface-hover)' }
-                return (
-                  <div key={c.id} style={{ padding: '10px 16px', borderBottom: i < Math.min(clientsSansObligations.length, 5) - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', background: tc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', color: tc.color, flexShrink: 0 }}>
-                      {c.nom.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nom}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{c.type} {c.ville ? '· ' + c.ville : ''}</div>
-                    </div>
-                    <span style={{ background: tc.bg, color: tc.color, padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: '500', flexShrink: 0 }}>{c.type}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </>
+            )
+          })}
+        </div>
       )}
 
-      {/* ===== ADMIN ===== */}
-      {profile?.role === 'admin' && (
-        <>
-          {ncMajeures.length > 0 && (
-            <div style={{ background: 'var(--danger-light)', border: '1px solid rgba(194,54,42,0.3)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <i className="ti ti-alert-triangle" style={{ fontSize: '20px', color: 'var(--danger)', flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--danger)' }}>{ncMajeures.length} non-conformite{ncMajeures.length > 1 ? 's' : ''} majeure{ncMajeures.length > 1 ? 's' : ''} — action requise</div>
-                <div style={{ fontSize: '11px', color: 'var(--danger)', opacity: 0.8, marginTop: '2px' }}>Ces points bloquent votre certification</div>
-              </div>
-              <button onClick={() => router.push('/dashboard/conformite')} style={{ padding: '7px 14px', background: 'var(--danger)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>Voir</button>
-            </div>
-          )}
-
-          {actionsEnRetard.length > 0 && (
-            <div style={{ background: 'var(--warning-light)', border: '1px solid rgba(158,94,0,0.3)', borderRadius: 'var(--radius-lg)', padding: '12px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <i className="ti ti-clock-exclamation" style={{ fontSize: '18px', color: 'var(--warning)', flexShrink: 0 }} />
-              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--warning)' }}>{actionsEnRetard.length} action{actionsEnRetard.length > 1 ? 's' : ''} en retard — echeance depassee</div>
-              <button onClick={() => router.push('/dashboard/conformite')} style={{ marginLeft: 'auto', padding: '6px 12px', background: 'var(--warning)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', flexShrink: 0 }}>Traiter</button>
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-            {[
-              { icon: 'ti-clipboard-check', color: '#7C3AED', bg: '#F5F3FF', value: stats.audits, label: 'Audits', path: '/dashboard/conformite' },
-              { icon: 'ti-alert-triangle', color: 'var(--danger)', bg: 'var(--danger-light)', value: stats.nonConformites, label: 'NC ouvertes', path: '/dashboard/conformite' },
-              { icon: 'ti-list-check', color: 'var(--warning)', bg: 'var(--warning-light)', value: actionsEnRetard.length, label: 'En retard', path: '/dashboard/conformite' },
-              { icon: 'ti-checklist', color: 'var(--accent)', bg: 'var(--accent-light)', value: stats.taches, label: 'Taches', path: '/dashboard/taches' },
-            ].map(k => (
-              <div key={k.label} onClick={() => router.push(k.path)}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-md)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: 'var(--radius-sm)', background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-                  <i className={`ti ${k.icon}`} style={{ fontSize: '15px', color: k.color }} />
-                </div>
-                <div style={{ fontSize: '26px', fontWeight: '700', color: k.color, letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '4px' }}>{k.value}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Mes audits</span>
-                <button onClick={() => router.push('/dashboard/conformite')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Voir tout</button>
-              </div>
-              {auditsRecents.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>Aucun audit</div>
-              ) : auditsRecents.map((a, i) => (
-                <div key={a.id} style={{ padding: '10px 16px', borderBottom: i < auditsRecents.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.titre}</div>
-                  </div>
-                  {a.score !== null && <div style={{ fontSize: '14px', fontWeight: '700', color: scoreColor(a.score) }}>{a.score}%</div>}
-                  <span style={{ fontSize: '10px', fontWeight: '500', padding: '2px 8px', borderRadius: '20px', flexShrink: 0,
-                    color: a.statut === 'termine' ? 'var(--success)' : 'var(--warning)',
-                    background: a.statut === 'termine' ? 'var(--success-light)' : 'var(--warning-light)' }}>
-                    {a.statut === 'termine' ? 'Termine' : 'En cours'}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Taches en attente</span>
-                <button onClick={() => router.push('/dashboard/taches')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Voir tout</button>
-              </div>
-              {tachesUrgentes.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center' }}>
-                  <i className="ti ti-check" style={{ fontSize: '22px', display: 'block', marginBottom: '6px', color: 'var(--success)' }} />
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Aucune tache en attente</div>
-                </div>
-              ) : tachesUrgentes.map((t, i) => {
-                const pr = prioriteTache(t.priorite)
-                const depasse = t.echeance && new Date(t.echeance) < today
-                return (
-                  <div key={t.id} style={{ padding: '10px 16px', borderBottom: i < tachesUrgentes.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.titre}</div>
-                      {t.echeance && <div style={{ fontSize: '11px', color: depasse ? 'var(--danger)' : 'var(--text-tertiary)', fontWeight: depasse ? '600' : '400', marginTop: '1px' }}>
-                        {new Date(t.echeance).toLocaleDateString('fr-FR')}{depasse ? ' — Retard' : ''}
-                      </div>}
-                    </div>
-                    <span style={{ fontSize: '10px', fontWeight: '500', color: pr.color, background: pr.bg, padding: '2px 8px', borderRadius: '20px', flexShrink: 0, textTransform: 'capitalize' }}>{t.priorite}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ===== CLIENT ===== */}
-      {profile?.role === 'client' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-            {[
-              { icon: 'ti-checklist', color: 'var(--accent)', bg: 'var(--accent-light)', value: stats.taches, label: 'Mes taches', path: '/dashboard/taches' },
-              { icon: 'ti-list-check', color: 'var(--warning)', bg: 'var(--warning-light)', value: stats.plansActions, label: 'Plans d actions', path: '/dashboard/conformite' },
-              { icon: 'ti-books', color: 'var(--success)', bg: 'var(--success-light)', value: stats.documents, label: 'Documents', path: '/dashboard/bibliotheque' },
-            ].map(k => (
-              <div key={k.label} onClick={() => router.push(k.path)}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-md)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: 'var(--radius-sm)', background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-                  <i className={`ti ${k.icon}`} style={{ fontSize: '15px', color: k.color }} />
-                </div>
-                <div style={{ fontSize: '26px', fontWeight: '700', color: k.color, letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '4px' }}>{k.value}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Que faire aujourd hui ?</span>
-              <button onClick={() => router.push('/dashboard/taches')} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '500' }}>Voir tout</button>
-            </div>
-            {tachesUrgentes.length === 0 ? (
-              <div style={{ padding: '48px', textAlign: 'center' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                  <i className="ti ti-check" style={{ fontSize: '24px', color: 'var(--success)' }} />
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '4px' }}>Tout est a jour</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Aucune tache en attente pour aujourd hui</div>
-              </div>
-            ) : tachesUrgentes.map((t, i) => {
-              const pr = prioriteTache(t.priorite)
-              const depasse = t.echeance && new Date(t.echeance) < today
-              return (
-                <div key={t.id} style={{ padding: '14px 18px', borderBottom: i < tachesUrgentes.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', background: pr.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className="ti ti-checklist" style={{ fontSize: '16px', color: pr.color }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.titre}</div>
-                    {t.echeance && <div style={{ fontSize: '11px', color: depasse ? 'var(--danger)' : 'var(--text-tertiary)', fontWeight: depasse ? '600' : '400', marginTop: '2px' }}>
-                      {new Date(t.echeance).toLocaleDateString('fr-FR')}{depasse ? ' — En retard !' : ''}
-                    </div>}
-                  </div>
-                  <span style={{ fontSize: '10px', fontWeight: '500', color: pr.color, background: pr.bg, padding: '2px 8px', borderRadius: '20px', textTransform: 'capitalize', flexShrink: 0 }}>{t.priorite}</span>
-                </div>
-              )
-            })}
-          </div>
-        </>
+      {/* Tout conforme */}
+      {criteresNonTraites.length === 0 && score === 100 && (
+        <div style={{ background: 'linear-gradient(135deg, #059669, #10B981)', borderRadius: '12px', padding: '32px', textAlign: 'center' }}>
+          <i className="ti ti-trophy" style={{ fontSize: '40px', color: '#fff', display: 'block', marginBottom: '12px' }} />
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Certification complète !</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>Tous les critères sont conformes. Vous êtes prêt pour l'audit HAS.</div>
+        </div>
       )}
     </div>
   )
