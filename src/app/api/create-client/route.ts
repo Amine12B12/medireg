@@ -88,7 +88,7 @@ async function sendInvitationEmail(email: string, nom: string, inviteLink: strin
       'Authorization': 'Bearer ' + RESEND_API_KEY,
     },
     body: JSON.stringify({
-      from: 'MediReg <onboarding@resend.dev>',
+      from: 'MediReg <noreply@medireg.pro>',
       to: [email],
       subject: 'Votre accès MediReg — Certification HAS PSDM',
       html,
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
 
       // 4. Générer le lien d'invitation (création de mot de passe)
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'invite',
+        type: 'recovery',
         email,
         options: {
           redirectTo: APP_URL + '/dashboard'
