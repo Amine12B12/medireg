@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email,
-        options: { redirectTo: APP_URL + '/auth/reset-password' }
+        options: { redirectTo: APP_URL + '/dashboard' }
       })
 
       console.log('generateLink error:', linkError?.message || 'none')
