@@ -34,6 +34,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [clientNom, setClientNom] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [notifCount, setNotifCount] = useState(0)
+  const [showNotifs, setShowNotifs] = useState(false)
+  const [notifs, setNotifs] = useState<any[]>([])
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname()
@@ -65,6 +68,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (prof.role !== 'consultant' && prof.client_id && pathname !== '/dashboard/onboarding') {
         const { data: societe } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
         if (!societe) { router.push('/dashboard/onboarding'); return }
+      }
+
+      // Charger notifications pour les consultants
+      if (prof.role === 'consultant') {
+        const { data: notifData } = await supabase
+          .from('notifications')
+          .select('*, clients(nom)')
+          .eq('lu', false)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        setNotifs(notifData || [])
+        setNotifCount((notifData || []).length)
       }
     }
     load()
@@ -185,8 +200,59 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {!isMobile && <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{page.sub}</div>}
             </div>
           </div>
-          <div style={{ padding: '4px 10px', background: roleBg, borderRadius: '20px', border: `1px solid ${roleColor}22` }}>
-            <span style={{ fontSize: '11px', fontWeight: '500', color: roleColor }}>{roleLabel}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {role === 'consultant' && (
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowNotifs(!showNotifs)}
+                  style={{ width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: notifCount > 0 ? '#7C3AED' : 'var(--text-secondary)', position: 'relative' }}>
+                  <i className="ti ti-bell" style={{ fontSize: '18px' }} />
+                  {notifCount > 0 && (
+                    <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '18px', height: '18px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#fff' }}>{notifCount > 9 ? '9+' : notifCount}</span>
+                    </div>
+                  )}
+                </button>
+
+                {showNotifs && (
+                  <div style={{ position: 'absolute', right: 0, top: '44px', width: '340px', background: '#fff', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 500, overflow: 'hidden' }}>
+                    <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>Documents à valider</div>
+                      {notifCount > 0 && (
+                        <button onClick={async () => {
+                          await supabase.from('notifications').update({ lu: true }).eq('lu', false)
+                          setNotifCount(0)
+                          setNotifs([])
+                          setShowNotifs(false)
+                        }} style={{ fontSize: '11px', color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
+                          Tout marquer lu
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                      {notifs.length === 0 ? (
+                        <div style={{ padding: '24px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>
+                          Aucune notification
+                        </div>
+                      ) : notifs.map((n: any) => (
+                        <div key={n.id} onClick={() => { router.push('/dashboard/clients'); setShowNotifs(false) }}
+                          style={{ padding: '12px 16px', borderBottom: '1px solid #F9FAFB', cursor: 'pointer', background: '#FAFAFA' }}
+                          onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#F3F4F6'}
+                          onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = '#FAFAFA'}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', marginBottom: '3px' }}>{n.clients?.nom}</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280' }}>{n.message}</div>
+                          <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                            {new Date(n.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div style={{ padding: '4px 10px', background: roleBg, borderRadius: '20px', border: `1px solid ${roleColor}22` }}>
+              <span style={{ fontSize: '11px', fontWeight: '500', color: roleColor }}>{roleLabel}</span>
+            </div>
           </div>
         </div>
 

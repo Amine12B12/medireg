@@ -48,7 +48,8 @@ export default function CertificationPage() {
   const [filterStatut, setFilterStatut] = useState<string>('tous')
   const [savingId, setSavingId] = useState<string | null>(null)
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null)
-  const [docsGeneres, setDocsGeneres] = useState<Record<string, any[]>>({})
+  const [docsGeneres, setDocsGeneres] = useState<Record<string, any[]>>({})  
+  const [userRole, setUserRole] = useState<string>('client')
   const supabase = createClient()
   const router = useRouter()
 
@@ -57,13 +58,14 @@ export default function CertificationPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data: prof } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+      setUserRole(prof?.role || 'client')
       let cId = prof?.client_id
       if (prof?.role === 'consultant') {
         const params = new URLSearchParams(window.location.search)
         cId = params.get('client_id') || null
         if (!cId) { router.push('/dashboard/clients'); return }
       }
-      const { data: soc } = await supabase.from('societes').select('*').eq('client_id', cId).single()
+      const { data: soc } = await supabase.from('societes').select('*, personnes(*, responsabilites_personnes(*))').eq('client_id', cId).single()
       if (!soc) { router.push('/dashboard/onboarding'); return }
       setSociete(soc)
       const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', soc.id).order('created_at')
@@ -168,6 +170,23 @@ export default function CertificationPage() {
         statut: 'genere'
       }])
       await reloadDocs()
+
+      // Créer notification en base pour les consultants
+      if (userRole === 'client') {
+        const { data: consultants } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'consultant')
+        for (const consultant of consultants || []) {
+          await supabase.from('notifications').insert([{
+            consultant_id: consultant.id,
+            client_id: societe.client_id,
+            type: 'document_uploade',
+            message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
+            critere_code: selectedCritere.code,
+          }])
+        }
+      }
     }
   }
 
@@ -253,6 +272,7 @@ export default function CertificationPage() {
             onReloadDocs={reloadDocs}
             generatingDoc={generatingDoc}
             saving={savingId === selectedCritere.id}
+            userRole={userRole}
           />
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginTop: '24px' }}>
             <button onClick={() => prevCritere && setSelectedCritere(prevCritere)} disabled={!prevCritere}

@@ -100,6 +100,7 @@ interface Props {
   onReloadDocs: () => Promise<void>
   generatingDoc: string | null
   saving: boolean
+  userRole?: string
 }
 
 function Critere221({ societe, organisation }: { societe: any; organisation: any }) {
@@ -301,8 +302,9 @@ function Critere221({ societe, organisation }: { societe: any; organisation: any
 
 export default function CritereDetail({
   critere, reponse, docsGeneres, societe,
-  onUpdateStatut, onGenererDoc, onUploadPreuve, onReloadDocs, generatingDoc
+  onUpdateStatut, onGenererDoc, onUploadPreuve, onReloadDocs, generatingDoc, userRole = 'client'
 }: Props) {
+  const isConsultant = userRole === 'consultant'
   const [apercuDoc, setApercuDoc] = useState<string | null>(null)
   const [mentionCopied, setMentionCopied] = useState(false)
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
@@ -384,28 +386,48 @@ export default function CritereDetail({
 
       {/* Statut */}
       <div style={{ padding: '14px 16px', background: '#FAFAFA', border: '1px solid #F3F4F6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-          {STATUTS.map(s => (
-            <button key={s.key} onClick={() => onUpdateStatut(s.key)}
-              style={{ height: '30px', padding: '0 12px', border: '1px solid ' + (statut === s.key ? s.dot : '#E5E7EB'), borderRadius: '20px', background: statut === s.key ? s.bg : '#fff', color: statut === s.key ? s.color : '#9CA3AF', fontSize: '12px', fontWeight: statut === s.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.1s' }}>
-              {statut === s.key && <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: s.dot }} />}
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        {nbProuves >= 1 && statut !== 'pret_audit' && (
-          <button onClick={() => onUpdateStatut('pret_audit')}
-            style={{ height: '36px', padding: '0 18px', background: '#10B981', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px', boxShadow: '0 1px 4px rgba(16,185,129,0.35)', flexShrink: 0 }}>
-            <i className="ti ti-check" style={{ fontSize: '14px' }} />
-            Prêt pour audit
-          </button>
-        )}
-
-        {statut === 'pret_audit' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 14px', background: '#ECFDF5', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
-            <i className="ti ti-circle-check-filled" style={{ fontSize: '16px', color: '#10B981' }} />
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#059669' }}>Prêt pour audit</span>
+        {isConsultant ? (
+          <>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+              {STATUTS.map(s => (
+                <button key={s.key} onClick={() => onUpdateStatut(s.key)}
+                  style={{ height: '30px', padding: '0 12px', border: '1px solid ' + (statut === s.key ? s.dot : '#E5E7EB'), borderRadius: '20px', background: statut === s.key ? s.bg : '#fff', color: statut === s.key ? s.color : '#9CA3AF', fontSize: '12px', fontWeight: statut === s.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.1s' }}>
+                  {statut === s.key && <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: s.dot }} />}
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            {nbProuves >= 1 && statut !== 'pret_audit' && (
+              <button onClick={() => onUpdateStatut('pret_audit')}
+                style={{ height: '36px', padding: '0 18px', background: '#10B981', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px', boxShadow: '0 1px 4px rgba(16,185,129,0.35)', flexShrink: 0 }}>
+                <i className="ti ti-check" style={{ fontSize: '14px' }} />
+                Prêt pour audit
+              </button>
+            )}
+            {statut === 'pret_audit' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 14px', background: '#ECFDF5', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
+                <i className="ti ti-circle-check-filled" style={{ fontSize: '16px', color: '#10B981' }} />
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#059669' }}>Prêt pour audit</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: STATUTS.find(s => s.key === statut)?.bg || '#F9FAFB', borderRadius: '8px', border: '1px solid ' + (STATUTS.find(s => s.key === statut)?.dot || '#D1D5DB') }}>
+              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: STATUTS.find(s => s.key === statut)?.dot || '#D1D5DB' }} />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: STATUTS.find(s => s.key === statut)?.color || '#6B7280' }}>
+                {STATUTS.find(s => s.key === statut)?.label || 'Non analysé'}
+              </span>
+            </div>
+            {statut === 'non_analyse' || statut === 'preuve_manquante' || statut === 'information_manquante' ? (
+              <span style={{ fontSize: '12px', color: '#9CA3AF' }}>En attente de validation par votre consultant</span>
+            ) : statut === 'procedure_a_valider' ? (
+              <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: '500' }}>⏳ Votre consultant va valider ce critère</span>
+            ) : statut === 'action_corrective' ? (
+              <span style={{ fontSize: '12px', color: '#DC2626', fontWeight: '500' }}>⚠️ Action corrective demandée par votre consultant</span>
+            ) : statut === 'pret_audit' ? (
+              <span style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>✓ Validé par votre consultant — prêt pour l'audit</span>
+            ) : null}
           </div>
         )}
       </div>
