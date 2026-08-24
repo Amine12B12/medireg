@@ -172,19 +172,22 @@ export default function CertificationPage() {
       await reloadDocs()
 
       // Créer notification en base pour les consultants
+      console.log('userRole:', userRole, 'client_id:', societe?.client_id)
       if (userRole === 'client') {
         const { data: consultants } = await supabase
           .from('profiles')
           .select('id')
           .eq('role', 'consultant')
+        console.log('consultants:', consultants?.length)
         for (const consultant of consultants || []) {
-          await supabase.from('notifications').insert([{
+          const { error: notifError } = await supabase.from('notifications').insert([{
             consultant_id: consultant.id,
             client_id: societe.client_id,
             type: 'document_uploade',
             message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
             critere_code: selectedCritere.code,
           }])
+          console.log('notif insert error:', notifError?.message || 'OK')
         }
       }
     }
