@@ -5,9 +5,9 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const FORFAITS = {
-  starter: { label: 'Starter', color: '#6B7280', bg: '#F3F4F6', price: '40€/mois' },
-  pro: { label: 'Pro', color: '#1A56DB', bg: '#EBF2FF', price: '89€/mois' },
-  premium: { label: 'Premium', color: '#7C3AED', bg: '#F5F3FF', price: '149€/mois' },
+  starter: { label: 'Starter', color: '#6B7280', bg: '#F3F4F6' },
+  pro: { label: 'Pro', color: '#1A56DB', bg: '#EBF2FF' },
+  premium: { label: 'Premium', color: '#7C3AED', bg: '#F5F3FF' },
 }
 
 const CHAPITRES = ['1', '2', '3', '4']
@@ -132,7 +132,7 @@ export default function ClientsPage() {
               </div>
               <div>
                 <div style={{ fontSize: '24px', fontWeight: '700', color: f.color, letterSpacing: '-0.5px', lineHeight: 1 }}>{count}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{f.label} · {f.price}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{f.label}</div>
               </div>
             </div>
           )
@@ -301,7 +301,7 @@ export default function ClientsPage() {
                     <button key={key} onClick={() => setForm(p => ({ ...p, forfait: key }))}
                       style={{ flex: 1, padding: '10px 8px', border: `2px solid ${form.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: form.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
                       <div style={{ fontSize: '12px', fontWeight: '700', color: form.forfait === key ? f.color : '#6B7280' }}>{f.label}</div>
-                      <div style={{ fontSize: '11px', color: form.forfait === key ? f.color : '#9CA3AF', marginTop: '2px' }}>{f.price}</div>
+
                     </button>
                   ))}
                 </div>
@@ -347,7 +347,7 @@ export default function ClientsPage() {
                   style={{ padding: '12px 16px', border: `2px solid ${showForfaitModal.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: showForfaitModal.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.1s' }}>
                   <div style={{ textAlign: 'left' }}>
                     <div style={{ fontSize: '13px', fontWeight: '700', color: showForfaitModal.forfait === key ? f.color : '#374151' }}>{f.label}</div>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{f.price}</div>
+
                   </div>
                   {showForfaitModal.forfait === key && <i className="ti ti-check" style={{ fontSize: '16px', color: f.color }} />}
                 </button>
