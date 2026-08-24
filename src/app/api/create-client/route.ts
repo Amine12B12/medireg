@@ -9,45 +9,65 @@ const supabase = createClient(
 const RESEND_API_KEY = process.env.RESEND_API_KEY!
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://medireg-wcnk.vercel.app'
 
-async function sendInvitationEmail(email: string, nom: string, inviteLink: string) {
+function generatePassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  let pwd = ''
+  for (let i = 0; i < 12; i++) {
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return pwd
+}
+
+async function sendInvitationEmail(email: string, nom: string, password: string) {
   const html = `
     <!DOCTYPE html>
     <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
     <body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-      <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-        <div style="background:linear-gradient(135deg,#7C3AED,#1A56DB);padding:32px 40px;text-align:center;">
-          <span style="color:#fff;font-size:22px;font-weight:700;">MediReg</span>
-          <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:14px;">Plateforme de certification HAS PSDM</p>
+      <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        
+        <div style="background:linear-gradient(135deg,#7C3AED,#1A56DB);padding:28px 36px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;">MediReg</div>
+          <div style="color:rgba(255,255,255,0.75);font-size:13px;margin-top:4px;">Certification HAS PSDM</div>
         </div>
-        <div style="padding:40px;">
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Bienvenue sur MediReg</h1>
-          <p style="margin:0 0 24px;font-size:15px;color:#6B7280;line-height:1.6;">
-            Votre espace de certification HAS a été créé pour <strong style="color:#111827;">${nom}</strong>. 
-            Cliquez sur le bouton ci-dessous pour créer votre mot de passe.
+
+        <div style="padding:36px;">
+          <h2 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#111827;">Bienvenue sur MediReg</h2>
+          <p style="margin:0 0 24px;font-size:14px;color:#6B7280;line-height:1.6;">
+            Votre espace de certification HAS a été créé pour <strong style="color:#111827;">${nom}</strong>.
+            Voici vos identifiants de connexion :
           </p>
-          <div style="text-align:center;margin:32px 0;">
-            <a href="${inviteLink}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7C3AED,#1A56DB);color:#fff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
-              Créer mon mot de passe →
+
+          <div style="background:#F8FAFF;border:1px solid #E0E7FF;border-radius:12px;padding:20px;margin:0 0 24px;">
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px;font-weight:600;color:#6366F1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Email</div>
+              <div style="font-size:15px;font-weight:600;color:#111827;">${email}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6366F1;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Mot de passe temporaire</div>
+              <div style="font-size:18px;font-weight:700;color:#111827;letter-spacing:2px;font-family:monospace;">${password}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${APP_URL}/login"
+               style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7C3AED,#1A56DB);color:#fff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
+              Accéder à mon espace →
             </a>
           </div>
-          <p style="margin:24px 0 0;font-size:12px;color:#9CA3AF;line-height:1.6;">
-            Ce lien est valable 24 heures. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
-          </p>
+
+          <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 16px;font-size:12px;color:#92400E;">
+            <strong>Important</strong> — Nous vous recommandons de changer ce mot de passe temporaire dès votre première connexion depuis votre profil.
+          </div>
         </div>
-        <div style="padding:20px 40px;background:#F9FAFB;border-top:1px solid #F3F4F6;text-align:center;">
+
+        <div style="padding:16px 36px;background:#F9FAFB;border-top:1px solid #F3F4F6;text-align:center;">
           <p style="margin:0;font-size:12px;color:#9CA3AF;">MediReg · Certification HAS PSDM</p>
         </div>
       </div>
     </body>
     </html>
   `
-
-  console.log('Sending email to:', email)
-  console.log('RESEND_API_KEY present:', !!RESEND_API_KEY)
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -58,24 +78,23 @@ async function sendInvitationEmail(email: string, nom: string, inviteLink: strin
     body: JSON.stringify({
       from: 'MediReg <noreply@medireg.pro>',
       to: [email],
-      subject: 'Votre accès MediReg — Certification HAS PSDM',
+      subject: 'Vos accès MediReg — Certification HAS PSDM',
       html,
     })
   })
 
-  const resBody = await res.json()
-  console.log('Resend response status:', res.status)
-  console.log('Resend response body:', JSON.stringify(resBody))
-
+  const body = await res.json()
+  console.log('Resend status:', res.status, JSON.stringify(body))
   return res.ok
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { nom, email, forfait } = await req.json()
-    console.log('create-client called with:', { nom, email, forfait })
-
     if (!nom || !email) return NextResponse.json({ error: 'Nom et email requis' }, { status: 400 })
+
+    // Generer mot de passe temporaire
+    const tempPassword = generatePassword()
 
     // 1. Créer le client
     const { data: client, error: clientError } = await supabase
@@ -84,55 +103,35 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    if (clientError) {
-      console.log('Client insert error:', clientError.message)
-      return NextResponse.json({ error: clientError.message }, { status: 500 })
-    }
+    if (clientError) return NextResponse.json({ error: clientError.message }, { status: 500 })
 
-    console.log('Client created:', client.id)
-
-    // 2. Créer le compte auth
+    // 2. Créer le compte auth avec mot de passe temporaire
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
+      password: tempPassword,
       email_confirm: true,
       user_metadata: { nom, client_id: client.id }
     })
-
-    console.log('Auth createUser error:', authError?.message || 'none')
-    console.log('Auth user id:', authData?.user?.id || 'none')
 
     if (authError && !authError.message?.includes('already')) {
       return NextResponse.json({ error: authError.message }, { status: 500 })
     }
 
     const userId = authData?.user?.id
-
     if (userId) {
       // 3. Créer le profil
       await supabase.from('profiles').upsert([{
         id: userId, email, nom, role: 'admin', client_id: client.id
       }])
-
-      // 4. Générer le lien
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email,
-        options: { redirectTo: APP_URL + '/auth/callback?type=recovery' }
-      })
-
-      console.log('generateLink error:', linkError?.message || 'none')
-      console.log('action_link:', linkData?.properties?.action_link || 'none')
-
-      if (!linkError && linkData?.properties?.action_link) {
-        const sent = await sendInvitationEmail(email, nom, linkData.properties.action_link)
-        console.log('email sent:', sent)
-      }
     }
+
+    // 4. Envoyer l'email avec les identifiants
+    await sendInvitationEmail(email, nom, tempPassword)
 
     return NextResponse.json({ success: true, client_id: client.id })
 
   } catch (error: any) {
-    console.log('Unexpected error:', error.message)
+    console.log('Error:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
