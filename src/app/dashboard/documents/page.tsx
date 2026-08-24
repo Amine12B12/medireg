@@ -14,8 +14,18 @@ const CHAPITRES: Record<string, { label: string; color: string; bg: string }> = 
 const NOMS_DOCS: Record<string, string> = {
   'USA-INFO-01': 'Définitions libre choix et consentement',
   'USA-DOC-01': 'Charte éthique',
-  'PRESTA-DOC-01': 'Attestation d\'installation',
+  'PRESTA-DOC-01': "Attestation d'installation",
   'QR-DOC-01': 'Enquête de satisfaction',
+  'PROC-PRESCRIPTION-01': 'Procédure réception des prescriptions',
+}
+
+// Pour chaque code document, quels critères il couvre
+const CRITERES_PAR_DOC: Record<string, string[]> = {
+  'USA-INFO-01': ['1.2.1', '1.2.2'],
+  'USA-DOC-01': ['1.2.1', '1.2.5'],
+  'PRESTA-DOC-01': ['1.2.1', '1.2.4'],
+  'QR-DOC-01': ['1.3.1', '1.3.2'],
+  'PROC-PRESCRIPTION-01': ['2.2.1'],
 }
 
 export default function DocumentsPage() {
@@ -55,17 +65,17 @@ export default function DocumentsPage() {
   }, [])
 
   const isPreuve = (doc: any) => doc.code_doc?.startsWith('PREUVE_')
-  const getCritereCode = (doc: any) => {
-    if (isPreuve(doc)) return doc.code_doc.replace('PREUVE_', '')
-    return null
+
+  // Critere pour les preuves uploadées
+  const getCritereForPreuve = (doc: any) => {
+    const code = doc.code_doc.replace('PREUVE_', '')
+    return criteres.find(c => c.code === code)
   }
 
-  const getCritere = (doc: any) => {
-    if (isPreuve(doc)) {
-      const code = getCritereCode(doc)
-      return criteres.find(c => c.code === code)
-    }
-    return null
+  // Critères couverts par un document généré
+  const getCriteresForDoc = (doc: any): any[] => {
+    const codes = CRITERES_PAR_DOC[doc.code_doc] || []
+    return codes.map(code => criteres.find(c => c.code === code)).filter(Boolean)
   }
 
   const filtered = docs.filter(d => {
@@ -148,7 +158,7 @@ export default function DocumentsPage() {
         ))}
       </div>
 
-      {/* Filtres + search */}
+      {/* Filtres */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} />
@@ -169,7 +179,7 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Liste documents */}
+      {/* Liste */}
       {filtered.length === 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '64px', textAlign: 'center' }}>
           <i className="ti ti-files" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
@@ -190,8 +200,8 @@ export default function DocumentsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {filtered.map(doc => {
             const preuve = isPreuve(doc)
-            const critere = getCritere(doc)
-            const chap = critere ? CHAPITRES[critere.chapitre] : null
+            const criterePreuve = preuve ? getCritereForPreuve(doc) : null
+            const criteuresDoc = !preuve ? getCriteresForDoc(doc) : []
             const nomDoc = preuve ? doc.nom : (NOMS_DOCS[doc.code_doc] || doc.nom || doc.code_doc)
             const iconStyle = getDocIcon(doc)
             const filename = doc.url?.split('/').pop() || ''
@@ -203,14 +213,14 @@ export default function DocumentsPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#BFDBFE'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
 
-                {/* Icone doc */}
+                {/* Icone */}
                 <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: iconStyle.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className={`ti ${iconStyle.icon}`} style={{ fontSize: '20px', color: iconStyle.color }} />
                 </div>
 
                 {/* Infos */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{nomDoc}</span>
                     {!preuve && doc.code_doc && (
                       <span style={{ fontSize: '10px', color: '#1A56DB', background: '#EBF2FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '500' }}>{doc.code_doc}</span>
@@ -219,12 +229,33 @@ export default function DocumentsPage() {
                       <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '500' }}>Preuve uploadée</span>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {critere && chap && (
-                      <span style={{ fontSize: '11px', color: chap.color, background: chap.bg, padding: '1px 7px', borderRadius: '4px', fontWeight: '500' }}>
-                        {critere.code} — {critere.titre.substring(0, 40)}{critere.titre.length > 40 ? '...' : ''}
-                      </span>
-                    )}
+
+                  {/* Critères associés */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {/* Pour les preuves — un seul critère */}
+                    {criterePreuve && (() => {
+                      const chap = CHAPITRES[criterePreuve.chapitre]
+                      return (
+                        <button onClick={() => router.push('/dashboard/certification')}
+                          style={{ fontSize: '11px', color: chap?.color, background: chap?.bg, padding: '2px 8px', borderRadius: '4px', fontWeight: '600', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="ti ti-link" style={{ fontSize: '10px' }} />
+                          {criterePreuve.code} — {criterePreuve.titre.substring(0, 35)}{criterePreuve.titre.length > 35 ? '...' : ''}
+                        </button>
+                      )
+                    })()}
+
+                    {/* Pour les documents générés — plusieurs critères possibles */}
+                    {criteuresDoc.map((crit: any) => {
+                      const chap = CHAPITRES[crit.chapitre]
+                      return (
+                        <button key={crit.id} onClick={() => router.push('/dashboard/certification')}
+                          style={{ fontSize: '11px', color: chap?.color, background: chap?.bg, padding: '2px 8px', borderRadius: '4px', fontWeight: '600', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="ti ti-link" style={{ fontSize: '10px' }} />
+                          {crit.code}
+                        </button>
+                      )
+                    })}
+
                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                       {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
@@ -232,8 +263,8 @@ export default function DocumentsPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                {/* Action */}
+                <div style={{ flexShrink: 0 }}>
                   <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download={filename}
                     style={{ height: '34px', padding: '0 14px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
                     <i className="ti ti-download" style={{ fontSize: '13px' }} />
