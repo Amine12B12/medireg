@@ -48,7 +48,8 @@ export default function CertificationPage() {
   const [filterStatut, setFilterStatut] = useState<string>('tous')
   const [savingId, setSavingId] = useState<string | null>(null)
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null)
-  const [docsGeneres, setDocsGeneres] = useState<Record<string, any[]>>({})  
+  const [docsGeneres, setDocsGeneres] = useState<Record<string, any[]>>({})
+  const [messagesNonLus, setMessagesNonLus] = useState<Record<string, number>>({})  
   const [userRole, setUserRole] = useState<string>('client')
   const supabase = createClient()
   const router = useRouter()
@@ -95,6 +96,18 @@ export default function CertificationPage() {
     const repMap: Record<string, any> = {}
     for (const r of reps || []) repMap[r.critere_id] = r
     setReponses(repMap)
+
+    // Charger messages non lus
+    const champLu = userRole === 'consultant' ? 'lu_consultant' : 'lu_client'
+    const { data: msgs } = await supabase.from('messages_critere')
+      .select('critere_id')
+      .eq('etablissement_id', etabId)
+      .eq(champLu, false)
+    const nonLusMap: Record<string, number> = {}
+    for (const m of msgs || []) {
+      nonLusMap[m.critere_id] = (nonLusMap[m.critere_id] || 0) + 1
+    }
+    setMessagesNonLus(nonLusMap)
   }
 
   async function handleEtabChange(etabId: string) {
@@ -114,6 +127,36 @@ export default function CertificationPage() {
       await supabase.from('reponses_criteres').insert([{ etablissement_id: selectedEtabId, critere_id: critereId, statut }])
     }
     setReponses(prev => ({ ...prev, [critereId]: { ...prev[critereId], statut } }))
+
+    // Message automatique si consultant valide ou rejette
+    if (userRole === 'consultant') {
+      const critere = criteres.find(c => c.id === critereId)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (statut === 'pret_audit' && user) {
+        await supabase.from('messages_critere').insert([{
+          etablissement_id: selectedEtabId,
+          critere_id: critereId,
+          auteur_id: user.id,
+          auteur_role: 'consultant',
+          contenu: `Critere ${critere?.code || ""} valide - pret pour audit sur ce point`,
+          type: 'validation',
+          lu_client: false,
+          lu_consultant: true,
+        }])
+      } else if (statut === 'action_corrective' && user) {
+        await supabase.from('messages_critere').insert([{
+          etablissement_id: selectedEtabId,
+          critere_id: critereId,
+          auteur_id: user.id,
+          auteur_role: 'consultant',
+          contenu: `Action corrective necessaire sur le critere ${critere?.code || ""}. Consultez les commentaires.`,
+          type: 'rejet',
+          lu_client: false,
+          lu_consultant: true,
+        }])
+      }
+    }
+
     setSavingId(null)
   }
 
@@ -440,6 +483,12 @@ export default function CertificationPage() {
                       {critere.champ_application && (
                         <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
                           {critere.champ_application}
+                        </span>
+                      )}
+                      {messagesNonLus[critere.id] > 0 && (
+                        <span style={{ fontSize: '10px', color: '#DC2626', background: '#FEF2F2', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#EF4444' }} />
+                          {messagesNonLus[critere.id]} message{messagesNonLus[critere.id] > 1 ? 's' : ''}
                         </span>
                       )}
                       {hasDocs && (

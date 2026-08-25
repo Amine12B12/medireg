@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 
 const CRITERES_CONFIG: Record<string, {
@@ -300,8 +300,148 @@ function Critere221({ societe, organisation }: { societe: any; organisation: any
   )
 }
 
+
+function ChatCritere({ critereId, etabId, userRole, onValidation }: {
+  critereId: string
+  etabId: string
+  userRole: string
+  onValidation?: () => void
+}) {
+  const [messages, setMessages] = useState<any[]>([])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const supabase = createClient()
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { loadMessages() }, [critereId])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  async function loadMessages() {
+    const { data } = await supabase
+      .from('messages_critere')
+      .select('*, profiles(nom, prenom, role)')
+      .eq('critere_id', critereId)
+      .eq('etablissement_id', etabId)
+      .order('created_at', { ascending: true })
+    setMessages(data || [])
+
+    // Marquer comme lus
+    if (userRole === 'client') {
+      await supabase.from('messages_critere')
+        .update({ lu_client: true })
+        .eq('critere_id', critereId)
+        .eq('etablissement_id', etabId)
+        .eq('lu_client', false)
+    } else {
+      await supabase.from('messages_critere')
+        .update({ lu_consultant: true })
+        .eq('critere_id', critereId)
+        .eq('etablissement_id', etabId)
+        .eq('lu_consultant', false)
+    }
+  }
+
+  async function sendMessage() {
+    if (!input.trim() || sending) return
+    setSending(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase.from('messages_critere').insert([{
+      etablissement_id: etabId,
+      critere_id: critereId,
+      auteur_id: user.id,
+      auteur_role: userRole,
+      contenu: input.trim(),
+      type: 'message',
+      lu_client: userRole === 'client',
+      lu_consultant: userRole === 'consultant',
+    }])
+    setInput('')
+    await loadMessages()
+    setSending(false)
+  }
+
+  const isConsultant = userRole === 'consultant'
+
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', marginTop: '20px' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px', background: '#FAFAFA' }}>
+        <i className="ti ti-message-circle" style={{ fontSize: '15px', color: '#7C3AED' }} />
+        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+          {isConsultant ? 'Discussion avec le client' : 'Discussion avec votre consultant'}
+        </span>
+        {messages.filter(m => isConsultant ? !m.lu_consultant : !m.lu_client).length > 0 && (
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
+        )}
+      </div>
+
+      {/* Messages */}
+      <div style={{ maxHeight: '280px', overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {messages.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF', fontSize: '12px' }}>
+            Aucun message — démarrez la discussion
+          </div>
+        ) : messages.map((msg: any) => {
+          const isMine = (isConsultant && msg.auteur_role === 'consultant') || (!isConsultant && msg.auteur_role === 'client')
+          const isAuto = msg.type !== 'message'
+          const auteurNom = msg.profiles?.prenom ? msg.profiles.prenom + ' ' + msg.profiles.nom : msg.auteur_role === 'consultant' ? 'Consultant' : 'Client'
+
+          if (isAuto) return (
+            <div key={msg.id} style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: '11px', color: msg.type === 'validation' ? '#059669' : '#DC2626', background: msg.type === 'validation' ? '#ECFDF5' : '#FEF2F2', padding: '4px 12px', borderRadius: '20px', fontWeight: '600' }}>
+                {msg.type === 'validation' ? '✓ ' : '✗ '}{msg.contenu}
+              </span>
+            </div>
+          )
+
+          return (
+            <div key={msg.id} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', gap: '8px', alignItems: 'flex-end' }}>
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: isMine ? '#EBF2FF' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={`ti ${msg.auteur_role === 'consultant' ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '12px', color: msg.auteur_role === 'consultant' ? '#7C3AED' : '#1A56DB' }} />
+              </div>
+              <div style={{ maxWidth: '75%' }}>
+                {!isMine && <div style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '3px', paddingLeft: '4px' }}>{auteurNom}</div>}
+                <div style={{ padding: '9px 13px', borderRadius: isMine ? '14px 4px 14px 14px' : '4px 14px 14px 14px', background: isMine ? '#1A56DB' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>
+                  {msg.contenu}
+                </div>
+                <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '3px', textAlign: isMine ? 'right' : 'left', paddingLeft: isMine ? '0' : '4px' }}>
+                  {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+          placeholder={isConsultant ? 'Envoyer un retour au client...' : 'Poser une question à votre consultant...'}
+          rows={1}
+          style={{ flex: 1, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '9px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface-hover)', resize: 'none', lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto', boxSizing: 'border-box' as const }}
+          onInput={e => { const el = e.target as HTMLTextAreaElement; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px' }}
+          onFocus={e => e.target.style.borderColor = '#7C3AED'}
+          onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        />
+        <button onClick={sendMessage} disabled={sending || !input.trim()}
+          style={{ width: '36px', height: '36px', background: sending || !input.trim() ? 'rgba(124,58,237,0.2)' : '#7C3AED', border: 'none', borderRadius: '9px', cursor: sending || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <i className="ti ti-send" style={{ fontSize: '15px', color: '#fff' }} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function CritereDetail({
-  critere, reponse, docsGeneres, societe,
+  critere, reponse, docsGeneres, societe, selectedEtabId,
   onUpdateStatut, onGenererDoc, onUploadPreuve, onReloadDocs, generatingDoc, userRole = 'client'
 }: Props) {
   const isConsultant = userRole === 'consultant'
@@ -533,6 +673,13 @@ export default function CritereDetail({
           <div style={{ fontSize: '12px', color: '#D1D5DB', marginTop: '4px' }}>Utilisez le statut ci-dessous pour indiquer votre avancement</div>
         </div>
       )}
+
+      {/* Chat consultant/client */}
+      <ChatCritere
+        critereId={critere.id}
+        etabId={selectedEtabId || ''}
+        userRole={userRole || 'client'}
+      />
 
       {/* Docs uploadés */}
       {preuvesUploadees.length > 0 && (
