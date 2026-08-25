@@ -217,16 +217,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div style={{ position: 'absolute', right: 0, top: '44px', width: '340px', background: '#fff', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 500, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>Documents à valider</div>
-                      {notifCount > 0 && (
-                        <button onClick={async () => {
-                          await supabase.from('notifications').update({ lu: true }).eq('lu', false)
-                          setNotifCount(0)
-                          setNotifs([])
-                          setShowNotifs(false)
-                        }} style={{ fontSize: '11px', color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
-                          Tout marquer lu
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {notifCount > 0 && (
+                          <button onClick={async () => {
+                            await supabase.from('notifications').update({ lu: true }).eq('lu', false)
+                            setNotifCount(0)
+                            setNotifs([])
+                          }} style={{ fontSize: '11px', color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
+                            Tout lire
+                          </button>
+                        )}
+                        <button onClick={() => { router.push('/dashboard/notifications'); setShowNotifs(false) }}
+                          style={{ fontSize: '11px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
+                          Tout voir →
                         </button>
-                      )}
+                      </div>
                     </div>
                     <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
                       {notifs.length === 0 ? (
