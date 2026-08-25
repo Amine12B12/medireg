@@ -252,7 +252,7 @@ export default function ClientsPage() {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button onClick={() => router.push(`/dashboard/certification?client_id=${client.id}`)}
+                    <button onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                       style={{ height: '32px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <i className="ti ti-eye" style={{ fontSize: '13px' }} />
                       Voir
