@@ -142,6 +142,44 @@ export default function OnboardingPage() {
             fonction_reelle: p.fonction_reelle || '',
             telephone: p.telephone || '', email: p.email || ''
           })))
+
+          // Charger les responsabilités existantes
+          const { data: resps } = await supabase
+            .from('responsabilites_personnes')
+            .select('*')
+            .in('personne_id', pers.map(p => p.id))
+          
+          if (resps && resps.length > 0) {
+            const { data: etabsForResp } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
+            const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
+            for (const r of resps) {
+              const pIdx = pers.findIndex(p => p.id === r.personne_id)
+              const eIdx = (etabsForResp || []).findIndex(e => e.id === r.etablissement_id)
+              if (pIdx === -1 || eIdx === -1) continue
+              if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
+              // Eviter les doublons
+              if (!respMap[r.responsabilite].some(a => a.personne_idx === pIdx && a.etablissement_idx === eIdx)) {
+                respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
+              }
+            }
+            setResponsabilites(respMap)
+          }
+        }
+
+        // Charger les activités existantes
+        const { data: etabsForActs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
+        if (etabsForActs && etabsForActs.length > 0) {
+          const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabsForActs.map(e => e.id))
+          if (acts && acts.length > 0) {
+            const actsMap: Record<number, Record<string, string>> = {}
+            for (const act of acts) {
+              const eIdx = etabsForActs.findIndex(e => e.id === act.etablissement_id)
+              if (eIdx === -1) continue
+              if (!actsMap[eIdx]) actsMap[eIdx] = {}
+              actsMap[eIdx][act.activite] = act.mode
+            }
+            setActivites(actsMap)
+          }
         }
       } else {
         const { data: client } = await supabase.from('clients').select('*').eq('id', prof.client_id).single()
