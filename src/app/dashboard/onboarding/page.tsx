@@ -203,11 +203,30 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      await supabase.from('etablissements_psdm').delete().eq('societe_id', sid)
-      for (const etab of etablissements) {
-        if (!etab.nom) continue
-        const { error: err } = await supabase.from('etablissements_psdm').insert([{ ...etab, societe_id: sid }])
-        if (err) throw new Error(err.message)
+      if (isEditing) {
+        // En mode edition : update chaque etablissement existant par position (preserve les IDs)
+        const { data: existing } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', sid).order('created_at')
+        for (let i = 0; i < etablissements.length; i++) {
+          const etab = etablissements[i]
+          if (!etab.nom) continue
+          if (existing && existing[i]) {
+            // Update l'existant — preserve l'ID et toutes les liaisons
+            const { id, ...rest } = existing[i]
+            await supabase.from('etablissements_psdm').update({ 
+              nom: etab.nom, siret: etab.siret, adresse: etab.adresse,
+              code_postal: etab.code_postal, ville: etab.ville,
+              telephone: etab.telephone, email: etab.email, est_siege: etab.est_siege
+            }).eq('id', existing[i].id)
+          }
+          // Ne pas créer de nouveaux établissements en mode édition simple
+        }
+      } else {
+        await supabase.from('etablissements_psdm').delete().eq('societe_id', sid)
+        for (const etab of etablissements) {
+          if (!etab.nom) continue
+          const { error: err } = await supabase.from('etablissements_psdm').insert([{ ...etab, societe_id: sid }])
+          if (err) throw new Error(err.message)
+        }
       }
       if (!isEditing) setStep(3)
       if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
@@ -220,11 +239,28 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      await supabase.from('personnes').delete().eq('societe_id', sid)
-      for (const pers of personnes) {
-        if (!pers.nom || !pers.prenom) continue
-        const { error: err } = await supabase.from('personnes').insert([{ ...pers, societe_id: sid }])
-        if (err) throw new Error(err.message)
+      if (isEditing) {
+        const { data: existing } = await supabase.from('personnes').select('*').eq('societe_id', sid).order('created_at')
+        for (let i = 0; i < personnes.length; i++) {
+          const pers = personnes[i]
+          if (!pers.nom || !pers.prenom) continue
+          if (existing && existing[i]) {
+            // Update l'existant — preserve l'ID
+            await supabase.from('personnes').update({
+              nom: pers.nom, prenom: pers.prenom,
+              fonction_reelle: pers.fonction_reelle,
+              telephone: pers.telephone, email: pers.email
+            }).eq('id', existing[i].id)
+          }
+          // Ne pas créer de nouvelles personnes en mode édition simple
+        }
+      } else {
+        await supabase.from('personnes').delete().eq('societe_id', sid)
+        for (const pers of personnes) {
+          if (!pers.nom || !pers.prenom) continue
+          const { error: err } = await supabase.from('personnes').insert([{ ...pers, societe_id: sid }])
+          if (err) throw new Error(err.message)
+        }
       }
       if (!isEditing) setStep(4)
       if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
@@ -240,11 +276,12 @@ export default function OnboardingPage() {
       const { data: persData } = await supabase.from('personnes').select('id').eq('societe_id', sid).order('created_at')
       const { data: etabData } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
       if (persData && persData.length > 0) {
+        // Toujours supprimer et recréer les responsabilités (pas de risque de cascade)
         await supabase.from('responsabilites_personnes').delete().in('personne_id', persData.map(p => p.id))
       }
       if (persData && etabData) {
         for (const [resp, assignments] of Object.entries(responsabilites)) {
-          for (const assignment of assignments) {
+          for (const assignment of (assignments as any[])) {
             const personne = persData[assignment.personne_idx]
             const etab = etabData[assignment.etablissement_idx]
             if (personne && etab) {
@@ -268,11 +305,12 @@ export default function OnboardingPage() {
     try {
       const { data: etabData } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
       if (etabData && etabData.length > 0) {
+        // Supprimer et recréer les activités (pas de cascade sur d'autres tables)
         await supabase.from('activites_etablissement').delete().in('etablissement_id', etabData.map(e => e.id))
         for (const [etabIdx, acts] of Object.entries(activites)) {
           const etab = etabData[parseInt(etabIdx)]
           if (!etab) continue
-          for (const [activite, mode] of Object.entries(acts)) {
+          for (const [activite, mode] of Object.entries(acts as Record<string, string>)) {
             await supabase.from('activites_etablissement').insert([{ etablissement_id: etab.id, activite, mode }])
           }
         }
