@@ -67,6 +67,7 @@ export default function OnboardingPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -107,6 +108,7 @@ export default function OnboardingPage() {
       const { data: existingSoc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
       if (existingSoc) {
         setSocieteId(existingSoc.id)
+        setIsEditing(true)
         setSociete({
           raison_sociale: existingSoc.raison_sociale || '',
           nom_commercial: existingSoc.nom_commercial || '',
@@ -285,7 +287,7 @@ export default function OnboardingPage() {
         organisation: organisation,
         updated_at: new Date().toISOString()
       }).eq('id', sid)
-      router.push('/dashboard/certification')
+      router.push(isEditing ? '/dashboard/profile' : '/dashboard/certification')
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -353,7 +355,7 @@ export default function OnboardingPage() {
           </div>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>MediReg</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Configuration de votre profil</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{isEditing ? 'Modifier votre profil' : 'Configuration de votre profil'}</div>
           </div>
         </div>
         {societeId && (
@@ -369,9 +371,9 @@ export default function OnboardingPage() {
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center', maxWidth: '700px', margin: '0 auto' }}>
           {STEPS.map((s, i) => (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: step > s.id ? 'pointer' : 'default' }}
-                onClick={() => step > s.id && setStep(s.id)}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: step > s.id ? '#10B981' : step === s.id ? '#1A56DB' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: (isEditing || step > s.id) ? 'pointer' : 'default' }}
+                onClick={() => (isEditing || step > s.id) && setStep(s.id)}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: step > s.id ? '#10B981' : step === s.id ? '#1A56DB' : isEditing ? '#E5E7EB' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {step > s.id
                     ? <i className="ti ti-check" style={{ fontSize: '13px', color: '#fff' }} />
                     : <i className={`ti ${s.icon}`} style={{ fontSize: '13px', color: step === s.id ? '#fff' : 'var(--text-tertiary)' }} />
@@ -382,10 +384,19 @@ export default function OnboardingPage() {
             </div>
           ))}
           <div style={{ marginLeft: '12px', fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
-            {step}/{STEPS.length} — {STEPS[step - 1].label}
+            {isEditing ? 'Modification — ' : ''}{step}/{STEPS.length} — {STEPS[step - 1].label}
           </div>
         </div>
       </div>
+
+      {isEditing && (
+        <div style={{ maxWidth: '700px', margin: '12px auto 0', width: '100%', padding: '0 24px', boxSizing: 'border-box' as const }}>
+          <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="ti ti-edit" style={{ fontSize: '14px' }} />
+            Mode modification — cliquez sur n'importe quelle étape pour la modifier directement
+          </div>
+        </div>
+      )}
 
       {error && (
         <div style={{ maxWidth: '700px', margin: '16px auto 0', width: '100%', padding: '0 24px', boxSizing: 'border-box' as const }}>
@@ -480,7 +491,7 @@ export default function OnboardingPage() {
 
             <button onClick={saveSociete} disabled={saving || !societe.raison_sociale}
               style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {saving ? 'Enregistrement...' : 'Continuer →'}
+              {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
             </button>
           </div>
         )}
@@ -547,7 +558,7 @@ export default function OnboardingPage() {
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)}
                 style={{ flex: 2, padding: '12px', background: saving || !etablissements.some(e => e.nom) ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -606,7 +617,7 @@ export default function OnboardingPage() {
               <button onClick={() => setStep(2)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)}
                 style={{ flex: 2, padding: '12px', background: saving || !personnes.some(p => p.nom && p.prenom) ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -646,7 +657,7 @@ export default function OnboardingPage() {
               <button onClick={() => setStep(3)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveResponsabilites} disabled={saving}
                 style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -689,7 +700,7 @@ export default function OnboardingPage() {
               <button onClick={() => setStep(4)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveActivites} disabled={saving}
                 style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -809,7 +820,7 @@ export default function OnboardingPage() {
               <button onClick={saveOrganisation} disabled={saving}
                 style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <i className="ti ti-rocket" style={{ fontSize: '16px' }} />
-                {saving ? 'Finalisation...' : 'Lancer la certification !'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Lancer la certification !'}
               </button>
             </div>
           </div>
