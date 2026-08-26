@@ -4,6 +4,14 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 
+const CRITERES_PAR_DOC: Record<string, string[]> = {
+  'USA-INFO-01': ['1.2.1', '1.2.2'],
+  'USA-DOC-01': ['1.2.1', '1.2.5'],
+  'PRESTA-DOC-01': ['1.2.1', '1.2.4'],
+  'QR-DOC-01': ['1.3.1', '1.3.2'],
+  'PROC-PRESCRIPTION-01': ['2.2.1'],
+}
+
 const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
   '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
   '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
@@ -96,7 +104,14 @@ export default function ClientDetailPage() {
       .order('created_at', { ascending: true })
     setPanelMessages(msgs || [])
 
-    const docsCritere = docs.filter(d => d.critere_id === critereId || d.code_doc === `PREUVE_${selectedCritere?.code}`)
+    const critCode = selectedCritere?.code || ''
+    const docsCritere = docs.filter(d => {
+      // Preuves uploadées pour ce critère
+      if (d.code_doc === `PREUVE_${critCode}`) return true
+      // Documents générés couvrant ce critère
+      const criteresCodes = CRITERES_PAR_DOC[d.code_doc] || []
+      return criteresCodes.includes(critCode)
+    })
     setPanelDocs(docsCritere)
 
     // Marquer comme lus
