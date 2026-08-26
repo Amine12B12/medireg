@@ -5,14 +5,14 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const RESPONSABILITES_LABELS: Record<string, string> = {
-  direction: 'Direction / Representant legal',
+  direction: 'Direction / Représentant légal',
   garant_psdm: 'Garant PSDM',
-  materiovigilance: 'Correspondant materiovigilance',
+  materiovigilance: 'Correspondant matériovigilance',
   pharmacien: 'Pharmacien responsable',
-  responsable_etablissement: 'Responsable etablissement',
-  desinfection: 'Desinfection / Hygiene',
+  responsable_etablissement: 'Responsable établissement',
+  desinfection: 'Désinfection / Hygiène',
   sav_maintenance: 'SAV / Maintenance',
-  reclamations: 'Reclamations',
+  reclamations: 'Réclamations',
   pilote_certification: 'Pilote certification MediReg',
   dpo: 'DPO / Interlocuteur RGPD',
 }
@@ -24,6 +24,15 @@ export default function ProfilPage() {
   const [responsabilites, setResponsabilites] = useState<any[]>([])
   const [activites, setActivites] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Changement de mot de passe
+  const [showPwd, setShowPwd] = useState(false)
+  const [newPwd, setNewPwd] = useState('')
+  const [confirmPwd, setConfirmPwd] = useState('')
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdError, setPwdError] = useState('')
+  const [pwdSuccess, setPwdSuccess] = useState(false)
+
   const supabase = createClient()
   const router = useRouter()
 
@@ -42,30 +51,24 @@ export default function ProfilPage() {
 
       if (!clientId) { router.push('/dashboard'); return }
 
-      // Societe
       const { data: soc } = await supabase.from('societes').select('*').eq('client_id', clientId).single()
       if (!soc) { router.push('/dashboard/onboarding'); return }
       setSociete(soc)
 
-      // Etablissements
       const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', soc.id).order('created_at')
       setEtablissements(etabs || [])
 
-      // Personnes
       const { data: pers } = await supabase.from('personnes').select('*').eq('societe_id', soc.id).order('created_at')
       setPersonnes(pers || [])
 
-      // Responsabilites avec personnes
       if (pers && pers.length > 0) {
         const { data: resps } = await supabase
           .from('responsabilites_personnes')
           .select('*, personnes(nom, prenom, fonction_reelle), etablissements_psdm(nom)')
           .in('personne_id', pers.map(p => p.id))
-          .eq('actif', true)
         setResponsabilites(resps || [])
       }
 
-      // Activites
       if (etabs && etabs.length > 0) {
         const { data: acts } = await supabase
           .from('activites_etablissement')
@@ -79,23 +82,42 @@ export default function ProfilPage() {
     load()
   }, [])
 
+  async function handleChangePwd() {
+    if (!newPwd || newPwd !== confirmPwd) { setPwdError('Les mots de passe ne correspondent pas'); return }
+    if (newPwd.length < 8) { setPwdError('Minimum 8 caractères'); return }
+    setPwdLoading(true)
+    setPwdError('')
+    const { error } = await supabase.auth.updateUser({ password: newPwd })
+    if (error) {
+      setPwdError(error.message)
+    } else {
+      setPwdSuccess(true)
+      setNewPwd('')
+      setConfirmPwd('')
+      setTimeout(() => { setPwdSuccess(false); setShowPwd(false) }, 3000)
+    }
+    setPwdLoading(false)
+  }
+
   const modeStyle = (mode: string) => {
-    if (mode === 'interne') return { color: 'var(--success)', bg: 'var(--success-light)', label: 'Interne' }
-    if (mode === 'sous_traite') return { color: 'var(--warning)', bg: 'var(--warning-light)', label: 'Sous-traite' }
-    if (mode === 'mixte') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'Mixte' }
-    return { color: 'var(--text-tertiary)', bg: 'var(--surface-hover)', label: 'Non concerne' }
+    if (mode === 'interne') return { color: '#059669', bg: '#D1FAE5', label: 'Interne' }
+    if (mode === 'sous_traite') return { color: '#D97706', bg: '#FEF3C7', label: 'Sous-traité' }
+    if (mode === 'mixte') return { color: '#1A56DB', bg: '#EBF2FF', label: 'Mixte' }
+    return { color: '#9CA3AF', bg: '#F3F4F6', label: 'Non concerné' }
   }
 
   if (loading) return <div style={{ padding: '28px', color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font)' }}>Chargement...</div>
 
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }
+
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '900px' }}>
 
-      {/* Header avec bouton modifier */}
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {societe?.logo_url && (
-            <img src={societe.logo_url} alt="Logo" style={{ height: '48px', objectFit: 'contain', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '4px', background: '#fff' }} />
+            <img src={societe.logo_url} alt="Logo" style={{ height: '48px', objectFit: 'contain', border: '1px solid var(--border)', borderRadius: '8px', padding: '4px', background: '#fff' }} />
           )}
           <div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>{societe?.raison_sociale}</div>
@@ -105,25 +127,25 @@ export default function ProfilPage() {
           </div>
         </div>
         <button onClick={() => router.push('/dashboard/onboarding')}
-          style={{ padding: '8px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-md)', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ padding: '8px 16px', background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.2)', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <i className="ti ti-edit" style={{ fontSize: '14px' }} />
           Modifier le profil
         </button>
       </div>
 
-      {/* Societe */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Société */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <i className="ti ti-building" style={{ fontSize: '14px' }} />
-          Identite de la societe
+          Identité de la société
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
           {[
             { label: 'Forme juridique', value: societe?.forme_juridique },
             { label: 'SIREN', value: societe?.siren },
             { label: 'Code APE', value: societe?.code_ape },
-            { label: 'Adresse siege', value: [societe?.adresse_siege, societe?.code_postal, societe?.ville].filter(Boolean).join(', ') },
-            { label: 'Telephone', value: societe?.telephone },
+            { label: 'Adresse siège', value: [societe?.adresse_siege, societe?.code_postal, societe?.ville].filter(Boolean).join(', ') },
+            { label: 'Téléphone', value: societe?.telephone },
             { label: 'Email', value: societe?.email },
           ].map(f => f.value ? (
             <div key={f.label}>
@@ -134,30 +156,28 @@ export default function ProfilPage() {
         </div>
       </div>
 
-      {/* Etablissements */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Établissements */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-building-hospital" style={{ fontSize: '14px' }} />
-            Etablissements
+            Établissements
           </div>
-          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{etablissements.length}</span>
+          <span style={{ background: '#EBF2FF', color: '#1A56DB', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{etablissements.length}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {etablissements.map((etab, i) => (
-            <div key={etab.id} style={{ padding: '14px 16px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <div key={etab.id} style={{ padding: '14px 16px', background: '#F9FAFB', borderRadius: '9px', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{etab.nom}</div>
-                {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px', fontWeight: '500' }}>Siege</span>}
+                {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                 {etab.siret && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>SIRET </span>{etab.siret}</span>}
                 {etab.ville && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>Ville </span>{etab.ville}</span>}
-                {etab.telephone && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>Tel </span>{etab.telephone}</span>}
+                {etab.telephone && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>Tél </span>{etab.telephone}</span>}
               </div>
-
-              {/* Activites de cet etablissement */}
               {(() => {
                 const actsEtab = activites.filter(a => a.etablissement_id === etab.id && a.mode !== 'non_concerne')
                 if (actsEtab.length === 0) return null
@@ -165,11 +185,7 @@ export default function ProfilPage() {
                   <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {actsEtab.map(act => {
                       const ms = modeStyle(act.mode)
-                      return (
-                        <span key={act.id} style={{ fontSize: '10px', fontWeight: '500', color: ms.color, background: ms.bg, padding: '2px 8px', borderRadius: '20px' }}>
-                          {act.activite}
-                        </span>
-                      )
+                      return <span key={act.id} style={{ fontSize: '10px', fontWeight: '500', color: ms.color, background: ms.bg, padding: '2px 8px', borderRadius: '20px' }}>{act.activite}</span>
                     })}
                   </div>
                 )
@@ -179,24 +195,22 @@ export default function ProfilPage() {
         </div>
       </div>
 
-      {/* Personnes et responsabilites */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Personnes */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-users" style={{ fontSize: '14px' }} />
-            Personnes et responsabilites
+            Personnes et responsabilités
           </div>
-          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{personnes.length}</span>
+          <span style={{ background: '#EBF2FF', color: '#1A56DB', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{personnes.length}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {personnes.map(pers => {
             const persResps = responsabilites.filter(r => r.personne_id === pers.id)
             return (
-              <div key={pers.id} style={{ padding: '14px 16px', background: 'var(--surface-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+              <div key={pers.id} style={{ padding: '14px 16px', background: '#F9FAFB', borderRadius: '9px', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                 <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#7C3AED' }}>
-                    {pers.prenom.charAt(0)}{pers.nom.charAt(0)}
-                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#7C3AED' }}>{pers.prenom?.charAt(0)}{pers.nom?.charAt(0)}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{pers.prenom} {pers.nom}</div>
@@ -221,20 +235,73 @@ export default function ProfilPage() {
         </div>
       </div>
 
-      {/* Variables disponibles pour les documents */}
-      <div style={{ background: 'var(--surface-hover)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
+      {/* Changer mot de passe */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPwd ? '16px' : '0', paddingBottom: showPwd ? '12px' : '0', borderBottom: showPwd ? '1px solid var(--border)' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="ti ti-lock" style={{ fontSize: '16px', color: '#6B7280' }} />
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Mot de passe</span>
+          </div>
+          <button onClick={() => { setShowPwd(!showPwd); setPwdError(''); setPwdSuccess(false) }}
+            style={{ padding: '7px 14px', background: showPwd ? '#F3F4F6' : '#EBF2FF', border: `1px solid ${showPwd ? '#E5E7EB' : 'rgba(26,86,219,0.2)'}`, borderRadius: '8px', color: showPwd ? '#6B7280' : '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            {showPwd ? 'Annuler' : 'Changer mon mot de passe'}
+          </button>
+        </div>
+
+        {showPwd && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {pwdSuccess ? (
+              <div style={{ padding: '12px 16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '9px', fontSize: '13px', color: '#059669', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="ti ti-circle-check" style={{ fontSize: '16px' }} />
+                Mot de passe modifié avec succès
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                    Nouveau mot de passe
+                  </label>
+                  <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)}
+                    placeholder="Minimum 8 caractères"
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                    onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                    Confirmer le mot de passe
+                  </label>
+                  <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)}
+                    placeholder="Répétez le mot de passe"
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                    onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+                    onKeyDown={e => { if (e.key === 'Enter') handleChangePwd() }} />
+                </div>
+                {pwdError && (
+                  <div style={{ padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', fontSize: '12px', color: '#DC2626' }}>
+                    {pwdError}
+                  </div>
+                )}
+                <button onClick={handleChangePwd} disabled={pwdLoading || !newPwd || !confirmPwd}
+                  style={{ padding: '11px', background: pwdLoading || !newPwd || !confirmPwd ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: pwdLoading || !newPwd || !confirmPwd ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                  {pwdLoading ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Variables documents */}
+      <div style={{ background: '#F9FAFB', border: '1px dashed var(--border)', borderRadius: '12px', padding: '20px' }}>
         <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <i className="ti ti-code" style={{ fontSize: '14px' }} />
           Variables disponibles dans vos documents
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[
-            '{{logo}}', '{{raison_sociale}}', '{{siren}}', '{{adresse_siege}}',
-            '{{dirigeant_nom}}', '{{garant_psdm}}', '{{correspondant_materiovigilance}}',
-            '{{responsable_desinfection}}', '{{responsable_sav}}', '{{responsable_reclamations}}',
-            '{{pilote_certification}}', '{{nom_etablissement}}', '{{siret_etablissement}}',
-          ].map(v => (
-            <span key={v} style={{ fontSize: '11px', fontFamily: 'monospace', background: '#fff', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '4px', color: 'var(--accent)' }}>{v}</span>
+          {['{{logo}}', '{{raison_sociale}}', '{{siren}}', '{{adresse_siege}}', '{{dirigeant_nom}}', '{{garant_psdm}}', '{{correspondant_materiovigilance}}', '{{responsable_desinfection}}', '{{responsable_sav}}', '{{responsable_reclamations}}', '{{pilote_certification}}', '{{nom_etablissement}}', '{{siret_etablissement}}'].map(v => (
+            <span key={v} style={{ fontSize: '11px', fontFamily: 'monospace', background: '#fff', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '4px', color: '#1A56DB' }}>{v}</span>
           ))}
         </div>
       </div>
