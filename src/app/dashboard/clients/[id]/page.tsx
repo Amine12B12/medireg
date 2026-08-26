@@ -407,19 +407,30 @@ export default function ClientDetailPage() {
                 Documents uploadés par le client
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {panelDocs.map(doc => (
-                  <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#fff', borderRadius: '8px', border: '1px solid #FDE68A' }}>
-                    <i className="ti ti-file" style={{ fontSize: '14px', color: '#D97706', flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '500', color: '#92400E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom || doc.code_doc}</div>
-                      <div style={{ fontSize: '10px', color: '#B45309' }}>{new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</div>
+                {panelDocs.map(doc => {
+                  const isPreuve = doc.code_doc?.startsWith('PREUVE_')
+                  const isGenere = !isPreuve
+                  return (
+                    <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#fff', borderRadius: '8px', border: `1px solid ${isGenere ? '#BFDBFE' : '#FDE68A'}` }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: isGenere ? '#EBF2FF' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`ti ${isGenere ? 'ti-sparkles' : 'ti-upload'}`} style={{ fontSize: '13px', color: isGenere ? '#1A56DB' : '#D97706' }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom || doc.code_doc}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: '600', color: isGenere ? '#1A56DB' : '#D97706', background: isGenere ? '#EBF2FF' : '#FEF3C7', padding: '1px 6px', borderRadius: '20px' }}>
+                            {isGenere ? 'Généré par MediReg' : 'Uploadé par le client'}
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#9CA3AF' }}>{new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                        </div>
+                      </div>
+                      <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
+                        style={{ width: '26px', height: '26px', background: isGenere ? '#EBF2FF' : '#FEF3C7', border: `1px solid ${isGenere ? '#BFDBFE' : '#FDE68A'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
+                        <i className="ti ti-download" style={{ fontSize: '12px', color: isGenere ? '#1A56DB' : '#D97706' }} />
+                      </a>
                     </div>
-                    <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
-                      style={{ width: '26px', height: '26px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
-                      <i className="ti ti-download" style={{ fontSize: '12px', color: '#D97706' }} />
-                    </a>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
