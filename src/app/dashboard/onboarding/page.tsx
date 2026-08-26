@@ -287,7 +287,7 @@ export default function OnboardingPage() {
         organisation: organisation,
         updated_at: new Date().toISOString()
       }).eq('id', sid)
-      router.push(isEditing ? '/dashboard/profile' : '/dashboard/certification')
+      router.push(isEditing ? '/dashboard/profil' : '/dashboard/certification')
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
