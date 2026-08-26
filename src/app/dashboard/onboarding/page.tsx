@@ -68,6 +68,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [savedStep, setSavedStep] = useState<number | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -191,7 +192,8 @@ export default function OnboardingPage() {
         sid = data!.id
         setSocieteId(sid)
       }
-      setStep(2)
+      if (!isEditing) setStep(2)
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -207,7 +209,8 @@ export default function OnboardingPage() {
         const { error: err } = await supabase.from('etablissements_psdm').insert([{ ...etab, societe_id: sid }])
         if (err) throw new Error(err.message)
       }
-      setStep(3)
+      if (!isEditing) setStep(3)
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -223,7 +226,8 @@ export default function OnboardingPage() {
         const { error: err } = await supabase.from('personnes').insert([{ ...pers, societe_id: sid }])
         if (err) throw new Error(err.message)
       }
-      setStep(4)
+      if (!isEditing) setStep(4)
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -251,7 +255,8 @@ export default function OnboardingPage() {
           }
         }
       }
-      setStep(5)
+      if (!isEditing) setStep(5)
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -272,7 +277,8 @@ export default function OnboardingPage() {
           }
         }
       }
-      setStep(6)
+      if (!isEditing) setStep(6)
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -287,7 +293,7 @@ export default function OnboardingPage() {
         organisation: organisation,
         updated_at: new Date().toISOString()
       }).eq('id', sid)
-      router.push(isEditing ? '/dashboard/profil' : '/dashboard/certification')
+      router.push(isEditing ? '/dashboard/profile' : '/dashboard/certification')
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -391,10 +397,17 @@ export default function OnboardingPage() {
 
       {isEditing && (
         <div style={{ maxWidth: '700px', margin: '12px auto 0', width: '100%', padding: '0 24px', boxSizing: 'border-box' as const }}>
-          <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="ti ti-edit" style={{ fontSize: '14px' }} />
-            Mode modification — cliquez sur n'importe quelle étape pour la modifier directement
-          </div>
+          {savedStep ? (
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#059669', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="ti ti-circle-check" style={{ fontSize: '14px' }} />
+              Modifications enregistrées avec succès
+            </div>
+          ) : (
+            <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="ti ti-edit" style={{ fontSize: '14px' }} />
+              Mode modification — cliquez sur n'importe quelle étape pour la modifier directement
+            </div>
+          )}
         </div>
       )}
 
