@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DocumentEditor from './DocumentEditor'
 import { createClient } from '@/lib/supabase'
 
 // ─────────────────────────────────────────────────────────────
@@ -476,6 +477,7 @@ export default function CritereDetail({
 }: Props) {
   const supabase = createClient()
   const config = CRITERES_CONFIG[critere.code]
+  const [editorCode, setEditorCode] = useState<string | null>(null)
   const statut = reponse?.statut || 'non_analyse'
   const st = STATUTS.find(s => s.key === statut) || STATUTS[0]
   const isConsultant = userRole === 'consultant'
@@ -684,11 +686,10 @@ export default function CritereDetail({
                       {/* Actions */}
                       <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {isGeneree && preuve.code && (
-                          <button onClick={() => onGenererDoc(preuve.code!)}
-                            disabled={generatingDoc === preuve.code}
+                          <button onClick={() => setEditorCode(preuve.code!)}
                             style={{ height: '32px', padding: '0 14px', background: hasDoc ? '#EBF2FF' : '#1A56DB', border: hasDoc ? '1px solid #BFDBFE' : 'none', borderRadius: '8px', color: hasDoc ? '#1A56DB' : '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <i className={`ti ${hasDoc ? 'ti-refresh' : 'ti-sparkles'}`} style={{ fontSize: '13px' }} />
-                            {generatingDoc === preuve.code ? 'Génération...' : hasDoc ? 'Regénérer' : 'Générer'}
+                            <i className={`ti ${hasDoc ? 'ti-edit' : 'ti-sparkles'}`} style={{ fontSize: '13px' }} />
+                            {hasDoc ? 'Modifier' : 'Créer et signer'}
                           </button>
                         )}
                         {hasDoc && preuve.code && docsGeneres[preuve.code]?.[0] && (
@@ -768,6 +769,17 @@ export default function CritereDetail({
 
       {/* Chat */}
       <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'client'} />
+
+      {/* Editeur de document */}
+      {editorCode && (
+        <DocumentEditor
+          templateCode={editorCode}
+          societe={societe}
+          etabId={selectedEtabId}
+          onClose={() => setEditorCode(null)}
+          onSaved={() => { setEditorCode(null); onReloadDocs() }}
+        />
+      )}
     </div>
   )
 }
