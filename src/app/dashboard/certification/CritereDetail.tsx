@@ -692,12 +692,25 @@ export default function CritereDetail({
                             {hasDoc ? 'Modifier' : 'Créer et signer'}
                           </button>
                         )}
-                        {hasDoc && preuve.code && docsGeneres[preuve.code]?.[0] && (
-                          <a href={`/api/generate-doc?path=${encodeURIComponent(docsGeneres[preuve.code][0].url)}`} download
-                            style={{ height: '32px', padding: '0 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#059669', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
-                            <i className="ti ti-download" style={{ fontSize: '13px' }} />Télécharger
-                          </a>
-                        )}
+                        {hasDoc && preuve.code && docsGeneres[preuve.code]?.[0] && (() => {
+                          const doc = docsGeneres[preuve.code][0]
+                          const isEditable = doc.type_doc === 'editable'
+                          return (
+                            <>
+                              {isEditable ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
+                                  <i className="ti ti-signature" style={{ fontSize: '13px', color: '#059669' }} />
+                                  <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Signé par {doc.signe_par}</span>
+                                </div>
+                              ) : doc.url ? (
+                                <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
+                                  style={{ height: '32px', padding: '0 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#059669', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
+                                  <i className="ti ti-download" style={{ fontSize: '13px' }} />Télécharger
+                                </a>
+                              ) : null}
+                            </>
+                          )
+                        })()}
                       </div>
                     </div>
                   </div>
