@@ -313,18 +313,21 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      // Utiliser les IDs réels stockés
-      const realPersIds = persIds
-      const realEtabIds = etabIds
+      // Recharger les IDs depuis la base pour eviter les problemes de state
+      const { data: freshPers } = await supabase.from('personnes').select('id').eq('societe_id', sid).order('created_at')
+      const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
+      if (!freshPers || !freshEtabs) throw new Error('Données non trouvées')
 
-      if (realPersIds.length > 0) {
-        await supabase.from('responsabilites_personnes').delete().in('personne_id', realPersIds)
+      // Supprimer toutes les responsabilites existantes
+      if (freshPers.length > 0) {
+        await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map(p => p.id))
       }
 
+      // Recréer uniquement celles sélectionnées
       for (const [resp, assignments] of Object.entries(responsabilites)) {
         for (const assignment of (assignments as any[])) {
-          const persId = realPersIds[assignment.personne_idx]
-          const etabId = realEtabIds[assignment.etablissement_idx]
+          const persId = freshPers[assignment.personne_idx]?.id
+          const etabId = freshEtabs[assignment.etablissement_idx]?.id
           if (persId && etabId) {
             await supabase.from('responsabilites_personnes').insert([{
               personne_id: persId, etablissement_id: etabId, responsabilite: resp
@@ -344,16 +347,21 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      const realEtabIds = etabIds
+      // Recharger les IDs depuis la base
+      const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
+      if (!freshEtabs) throw new Error('Établissements non trouvés')
 
-      if (realEtabIds.length > 0) {
-        await supabase.from('activites_etablissement').delete().in('etablissement_id', realEtabIds)
-        for (const [etabIdx, acts] of Object.entries(activites)) {
-          const etabId = realEtabIds[parseInt(etabIdx)]
-          if (!etabId) continue
-          for (const [activite, mode] of Object.entries(acts as Record<string, string>)) {
-            await supabase.from('activites_etablissement').insert([{ etablissement_id: etabId, activite, mode }])
-          }
+      // Supprimer toutes les activites existantes
+      if (freshEtabs.length > 0) {
+        await supabase.from('activites_etablissement').delete().in('etablissement_id', freshEtabs.map(e => e.id))
+      }
+
+      // Recréer uniquement celles sélectionnées
+      for (const [etabIdx, acts] of Object.entries(activites)) {
+        const etabId = freshEtabs[parseInt(etabIdx)]?.id
+        if (!etabId) continue
+        for (const [activite, mode] of Object.entries(acts as Record<string, string>)) {
+          await supabase.from('activites_etablissement').insert([{ etablissement_id: etabId, activite, mode }])
         }
       }
 
