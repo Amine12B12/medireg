@@ -48,6 +48,8 @@ export default function ClientDetailPage() {
   const [panelInput, setPanelInput] = useState('')
   const [panelSending, setPanelSending] = useState(false)
   const [panelDocs, setPanelDocs] = useState<any[]>([])
+  const [panelRemises, setPanelRemises] = useState<any[]>([])
+  const [panelReclamations, setPanelReclamations] = useState<any[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const supabase = createClient()
@@ -118,6 +120,28 @@ export default function ClientDetailPage() {
       return criteresCodes.includes(critCode)
     })
     setPanelDocs(docsCritere)
+
+    // Charger registre remises pour ce critère
+    const { data: remises } = await supabase
+      .from('registre_remises')
+      .select('*')
+      .eq('etablissement_id', etabId)
+      .order('date_remise', { ascending: false })
+      .limit(5)
+    setPanelRemises(remises || [])
+
+    // Charger registre réclamations si critère 1.3.2
+    if (selectedCritere?.code === '1.3.2') {
+      const { data: reclamations } = await supabase
+        .from('registre_reclamations')
+        .select('*')
+        .eq('etablissement_id', etabId)
+        .order('date_reclamation', { ascending: false })
+        .limit(10)
+      setPanelReclamations(reclamations || [])
+    } else {
+      setPanelReclamations([])
+    }
 
     // Marquer comme lus
     await supabase.from('messages_critere')
@@ -444,6 +468,47 @@ export default function ClientDetailPage() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Registre remises */}
+          {panelRemises.length > 0 && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: '#F8FAFF' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#4338CA', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-clipboard-list" style={{ fontSize: '12px' }} />
+                Registre de remise ({panelRemises.length} entrées)
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {panelRemises.map(r => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #E0E7FF', fontSize: '11px' }}>
+                    <span style={{ color: '#9CA3AF', flexShrink: 0 }}>{new Date(r.date_remise).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                    <span style={{ flex: 1, color: '#374151', fontWeight: '500' }}>{r.type_document?.replace(/_/g, ' ')}</span>
+                    <span style={{ color: '#6B7280', fontSize: '10px' }}>{r.remis_par}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Registre réclamations */}
+          {panelReclamations.length > 0 && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: '#FFF7F7' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-alert-triangle" style={{ fontSize: '12px' }} />
+                Registre réclamations ({panelReclamations.length})
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {panelReclamations.map(r => (
+                  <div key={r.id} style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #FECACA' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: r.reponse_apportee ? '4px' : '0' }}>
+                      <span style={{ fontSize: '10px', color: '#9CA3AF', flexShrink: 0 }}>{new Date(r.date_reclamation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                      <span style={{ flex: 1, fontSize: '11px', fontWeight: '600', color: '#374151' }}>{r.nature}</span>
+                      <span style={{ fontSize: '10px', fontWeight: '600', color: r.statut === 'resolue' ? '#059669' : r.statut === 'en_cours' ? '#2563EB' : '#D97706', background: r.statut === 'resolue' ? '#ECFDF5' : r.statut === 'en_cours' ? '#EFF6FF' : '#FFFBEB', padding: '1px 6px', borderRadius: '20px' }}>{r.statut}</span>
+                    </div>
+                    {r.reponse_apportee && <div style={{ fontSize: '10px', color: '#059669' }}>→ {r.reponse_apportee}</div>}
+                  </div>
+                ))}
               </div>
             </div>
           )}
