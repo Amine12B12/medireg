@@ -374,6 +374,58 @@ export default function OnboardingPage() {
     setSaving(false)
   }
 
+  // Recharger depuis la base à chaque fois qu'on arrive sur étape 4 ou 5
+  useEffect(() => {
+    if (step === 4 && societeId) loadResponsabilites()
+  }, [step, societeId])
+
+  useEffect(() => {
+    if (step === 5 && societeId) loadActivites()
+  }, [step, societeId])
+
+  async function loadResponsabilites() {
+    const { data: pers } = await supabase.from('personnes').select('id').eq('societe_id', societeId!).order('created_at')
+    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', societeId!).order('created_at')
+    if (!pers || !etabs) return
+    setPersIds(pers.map(p => p.id))
+    setEtabIds(etabs.map(e => e.id))
+    const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', pers.map(p => p.id))
+    if (!resps) return
+    const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
+    const seen = new Set<string>()
+    for (const r of resps) {
+      const pIdx = pers.findIndex(p => p.id === r.personne_id)
+      const eIdx = etabs.findIndex(e => e.id === r.etablissement_id)
+      if (pIdx === -1 || eIdx === -1) continue
+      const key = `${r.responsabilite}_${pIdx}_${eIdx}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
+      respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
+    }
+    setResponsabilites(respMap)
+  }
+
+  async function loadActivites() {
+    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', societeId!).order('created_at')
+    if (!etabs) return
+    setEtabIds(etabs.map(e => e.id))
+    const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabs.map(e => e.id))
+    if (!acts) return
+    const actsMap: Record<number, Record<string, string>> = {}
+    const seen = new Set<string>()
+    for (const act of acts) {
+      const eIdx = etabs.findIndex(e => e.id === act.etablissement_id)
+      if (eIdx === -1) continue
+      const key = `${act.etablissement_id}_${act.activite}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (!actsMap[eIdx]) actsMap[eIdx] = {}
+      actsMap[eIdx][act.activite] = act.mode
+    }
+    setActivites(actsMap)
+  }
+
   const toggleFamillesMat = (fam: string) => setOrganisation(prev => ({
     ...prev,
     familles_materiels: prev.familles_materiels.includes(fam)
