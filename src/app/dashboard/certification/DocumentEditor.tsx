@@ -284,11 +284,11 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       .select('*')
       .eq('etablissement_id', etabId)
       .eq('template_code', templateCode)
-      .single()
-    if (data) {
-      setDocId(data.id)
-      setSections(data.contenu || defaultSections)
-      setSignePar(data.signe_par || '')
+      .limit(1)
+    if (data && data.length > 0) {
+      setDocId(data[0].id)
+      setSections(data[0].contenu || defaultSections)
+      setSignePar(data[0].signe_par || '')
     }
   }
 
