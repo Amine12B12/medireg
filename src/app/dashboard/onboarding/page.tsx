@@ -29,8 +29,8 @@ const DOCUMENTS_EXISTANTS = [
   { key: 'bon_commande', label: 'Bon de commande' },
   { key: 'contrat_location', label: 'Contrat de location' },
   { key: 'bon_livraison', label: 'Bon de livraison' },
-  { key: 'fiche_intervention', label: 'Fiche d\'intervention' },
-  { key: 'cr_essai', label: 'Compte rendu d\'essai' },
+  { key: 'fiche_intervention', label: "Fiche d'intervention" },
+  { key: 'cr_essai', label: "Compte rendu d'essai" },
   { key: 'fiche_suivi', label: 'Fiche de suivi patient' },
   { key: 'fiche_depannage', label: 'Fiche de dépannage' },
   { key: 'bon_reprise', label: 'Bon de reprise / retour' },
@@ -59,6 +59,10 @@ const STEPS = [
   { id: 6, label: 'Organisation', icon: 'ti-settings' },
 ]
 
+// IDs réels depuis la base pour faire les updates sans supprimer
+type EtabRecord = { id: string; nom: string; siret: string; adresse: string; code_postal: string; ville: string; telephone: string; email: string; est_siege: boolean }
+type PersRecord = { id: string; nom: string; prenom: string; fonction_reelle: string; telephone: string; email: string }
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [clientId, setClientId] = useState<string | null>(null)
@@ -69,6 +73,11 @@ export default function OnboardingPage() {
   const [initialized, setInitialized] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [savedStep, setSavedStep] = useState<number | null>(null)
+
+  // IDs réels pour les updates
+  const [etabIds, setEtabIds] = useState<string[]>([])
+  const [persIds, setPersIds] = useState<string[]>([])
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -85,10 +94,8 @@ export default function OnboardingPage() {
   }])
   const [responsabilites, setResponsabilites] = useState<Record<string, { personne_idx: number; etablissement_idx: number }[]>>({})
   const [activites, setActivites] = useState<Record<number, Record<string, string>>>({})
-
-  // Nouvelles données organisation
   const [organisation, setOrganisation] = useState({
-    dossier_usager: '' as string, // logiciel_metier | papier | mixte | autre
+    dossier_usager: '',
     dossier_usager_detail: '',
     astreinte: false,
     astreinte_tel: '',
@@ -107,6 +114,7 @@ export default function OnboardingPage() {
       setClientId(prof.client_id)
 
       const { data: existingSoc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
+
       if (existingSoc) {
         setSocieteId(existingSoc.id)
         setIsEditing(true)
@@ -123,62 +131,60 @@ export default function OnboardingPage() {
           email: existingSoc.email || '',
           logo_url: existingSoc.logo_url || '',
         })
-        // Charger organisation si existe
-        if (existingSoc.organisation) {
-          setOrganisation(existingSoc.organisation)
-        }
+        if (existingSoc.organisation) setOrganisation(existingSoc.organisation)
+
+        // Charger établissements
         const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', existingSoc.id).order('created_at')
         if (etabs && etabs.length > 0) {
+          setEtabIds(etabs.map(e => e.id))
           setEtablissements(etabs.map(e => ({
             nom: e.nom || '', siret: e.siret || '', adresse: e.adresse || '',
             code_postal: e.code_postal || '', ville: e.ville || '',
             telephone: e.telephone || '', email: e.email || '', est_siege: e.est_siege || false
           })))
+
+          // Charger activités
+          const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabs.map(e => e.id))
+          if (acts && acts.length > 0) {
+            const actsMap: Record<number, Record<string, string>> = {}
+            for (const act of acts) {
+              const eIdx = etabs.findIndex(e => e.id === act.etablissement_id)
+              if (eIdx === -1) continue
+              if (!actsMap[eIdx]) actsMap[eIdx] = {}
+              // Ne garder que le dernier mode pour chaque activité (éviter doublons)
+              actsMap[eIdx][act.activite] = act.mode
+            }
+            setActivites(actsMap)
+          }
         }
+
+        // Charger personnes
         const { data: pers } = await supabase.from('personnes').select('*').eq('societe_id', existingSoc.id).order('created_at')
         if (pers && pers.length > 0) {
+          setPersIds(pers.map(p => p.id))
           setPersonnes(pers.map(p => ({
             nom: p.nom || '', prenom: p.prenom || '',
             fonction_reelle: p.fonction_reelle || '',
             telephone: p.telephone || '', email: p.email || ''
           })))
 
-          // Charger les responsabilités existantes
-          const { data: resps } = await supabase
-            .from('responsabilites_personnes')
-            .select('*')
-            .in('personne_id', pers.map(p => p.id))
-          
+          // Charger responsabilités
+          const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', pers.map(p => p.id))
           if (resps && resps.length > 0) {
             const { data: etabsForResp } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
             const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
+            const seen = new Set<string>()
             for (const r of resps) {
               const pIdx = pers.findIndex(p => p.id === r.personne_id)
               const eIdx = (etabsForResp || []).findIndex(e => e.id === r.etablissement_id)
               if (pIdx === -1 || eIdx === -1) continue
+              const key = `${r.responsabilite}_${pIdx}_${eIdx}`
+              if (seen.has(key)) continue
+              seen.add(key)
               if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
-              // Eviter les doublons
-              if (!respMap[r.responsabilite].some(a => a.personne_idx === pIdx && a.etablissement_idx === eIdx)) {
-                respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
-              }
+              respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
             }
             setResponsabilites(respMap)
-          }
-        }
-
-        // Charger les activités existantes
-        const { data: etabsForActs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
-        if (etabsForActs && etabsForActs.length > 0) {
-          const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabsForActs.map(e => e.id))
-          if (acts && acts.length > 0) {
-            const actsMap: Record<number, Record<string, string>> = {}
-            for (const act of acts) {
-              const eIdx = etabsForActs.findIndex(e => e.id === act.etablissement_id)
-              if (eIdx === -1) continue
-              if (!actsMap[eIdx]) actsMap[eIdx] = {}
-              actsMap[eIdx][act.activite] = act.mode
-            }
-            setActivites(actsMap)
           }
         }
       } else {
@@ -231,7 +237,7 @@ export default function OnboardingPage() {
         setSocieteId(sid)
       }
       if (!isEditing) setStep(2)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -241,33 +247,30 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      if (isEditing) {
-        // En mode edition : update chaque etablissement existant par position (preserve les IDs)
-        const { data: existing } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', sid).order('created_at')
-        for (let i = 0; i < etablissements.length; i++) {
+      if (isEditing && etabIds.length > 0) {
+        // Update chaque établissement existant par ID — preserve les liaisons
+        for (let i = 0; i < etabIds.length; i++) {
           const etab = etablissements[i]
-          if (!etab.nom) continue
-          if (existing && existing[i]) {
-            // Update l'existant — preserve l'ID et toutes les liaisons
-            const { id, ...rest } = existing[i]
-            await supabase.from('etablissements_psdm').update({ 
-              nom: etab.nom, siret: etab.siret, adresse: etab.adresse,
-              code_postal: etab.code_postal, ville: etab.ville,
-              telephone: etab.telephone, email: etab.email, est_siege: etab.est_siege
-            }).eq('id', existing[i].id)
-          }
-          // Ne pas créer de nouveaux établissements en mode édition simple
+          if (!etab || !etab.nom) continue
+          await supabase.from('etablissements_psdm').update({
+            nom: etab.nom, siret: etab.siret, adresse: etab.adresse,
+            code_postal: etab.code_postal, ville: etab.ville,
+            telephone: etab.telephone, email: etab.email, est_siege: etab.est_siege
+          }).eq('id', etabIds[i])
         }
       } else {
         await supabase.from('etablissements_psdm').delete().eq('societe_id', sid)
+        const newIds: string[] = []
         for (const etab of etablissements) {
           if (!etab.nom) continue
-          const { error: err } = await supabase.from('etablissements_psdm').insert([{ ...etab, societe_id: sid }])
+          const { data, error: err } = await supabase.from('etablissements_psdm').insert([{ ...etab, societe_id: sid }]).select('id').single()
           if (err) throw new Error(err.message)
+          if (data) newIds.push(data.id)
         }
+        setEtabIds(newIds)
       }
       if (!isEditing) setStep(3)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -277,31 +280,30 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      if (isEditing) {
-        const { data: existing } = await supabase.from('personnes').select('*').eq('societe_id', sid).order('created_at')
-        for (let i = 0; i < personnes.length; i++) {
+      if (isEditing && persIds.length > 0) {
+        // Update chaque personne par ID — preserve les liaisons
+        for (let i = 0; i < persIds.length; i++) {
           const pers = personnes[i]
-          if (!pers.nom || !pers.prenom) continue
-          if (existing && existing[i]) {
-            // Update l'existant — preserve l'ID
-            await supabase.from('personnes').update({
-              nom: pers.nom, prenom: pers.prenom,
-              fonction_reelle: pers.fonction_reelle,
-              telephone: pers.telephone, email: pers.email
-            }).eq('id', existing[i].id)
-          }
-          // Ne pas créer de nouvelles personnes en mode édition simple
+          if (!pers || !pers.nom || !pers.prenom) continue
+          await supabase.from('personnes').update({
+            nom: pers.nom, prenom: pers.prenom,
+            fonction_reelle: pers.fonction_reelle,
+            telephone: pers.telephone, email: pers.email
+          }).eq('id', persIds[i])
         }
       } else {
         await supabase.from('personnes').delete().eq('societe_id', sid)
+        const newIds: string[] = []
         for (const pers of personnes) {
           if (!pers.nom || !pers.prenom) continue
-          const { error: err } = await supabase.from('personnes').insert([{ ...pers, societe_id: sid }])
+          const { data, error: err } = await supabase.from('personnes').insert([{ ...pers, societe_id: sid }]).select('id').single()
           if (err) throw new Error(err.message)
+          if (data) newIds.push(data.id)
         }
+        setPersIds(newIds)
       }
       if (!isEditing) setStep(4)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -311,27 +313,28 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      const { data: persData } = await supabase.from('personnes').select('id').eq('societe_id', sid).order('created_at')
-      const { data: etabData } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
-      if (persData && persData.length > 0) {
-        // Toujours supprimer et recréer les responsabilités (pas de risque de cascade)
-        await supabase.from('responsabilites_personnes').delete().in('personne_id', persData.map(p => p.id))
+      // Utiliser les IDs réels stockés
+      const realPersIds = persIds
+      const realEtabIds = etabIds
+
+      if (realPersIds.length > 0) {
+        await supabase.from('responsabilites_personnes').delete().in('personne_id', realPersIds)
       }
-      if (persData && etabData) {
-        for (const [resp, assignments] of Object.entries(responsabilites)) {
-          for (const assignment of (assignments as any[])) {
-            const personne = persData[assignment.personne_idx]
-            const etab = etabData[assignment.etablissement_idx]
-            if (personne && etab) {
-              await supabase.from('responsabilites_personnes').insert([{
-                personne_id: personne.id, etablissement_id: etab.id, responsabilite: resp
-              }])
-            }
+
+      for (const [resp, assignments] of Object.entries(responsabilites)) {
+        for (const assignment of (assignments as any[])) {
+          const persId = realPersIds[assignment.personne_idx]
+          const etabId = realEtabIds[assignment.etablissement_idx]
+          if (persId && etabId) {
+            await supabase.from('responsabilites_personnes').insert([{
+              personne_id: persId, etablissement_id: etabId, responsabilite: resp
+            }])
           }
         }
       }
+
       if (!isEditing) setStep(5)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -341,20 +344,21 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      const { data: etabData } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
-      if (etabData && etabData.length > 0) {
-        // Supprimer et recréer les activités (pas de cascade sur d'autres tables)
-        await supabase.from('activites_etablissement').delete().in('etablissement_id', etabData.map(e => e.id))
+      const realEtabIds = etabIds
+
+      if (realEtabIds.length > 0) {
+        await supabase.from('activites_etablissement').delete().in('etablissement_id', realEtabIds)
         for (const [etabIdx, acts] of Object.entries(activites)) {
-          const etab = etabData[parseInt(etabIdx)]
-          if (!etab) continue
+          const etabId = realEtabIds[parseInt(etabIdx)]
+          if (!etabId) continue
           for (const [activite, mode] of Object.entries(acts as Record<string, string>)) {
-            await supabase.from('activites_etablissement').insert([{ etablissement_id: etab.id, activite, mode }])
+            await supabase.from('activites_etablissement').insert([{ etablissement_id: etabId, activite, mode }])
           }
         }
       }
+
       if (!isEditing) setStep(6)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -364,33 +368,25 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      // Sauvegarder dans le champ JSONB organisation de la table societes
-      await supabase.from('societes').update({
-        organisation: organisation,
-        updated_at: new Date().toISOString()
-      }).eq('id', sid)
+      await supabase.from('societes').update({ organisation, updated_at: new Date().toISOString() }).eq('id', sid)
       router.push(isEditing ? '/dashboard/profil' : '/dashboard/certification')
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
 
-  const toggleFamillesMat = (fam: string) => {
-    setOrganisation(prev => ({
-      ...prev,
-      familles_materiels: prev.familles_materiels.includes(fam)
-        ? prev.familles_materiels.filter(f => f !== fam)
-        : [...prev.familles_materiels, fam]
-    }))
-  }
+  const toggleFamillesMat = (fam: string) => setOrganisation(prev => ({
+    ...prev,
+    familles_materiels: prev.familles_materiels.includes(fam)
+      ? prev.familles_materiels.filter(f => f !== fam)
+      : [...prev.familles_materiels, fam]
+  }))
 
-  const toggleDocExistant = (doc: string) => {
-    setOrganisation(prev => ({
-      ...prev,
-      documents_existants: prev.documents_existants.includes(doc)
-        ? prev.documents_existants.filter(d => d !== doc)
-        : [...prev.documents_existants, doc]
-    }))
-  }
+  const toggleDocExistant = (doc: string) => setOrganisation(prev => ({
+    ...prev,
+    documents_existants: prev.documents_existants.includes(doc)
+      ? prev.documents_existants.filter(d => d !== doc)
+      : [...prev.documents_existants, doc]
+  }))
 
   const addEtablissement = () => setEtablissements(prev => [...prev, { nom: '', siret: '', adresse: '', code_postal: '', ville: '', telephone: '', email: '', est_siege: false }])
   const addPersonne = () => setPersonnes(prev => [...prev, { nom: '', prenom: '', fonction_reelle: '', telephone: '', email: '' }])
@@ -497,15 +493,13 @@ export default function OnboardingPage() {
 
       <div style={{ flex: 1, padding: '32px 24px', maxWidth: '700px', margin: '0 auto', width: '100%', boxSizing: 'border-box' as const }}>
 
-        {/* STEP 1 — Société */}
+        {/* STEP 1 */}
         {step === 1 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Votre société</div>
               <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations seront utilisées automatiquement dans tous vos documents de certification.</div>
             </div>
-
-            {/* Logo */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Logo</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -521,8 +515,6 @@ export default function OnboardingPage() {
                 </div>
               </div>
             </div>
-
-            {/* Identité */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Identité</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -530,62 +522,30 @@ export default function OnboardingPage() {
                   <label style={labelStyle}>Raison sociale *</label>
                   <input value={societe.raison_sociale} onChange={e => setSociete(p => ({ ...p, raison_sociale: e.target.value }))} placeholder="SARL Oxygène Services Loire" style={inputStyle} autoFocus />
                 </div>
-                <div>
-                  <label style={labelStyle}>Nom commercial</label>
-                  <input value={societe.nom_commercial} onChange={e => setSociete(p => ({ ...p, nom_commercial: e.target.value }))} placeholder="Si différent" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Forme juridique</label>
-                  <select value={societe.forme_juridique} onChange={e => setSociete(p => ({ ...p, forme_juridique: e.target.value }))} style={inputStyle}>
-                    {FORMES_JURIDIQUES.map(f => <option key={f}>{f}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>SIREN</label>
-                  <input value={societe.siren} onChange={e => setSociete(p => ({ ...p, siren: e.target.value }))} placeholder="123 456 789" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Code APE / NAF</label>
-                  <input value={societe.code_ape} onChange={e => setSociete(p => ({ ...p, code_ape: e.target.value }))} placeholder="4774Z" style={inputStyle} />
-                </div>
+                <div><label style={labelStyle}>Nom commercial</label><input value={societe.nom_commercial} onChange={e => setSociete(p => ({ ...p, nom_commercial: e.target.value }))} placeholder="Si différent" style={inputStyle} /></div>
+                <div><label style={labelStyle}>Forme juridique</label><select value={societe.forme_juridique} onChange={e => setSociete(p => ({ ...p, forme_juridique: e.target.value }))} style={inputStyle}>{FORMES_JURIDIQUES.map(f => <option key={f}>{f}</option>)}</select></div>
+                <div><label style={labelStyle}>SIREN</label><input value={societe.siren} onChange={e => setSociete(p => ({ ...p, siren: e.target.value }))} placeholder="123 456 789" style={inputStyle} /></div>
+                <div><label style={labelStyle}>Code APE / NAF</label><input value={societe.code_ape} onChange={e => setSociete(p => ({ ...p, code_ape: e.target.value }))} placeholder="4774Z" style={inputStyle} /></div>
               </div>
             </div>
-
-            {/* Coordonnées */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées du siège</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Adresse</label>
-                  <input value={societe.adresse_siege} onChange={e => setSociete(p => ({ ...p, adresse_siege: e.target.value }))} placeholder="14 rue du Faubourg Saint-Jean" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Code postal</label>
-                  <input value={societe.code_postal} onChange={e => setSociete(p => ({ ...p, code_postal: e.target.value }))} placeholder="45000" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Ville</label>
-                  <input value={societe.ville} onChange={e => setSociete(p => ({ ...p, ville: e.target.value }))} placeholder="Orléans" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Téléphone</label>
-                  <input value={societe.telephone} onChange={e => setSociete(p => ({ ...p, telephone: e.target.value }))} placeholder="02 38 45 12 89" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Email</label>
-                  <input type='email' value={societe.email} onChange={e => setSociete(p => ({ ...p, email: e.target.value }))} placeholder="contact@oxygene-loire.fr" style={inputStyle} />
-                </div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Adresse</label><input value={societe.adresse_siege} onChange={e => setSociete(p => ({ ...p, adresse_siege: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Code postal</label><input value={societe.code_postal} onChange={e => setSociete(p => ({ ...p, code_postal: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Ville</label><input value={societe.ville} onChange={e => setSociete(p => ({ ...p, ville: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Téléphone</label><input value={societe.telephone} onChange={e => setSociete(p => ({ ...p, telephone: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Email</label><input type='email' value={societe.email} onChange={e => setSociete(p => ({ ...p, email: e.target.value }))} style={inputStyle} /></div>
               </div>
             </div>
-
             <button onClick={saveSociete} disabled={saving || !societe.raison_sociale}
-              style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
               {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
             </button>
           </div>
         )}
 
-        {/* STEP 2 — Établissements */}
+        {/* STEP 2 */}
         {step === 2 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
@@ -600,65 +560,37 @@ export default function OnboardingPage() {
                     {etab.est_siege ? 'Siège social' : `Établissement ${i + 1}`}
                     {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
                   </div>
-                  {!etab.est_siege && (
-                    <button onClick={() => setEtablissements(prev => prev.filter((_, idx) => idx !== i))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer
-                    </button>
-                  )}
+                  {!etab.est_siege && <button onClick={() => setEtablissements(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer</button>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Nom de l'établissement *</label>
-                    <input value={etab.nom} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, nom: e.target.value } : et))} placeholder="Agence d'Orléans" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>SIRET</label>
-                    <input value={etab.siret} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, siret: e.target.value } : et))} placeholder="123 456 789 00012" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Adresse</label>
-                    <input value={etab.adresse} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, adresse: e.target.value } : et))} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Code postal</label>
-                    <input value={etab.code_postal} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, code_postal: e.target.value } : et))} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Ville</label>
-                    <input value={etab.ville} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, ville: e.target.value } : et))} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Téléphone</label>
-                    <input value={etab.telephone} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, telephone: e.target.value } : et))} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <input value={etab.email} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, email: e.target.value } : et))} style={inputStyle} />
-                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom *</label><input value={etab.nom} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, nom: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>SIRET</label><input value={etab.siret} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, siret: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Adresse</label><input value={etab.adresse} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, adresse: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Code postal</label><input value={etab.code_postal} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, code_postal: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Ville</label><input value={etab.ville} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, ville: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Téléphone</label><input value={etab.telephone} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, telephone: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Email</label><input value={etab.email} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, email: e.target.value } : et))} style={inputStyle} /></div>
                 </div>
               </div>
             ))}
-            <button onClick={addEtablissement}
-              style={{ width: '100%', padding: '12px', background: 'transparent', border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+            <button onClick={addEtablissement} style={{ width: '100%', padding: '12px', background: 'transparent', border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
               <i className="ti ti-plus" style={{ fontSize: '16px' }} />Ajouter un établissement
             </button>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)}
-                style={{ flex: 2, padding: '12px', background: saving || !etablissements.some(e => e.nom) ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — Personnes */}
+        {/* STEP 3 */}
         {step === 3 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Vos collaborateurs</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Chaque personne est créée une seule fois. Vous leur attribuerez des responsabilités à l'étape suivante.</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Chaque personne est créée une seule fois.</div>
             </div>
             {personnes.map((pers, i) => (
               <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '14px' }}>
@@ -667,52 +599,30 @@ export default function OnboardingPage() {
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
                     Personne {i + 1}
                   </div>
-                  {i > 0 && (
-                    <button onClick={() => setPersonnes(prev => prev.filter((_, idx) => idx !== i))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer
-                    </button>
-                  )}
+                  {i > 0 && <button onClick={() => setPersonnes(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer</button>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={labelStyle}>Nom *</label>
-                    <input value={pers.nom} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, nom: e.target.value } : p))} placeholder="Dupont" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Prénom *</label>
-                    <input value={pers.prenom} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, prenom: e.target.value } : p))} placeholder="Marie" style={inputStyle} />
-                  </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Fonction réelle dans l'entreprise</label>
-                    <input value={pers.fonction_reelle} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, fonction_reelle: e.target.value } : p))} placeholder="Gérante, Technicien, Livreur..." style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Téléphone</label>
-                    <input value={pers.telephone} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, telephone: e.target.value } : p))} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <input value={pers.email} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, email: e.target.value } : p))} style={inputStyle} />
-                  </div>
+                  <div><label style={labelStyle}>Nom *</label><input value={pers.nom} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, nom: e.target.value } : p))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Prénom *</label><input value={pers.prenom} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, prenom: e.target.value } : p))} style={inputStyle} /></div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Fonction</label><input value={pers.fonction_reelle} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, fonction_reelle: e.target.value } : p))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Téléphone</label><input value={pers.telephone} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, telephone: e.target.value } : p))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Email</label><input value={pers.email} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, email: e.target.value } : p))} style={inputStyle} /></div>
                 </div>
               </div>
             ))}
-            <button onClick={addPersonne}
-              style={{ width: '100%', padding: '12px', background: 'transparent', border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+            <button onClick={addPersonne} style={{ width: '100%', padding: '12px', background: 'transparent', border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
               <i className="ti ti-plus" style={{ fontSize: '16px' }} />Ajouter une personne
             </button>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(2)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)}
-                style={{ flex: 2, padding: '12px', background: saving || !personnes.some(p => p.nom && p.prenom) ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4 — Responsabilités */}
+        {/* STEP 4 */}
         {step === 4 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
@@ -744,15 +654,14 @@ export default function OnboardingPage() {
             ))}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setStep(3)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveResponsabilites} disabled={saving}
-                style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveResponsabilites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 5 — Activités */}
+        {/* STEP 5 */}
         {step === 5 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
@@ -787,33 +696,24 @@ export default function OnboardingPage() {
             ))}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(4)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveActivites} disabled={saving}
-                style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveActivites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 6 — Organisation */}
+        {/* STEP 6 */}
         {step === 6 && (
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Organisation interne</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations permettent à MediReg de préremplir automatiquement les preuves du chapitre 2 sans vous reposer des questions déjà répondues.</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations permettent à MediReg de préremplir automatiquement les preuves du chapitre 2.</div>
             </div>
-
-            {/* Dossier usager */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Où tenez-vous le dossier de vos usagers ?</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '14px' }}>C'est le dossier contenant les informations médicales, prescriptions et historique des interventions.</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                {[
-                  { key: 'logiciel_metier', label: 'Logiciel métier', icon: 'ti-device-laptop' },
-                  { key: 'papier', label: 'Papier', icon: 'ti-file' },
-                  { key: 'mixte', label: 'Mixte', icon: 'ti-files' },
-                  { key: 'autre', label: 'Autre', icon: 'ti-dots' },
-                ].map(opt => (
+                {[{ key: 'logiciel_metier', label: 'Logiciel métier', icon: 'ti-device-laptop' }, { key: 'papier', label: 'Papier', icon: 'ti-file' }, { key: 'mixte', label: 'Mixte', icon: 'ti-files' }, { key: 'autre', label: 'Autre', icon: 'ti-dots' }].map(opt => (
                   <button key={opt.key} onClick={() => setOrganisation(p => ({ ...p, dossier_usager: opt.key }))}
                     style={{ padding: '10px 16px', border: `2px solid ${organisation.dossier_usager === opt.key ? '#1A56DB' : 'var(--border)'}`, borderRadius: '10px', background: organisation.dossier_usager === opt.key ? '#EBF2FF' : '#fff', color: organisation.dossier_usager === opt.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '13px', fontWeight: organisation.dossier_usager === opt.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <i className={`ti ${opt.icon}`} style={{ fontSize: '15px' }} />{opt.label}
@@ -821,93 +721,46 @@ export default function OnboardingPage() {
                 ))}
               </div>
               {(organisation.dossier_usager === 'logiciel_metier' || organisation.dossier_usager === 'autre') && (
-                <input value={organisation.dossier_usager_detail} onChange={e => setOrganisation(p => ({ ...p, dossier_usager_detail: e.target.value }))}
-                  placeholder={organisation.dossier_usager === 'logiciel_metier' ? 'Nom du logiciel (ex: Pharmagest, OXYLINK...)' : 'Précisez...'}
-                  style={inputStyle} />
+                <input value={organisation.dossier_usager_detail} onChange={e => setOrganisation(p => ({ ...p, dossier_usager_detail: e.target.value }))} placeholder={organisation.dossier_usager === 'logiciel_metier' ? 'Nom du logiciel...' : 'Précisez...'} style={inputStyle} />
               )}
             </div>
-
-            {/* Documents existants */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Quels documents utilisez-vous déjà ?</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '14px' }}>Ces documents existants pourront servir de preuves directement — MediReg ne vous demandera pas d'en créer de nouveaux inutilement.</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Quels documents utilisez-vous déjà ?</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {DOCUMENTS_EXISTANTS.map(doc => {
                   const selected = organisation.documents_existants.includes(doc.key)
-                  return (
-                    <button key={doc.key} onClick={() => toggleDocExistant(doc.key)}
-                      style={{ padding: '7px 14px', border: `1px solid ${selected ? '#059669' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#ECFDF5' : '#fff', color: selected ? '#059669' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      {selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}
-                      {doc.label}
-                    </button>
-                  )
+                  return <button key={doc.key} onClick={() => toggleDocExistant(doc.key)} style={{ padding: '7px 14px', border: `1px solid ${selected ? '#059669' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#ECFDF5' : '#fff', color: selected ? '#059669' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>{selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}{doc.label}</button>
                 })}
               </div>
             </div>
-
-            {/* Familles de matériels */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Familles de matériels que vous gérez</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '14px' }}>Sélectionnez toutes les familles concernées par votre activité.</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Familles de matériels</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {FAMILLES_MATERIELS.map(fam => {
                   const selected = organisation.familles_materiels.includes(fam)
-                  return (
-                    <button key={fam} onClick={() => toggleFamillesMat(fam)}
-                      style={{ padding: '7px 14px', border: `1px solid ${selected ? '#7C3AED' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#F5F3FF' : '#fff', color: selected ? '#7C3AED' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      {selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}
-                      {fam}
-                    </button>
-                  )
+                  return <button key={fam} onClick={() => toggleFamillesMat(fam)} style={{ padding: '7px 14px', border: `1px solid ${selected ? '#7C3AED' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#F5F3FF' : '#fff', color: selected ? '#7C3AED' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>{selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}{fam}</button>
                 })}
               </div>
             </div>
-
-            {/* Dépannage et astreinte */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Organisation des dépannages</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-                <div>
-                  <label style={labelStyle}>Qui reçoit les appels de dépannage ?</label>
-                  <input value={organisation.depannage_qui_recoit} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_recoit: e.target.value }))}
-                    placeholder="ex: Accueil téléphonique, Jean Martin..."
-                    style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Qui intervient ?</label>
-                  <input value={organisation.depannage_qui_intervient} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_intervient: e.target.value }))}
-                    placeholder="ex: Technicien SAV, sous-traitant..."
-                    style={inputStyle} />
-                </div>
+                <div><label style={labelStyle}>Qui reçoit les appels ?</label><input value={organisation.depannage_qui_recoit} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_recoit: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Qui intervient ?</label><input value={organisation.depannage_qui_intervient} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_intervient: e.target.value }))} style={inputStyle} /></div>
               </div>
-
-              {/* Astreinte */}
               <div style={{ padding: '14px 16px', background: organisation.astreinte ? '#EBF2FF' : 'var(--surface-hover)', borderRadius: '10px', border: `1px solid ${organisation.astreinte ? '#BFDBFE' : 'var(--border)'}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: organisation.astreinte ? '12px' : '0' }}>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Astreinte 24h/24 — 7j/7</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Obligatoire si vous gérez l'oxygène ou les VPH</div>
-                  </div>
-                  <button onClick={() => setOrganisation(p => ({ ...p, astreinte: !p.astreinte }))}
-                    style={{ width: '44px', height: '24px', borderRadius: '12px', background: organisation.astreinte ? '#1A56DB' : '#D1D5DB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
+                  <div><div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Astreinte 24h/24 — 7j/7</div><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Obligatoire si vous gérez l'oxygène ou les VPH</div></div>
+                  <button onClick={() => setOrganisation(p => ({ ...p, astreinte: !p.astreinte }))} style={{ width: '44px', height: '24px', borderRadius: '12px', background: organisation.astreinte ? '#1A56DB' : '#D1D5DB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
                     <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px', left: organisation.astreinte ? '23px' : '3px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </button>
                 </div>
-                {organisation.astreinte && (
-                  <div>
-                    <label style={labelStyle}>Numéro d'astreinte</label>
-                    <input value={organisation.astreinte_tel} onChange={e => setOrganisation(p => ({ ...p, astreinte_tel: e.target.value }))}
-                      placeholder="ex: 06 12 34 56 78"
-                      style={inputStyle} />
-                  </div>
-                )}
+                {organisation.astreinte && <div><label style={labelStyle}>Numéro d'astreinte</label><input value={organisation.astreinte_tel} onChange={e => setOrganisation(p => ({ ...p, astreinte_tel: e.target.value }))} style={inputStyle} /></div>}
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(5)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveOrganisation} disabled={saving}
-                style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={saveOrganisation} disabled={saving} style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <i className="ti ti-rocket" style={{ fontSize: '16px' }} />
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Lancer la certification !'}
               </button>
