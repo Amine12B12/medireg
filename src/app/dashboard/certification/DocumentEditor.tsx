@@ -294,6 +294,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
 
   async function saveDoc(statut = 'brouillon') {
     setSaving(true)
+    console.log('saveDoc appelé — statut:', statut, 'docId:', docId, 'etabId:', etabId, 'signePar:', signePar)
     const payload = {
       etablissement_id: etabId,
       template_code: templateCode,
