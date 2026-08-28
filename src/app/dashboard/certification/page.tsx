@@ -182,6 +182,18 @@ export default function CertificationPage() {
       if (!docsMap[d.code_doc]) docsMap[d.code_doc] = []
       docsMap[d.code_doc].push(d)
     }
+    // Charger aussi les documents editables signés
+    const { data: docsEditables } = await supabase
+      .from('documents_editables')
+      .select('*')
+      .eq('etablissement_id', selectedEtabId)
+      .eq('statut', 'signe')
+    for (const d of docsEditables || []) {
+      if (!docsMap[d.template_code]) docsMap[d.template_code] = []
+      if (!docsMap[d.template_code].find((x: any) => x.id === d.id)) {
+        docsMap[d.template_code].push({ ...d, code_doc: d.template_code, nom: d.titre, url: null, type_doc: 'editable' })
+      }
+    }
     setDocsGeneres(docsMap)
   }
 
