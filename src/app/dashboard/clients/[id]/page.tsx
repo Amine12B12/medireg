@@ -49,6 +49,7 @@ export default function ClientDetailPage() {
   const [panelSending, setPanelSending] = useState(false)
   const [panelDocs, setPanelDocs] = useState<any[]>([])
   const [panelRemises, setPanelRemises] = useState<any[]>([])
+  const [panelReponseQuestions, setPanelReponseQuestions] = useState<Record<string, any>>({})
   const [panelReclamations, setPanelReclamations] = useState<any[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -120,6 +121,10 @@ export default function ClientDetailPage() {
       return criteresCodes.includes(critCode)
     })
     setPanelDocs(docsCritere)
+
+    // Charger réponses aux questions du critère
+    const repCritere = Object.values(reponses).find((r: any) => r.critere_id === critereId) as any
+    setPanelReponseQuestions(repCritere?.reponses_questions || {})
 
     // Charger registre remises pour ce critère
     const { data: remises } = await supabase
@@ -468,6 +473,28 @@ export default function ClientDetailPage() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Réponses aux questions */}
+          {Object.keys(panelReponseQuestions).length > 0 && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-question-mark" style={{ fontSize: '12px' }} />
+                Réponses du client
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {Object.entries(panelReponseQuestions).map(([qId, val]: [string, any]) => (
+                  val && (
+                    <div key={qId} style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #EDE9FE' }}>
+                      <div style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Question {qId}</div>
+                      <div style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>
+                        {Array.isArray(val) ? val.join(', ') : val}
+                      </div>
+                    </div>
+                  )
+                ))}
               </div>
             </div>
           )}
