@@ -430,12 +430,17 @@ export default function ClientDetailPage() {
                           <span style={{ fontSize: '10px', color: '#9CA3AF' }}>{new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
                         </div>
                       </div>
-                      {!isEditable && doc.url && (
+                      {isEditable ? (
+                        <a href={`/api/download-editable?id=${doc.id}`} target="_blank"
+                          style={{ width: '26px', height: '26px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
+                          <i className="ti ti-download" style={{ fontSize: '12px', color: '#059669' }} />
+                        </a>
+                      ) : doc.url ? (
                         <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
                           style={{ width: '26px', height: '26px', background: isGenere ? '#EBF2FF' : '#FEF3C7', border: `1px solid ${isGenere ? '#BFDBFE' : '#FDE68A'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
                           <i className="ti ti-download" style={{ fontSize: '12px', color: isGenere ? '#1A56DB' : '#D97706' }} />
                         </a>
-                      )}
+                      ) : null}
                     </div>
                   )
                 })}

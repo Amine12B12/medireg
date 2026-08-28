@@ -698,9 +698,15 @@ export default function CritereDetail({
                           return (
                             <>
                               {isEditable ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
-                                  <i className="ti ti-signature" style={{ fontSize: '13px', color: '#059669' }} />
-                                  <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Signé par {doc.signe_par}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
+                                    <i className="ti ti-signature" style={{ fontSize: '13px', color: '#059669' }} />
+                                    <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Signé par {doc.signe_par}</span>
+                                  </div>
+                                  <a href={`/api/download-editable?id=${doc.id}`} target="_blank"
+                                    style={{ height: '32px', padding: '0 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#059669', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
+                                    <i className="ti ti-download" style={{ fontSize: '13px' }} />Télécharger
+                                  </a>
                                 </div>
                               ) : doc.url ? (
                                 <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
