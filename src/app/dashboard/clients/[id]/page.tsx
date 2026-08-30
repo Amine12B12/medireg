@@ -12,6 +12,53 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'PROC-PRESCRIPTION-01': ['2.2.1'],
 }
 
+
+// Config minimale pour afficher les labels des questions côté consultant
+const CRITERES_CONFIG: Record<string, { questions: { id: string; label: string }[] }> = {
+  '1.2.1': { questions: [
+    { id: 'q1', label: "À quel moment remettez-vous la notice de libre choix au patient ?" },
+    { id: 'q2', label: "Comment prouvez-vous que le patient a bien reçu la notice ?" },
+    { id: 'q3', label: "Avez-vous des accords commerciaux avec des établissements de santé ?" },
+  ]},
+  '1.2.2': { questions: [
+    { id: 'q1', label: "Remettez-vous systématiquement un devis avant la livraison ?" },
+    { id: 'q2', label: "Comment informez-vous le patient du reste à charge ?" },
+    { id: 'q3', label: "Vos livreurs/techniciens sont-ils formés pour expliquer le fonctionnement ?" },
+  ]},
+  '1.2.3': { questions: [
+    { id: 'q1', label: "Avez-vous une procédure écrite sur la bientraitance ?" },
+    { id: 'q2', label: "Vos employés ont-ils reçu une formation sur la bientraitance ?" },
+    { id: 'q3', label: "Comment gérez-vous un signalement de maltraitance ?" },
+  ]},
+  '1.2.4': { questions: [
+    { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?" },
+    { id: 'q2', label: "Comment gérez-vous les cas où le patient ne peut pas signer ?" },
+    { id: 'q3', label: "Avez-vous une procédure pour les modifications de prestation ?" },
+  ]},
+  '1.2.5': { questions: [
+    { id: 'q1', label: "Avez-vous nommé un DPO ou référent RGPD ?" },
+    { id: 'q2', label: "Votre registre des traitements RGPD est-il à jour ?" },
+    { id: 'q3', label: "Comment sont protégées les données patients dans votre logiciel ?" },
+    { id: 'q4', label: "Vos données sont-elles sauvegardées régulièrement ?" },
+  ]},
+  '1.3.1': { questions: [
+    { id: 'q1', label: "À quelle fréquence réalisez-vous des enquêtes de satisfaction ?" },
+    { id: 'q2', label: "Comment distribuez-vous le questionnaire de satisfaction ?" },
+    { id: 'q3', label: "Avez-vous pris des actions d'amélioration suite aux retours patients ?" },
+  ]},
+  '1.3.2': { questions: [
+    { id: 'q1', label: "Comment les patients peuvent-ils vous adresser une réclamation ?" },
+    { id: 'q2', label: "Dans quel délai répondez-vous aux réclamations ?" },
+    { id: 'q3', label: "Tenez-vous un registre des réclamations ?" },
+    { id: 'q4', label: "Faites-vous une analyse annuelle de vos réclamations ?" },
+  ]},
+  '2.2.1': { questions: [
+    { id: 'q1', label: "Comment vérifiez-vous qu'une prescription est complète ?" },
+    { id: 'q2', label: "Que faites-vous si une prescription est incomplète ou illisible ?" },
+    { id: 'q3', label: "Vérifiez-vous la disponibilité du matériel avant de confirmer ?" },
+  ]},
+}
+
 const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
   '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
   '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
@@ -485,16 +532,21 @@ export default function ClientDetailPage() {
                 Réponses du client
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {Object.entries(panelReponseQuestions).map(([qId, val]: [string, any]) => (
-                  val && (
+                {Object.entries(panelReponseQuestions).map(([qId, val]: [string, any]) => {
+                  if (!val) return null
+                  const config = CRITERES_CONFIG[selectedCritere?.code]
+                  const question = config?.questions?.find(q => q.id === qId)
+                  return (
                     <div key={qId} style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #EDE9FE' }}>
-                      <div style={{ fontSize: '10px', color: '#9CA3AF', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Question {qId}</div>
+                      <div style={{ fontSize: '11px', color: '#7C3AED', marginBottom: '4px', fontWeight: '600', lineHeight: '1.4' }}>
+                        {question?.label || `Question ${qId}`}
+                      </div>
                       <div style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>
                         {Array.isArray(val) ? val.join(', ') : val}
                       </div>
                     </div>
                   )
-                ))}
+                })}
               </div>
             </div>
           )}
