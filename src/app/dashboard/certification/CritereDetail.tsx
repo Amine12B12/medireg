@@ -538,6 +538,7 @@ export default function CritereDetail({
   const supabase = createClient()
   const config = CRITERES_CONFIG[critere.code]
   const [editorCode, setEditorCode] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const statut = reponse?.statut || 'non_analyse'
   const st = STATUTS.find(s => s.key === statut) || STATUTS[0]
   const isConsultant = userRole === 'consultant'
@@ -761,6 +762,7 @@ export default function CritereDetail({
                         )}
                         {isAttester && (
                           <AttestationButton
+                            key={reloadKey}
                             critereCode={critere.code}
                             critereId={critere.id}
                             etabId={selectedEtabId}
@@ -872,7 +874,7 @@ export default function CritereDetail({
           societe={societe}
           etabId={selectedEtabId}
           onClose={() => setEditorCode(null)}
-          onSaved={() => { setEditorCode(null); onReloadDocs() }}
+          onSaved={() => { setEditorCode(null); onReloadDocs(); setReloadKey(k => k + 1) }}
         />
       )}
     </div>
