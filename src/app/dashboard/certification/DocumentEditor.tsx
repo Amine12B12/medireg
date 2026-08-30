@@ -42,7 +42,7 @@ Nous évaluons régulièrement la satisfaction de nos usagers et mettons en plac
         aide: "Ce paragraphe est standard — vous pouvez le laisser tel quel."
       },
       {
-        id: 's5', titre: 'Signature et entrée en vigueur', modifiable: false,
+        id: 's5', titre: 'Signature et entrée en vigueur', modifiable: true,
         contenu: `La présente charte éthique est adoptée par {{raison_sociale}}, représentée par {{dirigeant}}, {{forme_juridique}} au capital social déclaré, dont le siège social est situé {{adresse_siege}}, {{code_postal}} {{ville}}.
 
 Elle entre en vigueur à compter de sa date de signature et est révisée annuellement.`,
@@ -92,7 +92,7 @@ Garant PSDM : {{garant_psdm}}`,
     description: "Document remis et signé par le patient lors de chaque livraison ou installation de matériel.",
     sections: [
       {
-        id: 's1', titre: 'Informations de la prestation', modifiable: false,
+        id: 's1', titre: 'Informations de la prestation', modifiable: true,
         contenu: `Cette attestation est établie par {{raison_sociale}} — {{adresse_siege}}, {{code_postal}} {{ville}}.
 
 Date de l'intervention : _______________
@@ -196,7 +196,7 @@ Ces documents sont disponibles sur demande de l'inspecteur HAS, dans le respect 
         aide: "Précisez le nom de votre logiciel métier si nécessaire."
       },
       {
-        id: 's4', titre: "Engagement et signature", modifiable: false,
+        id: 's4', titre: "Engagement et signature", modifiable: true,
         contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
 
 Fait à {{ville}}, le _______________
@@ -230,7 +230,7 @@ Les documents signés sont conservés dans {{dossier_usager}} pendant une durée
         aide: "Adaptez ce paragraphe à vos procédures réelles."
       },
       {
-        id: 's4', titre: "Engagement et signature", modifiable: false,
+        id: 's4', titre: "Engagement et signature", modifiable: true,
         contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
 
 Fait à {{ville}}, le _______________
