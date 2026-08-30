@@ -35,11 +35,11 @@ const CRITERES_CONFIG: Record<string, {
   '1.2.2': {
     inspecteur: "L'inspecteur va vérifier que le patient comprend ce qu'il reçoit — le matériel, son fonctionnement, son prix, ce qui est remboursé. Il peut interroger directement un patient pour tester sa compréhension.",
     contexte: "Un patient ne doit pas découvrir une facture surprise. Il doit être informé avant la livraison du coût, du ticket modérateur, et des alternatives disponibles.",
-    conseil: "Conservez les devis signés dans votre logiciel métier. Si l'inspecteur demande à voir un dossier patient, vous devez retrouver le devis en 2 minutes.",
+    conseil: "⭐ LA PREUVE CLÉ : le devis signé par le patient. Sans devis signé, ce critère ne peut pas être validé même si vous avez tous les autres documents. Conservez-les dans votre logiciel métier — l'inspecteur peut en demander un à la minute.",
     preuves: [
-      { code: 'USA-DOC-01', label: "Charte éthique et information usager", description: "Document présentant les produits, tarifs, remboursements et droits du patient.", type: 'generer' },
-      { code: 'USA-INFO-01', label: "Notice d'information patient", description: "Notice complète sur les produits et prestations.", type: 'generer' },
-      { label: "Devis signé par le patient", description: "Le devis remis et signé prouve que le patient a été informé du coût avant la prestation.", type: 'upload' },
+      { label: "⭐ Devis signé par le patient", description: "PREUVE PRINCIPALE — Le devis remis et signé avant la livraison prouve que le patient a été informé du coût, du ticket modérateur et des alternatives. C'est ce que l'inspecteur demande en premier.", type: 'upload', mention: 'principal' },
+      { code: 'USA-DOC-01', label: "Charte éthique et information usager", description: "Complément documentaire — présente les tarifs, remboursements et droits du patient.", type: 'generer' },
+      { code: 'USA-INFO-01', label: "Notice d'information patient", description: "Complément documentaire — notice complète sur les produits et prestations.", type: 'generer' },
     ],
     questions: [
       { id: 'q1', label: "Remettez-vous systématiquement un devis avant la livraison ?", type: 'oui_non', requis: true, aide: "Le devis signé est la preuve principale pour ce critère." },
@@ -671,6 +671,9 @@ export default function CritereDetail({
 
                       {/* Tag type */}
                       <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {preuve.mention === 'principal' && (
+                          <span style={{ fontSize: '10px', color: '#DC2626', background: '#FEF2F2', padding: '2px 8px', borderRadius: '20px', fontWeight: '700', border: '1px solid #FECACA' }}>⭐ Preuve principale</span>
+                        )}
                         {isGeneree && (
                           <span style={{ fontSize: '10px', color: '#1A56DB', background: '#EBF2FF', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Généré par MediReg</span>
                         )}
