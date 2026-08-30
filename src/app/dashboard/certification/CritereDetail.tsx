@@ -191,6 +191,7 @@ function AttestationButton({ critereCode, critereId, etabId, societe, onOpenEdit
   onOpenEditor: (code: string) => void
 }) {
   const [atteste, setAtteste] = useState(false)
+  const [docInfo, setDocInfo] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -199,12 +200,18 @@ function AttestationButton({ critereCode, critereId, etabId, societe, onOpenEdit
       if (!templateCode) return
       const { data } = await supabase
         .from('documents_editables')
-        .select('id')
+        .select('id, signe_par, signe_le')
         .eq('etablissement_id', etabId)
         .eq('template_code', templateCode)
         .eq('statut', 'signe')
         .limit(1)
-      if (data && data.length > 0) setAtteste(true)
+      if (data && data.length > 0) {
+        setAtteste(true)
+        setDocInfo(data[0])
+      } else {
+        setAtteste(false)
+        setDocInfo(null)
+      }
     }
     check()
   }, [critereCode, etabId])
@@ -216,8 +223,18 @@ function AttestationButton({ critereCode, critereId, etabId, societe, onOpenEdit
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
         <i className="ti ti-circle-check-filled" style={{ fontSize: '14px', color: '#10B981' }} />
-        <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Attestation signée</span>
+        <div>
+          <div style={{ fontSize: '12px', color: '#059669', fontWeight: '700' }}>Attestation signée</div>
+          {docInfo?.signe_par && <div style={{ fontSize: '10px', color: '#059669' }}>par {docInfo.signe_par}</div>}
+        </div>
       </div>
+      {docInfo?.id && (
+        <a href={`/api/download-editable?id=${docInfo.id}`} target="_blank"
+          style={{ height: '32px', padding: '0 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#059669', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
+          <i className="ti ti-download" style={{ fontSize: '13px' }} />
+          Télécharger
+        </a>
+      )}
       <button onClick={() => onOpenEditor(templateCode)}
         style={{ height: '32px', padding: '0 12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
         <i className="ti ti-edit" style={{ fontSize: '13px' }} />
