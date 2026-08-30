@@ -10,6 +10,8 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'PRESTA-DOC-01': ['1.2.1', '1.2.4'],
   'QR-DOC-01': ['1.3.1', '1.3.2'],
   'PROC-PRESCRIPTION-01': ['2.2.1'],
+  'ATTESTATION-DEVIS': ['1.2.2'],
+  'ATTESTATION-CONSENTEMENT': ['1.2.4'],
 }
 
 
