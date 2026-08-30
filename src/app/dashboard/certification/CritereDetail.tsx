@@ -176,94 +176,60 @@ interface Props {
 }
 
 
+// Mapping critère → template attestation
+const ATTESTATION_TEMPLATES: Record<string, string> = {
+  '1.2.2': 'ATTESTATION-DEVIS',
+  '1.2.4': 'ATTESTATION-CONSENTEMENT',
+}
+
 // ─── Composant Attestation ────────────────────────────────────
-function AttestationButton({ label, critereId, etabId }: { label: string; critereId: string; etabId: string }) {
+function AttestationButton({ critereCode, critereId, etabId, societe, onOpenEditor }: {
+  critereCode: string
+  critereId: string
+  etabId: string
+  societe: any
+  onOpenEditor: (code: string) => void
+}) {
   const [atteste, setAtteste] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  const [signataire, setSignataire] = useState('')
   const supabase = createClient()
 
   useEffect(() => {
-    // Vérifier si déjà attesté
     async function check() {
+      const templateCode = ATTESTATION_TEMPLATES[critereCode]
+      if (!templateCode) return
       const { data } = await supabase
-        .from('registre_remises')
+        .from('documents_editables')
         .select('id')
         .eq('etablissement_id', etabId)
-        .eq('type_document', 'attestation_' + critereId)
+        .eq('template_code', templateCode)
+        .eq('statut', 'signe')
         .limit(1)
       if (data && data.length > 0) setAtteste(true)
     }
     check()
-  }, [critereId, etabId])
+  }, [critereCode, etabId])
 
-  async function confirmer() {
-    if (!signataire.trim()) return
-    setLoading(true)
-    await supabase.from('registre_remises').insert([{
-      etablissement_id: etabId,
-      date_remise: new Date().toISOString().split('T')[0],
-      type_document: 'attestation_' + critereId,
-      reference_patient: 'Attestation générale — tous patients',
-      remis_par: signataire,
-    }])
-    setAtteste(true)
-    setShowModal(false)
-    setLoading(false)
-  }
+  const templateCode = ATTESTATION_TEMPLATES[critereCode]
+  if (!templateCode) return null
 
-  return (
-    <>
-      {atteste ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
-          <i className="ti ti-circle-check-filled" style={{ fontSize: '14px', color: '#10B981' }} />
-          <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Attesté</span>
-        </div>
-      ) : (
-        <button onClick={() => setShowModal(true)}
-          style={{ height: '32px', padding: '0 14px', background: '#059669', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <i className="ti ti-checkbox" style={{ fontSize: '13px' }} />
-          Attester
-        </button>
-      )}
-
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '8px' }}>Attestation sur l&apos;honneur</div>
-            <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: '1.6' }}>
-              En attestant, vous confirmez que votre entreprise applique systématiquement cette pratique pour tous vos patients. Les documents originaux sont conservés dans votre logiciel métier.
-            </div>
-            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#92400E' }}>
-              <i className="ti ti-lock" style={{ fontSize: '13px', marginRight: '6px' }} />
-              Aucun document patient n&apos;est stocké dans MediReg — votre registre reste anonymisé.
-            </div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                Votre nom (signataire)
-              </label>
-              <input value={signataire} onChange={e => setSignataire(e.target.value)}
-                placeholder="Prénom Nom"
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const }}
-                onFocus={e => e.target.style.borderColor = '#059669'}
-                onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowModal(false)}
-                style={{ flex: 1, padding: '10px', background: '#F3F4F6', border: 'none', borderRadius: '8px', color: '#6B7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-                Annuler
-              </button>
-              <button onClick={confirmer} disabled={loading || !signataire.trim()}
-                style={{ flex: 2, padding: '10px', background: !signataire.trim() ? 'rgba(5,150,105,0.3)' : '#059669', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !signataire.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                <i className="ti ti-checkbox" style={{ fontSize: '14px' }} />
-                {loading ? 'Enregistrement...' : 'Je confirme et j&apos;atteste'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+  return atteste ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
+        <i className="ti ti-circle-check-filled" style={{ fontSize: '14px', color: '#10B981' }} />
+        <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Attestation signée</span>
+      </div>
+      <button onClick={() => onOpenEditor(templateCode)}
+        style={{ height: '32px', padding: '0 12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px', color: '#6B7280', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <i className="ti ti-edit" style={{ fontSize: '13px' }} />
+        Modifier
+      </button>
+    </div>
+  ) : (
+    <button onClick={() => onOpenEditor(templateCode)}
+      style={{ height: '32px', padding: '0 14px', background: '#059669', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+      <i className="ti ti-file-certificate" style={{ fontSize: '13px' }} />
+      Créer l&apos;attestation
+    </button>
   )
 }
 
@@ -795,9 +761,11 @@ export default function CritereDetail({
                         )}
                         {isAttester && (
                           <AttestationButton
-                            label={preuve.label}
+                            critereCode={critere.code}
                             critereId={critere.id}
                             etabId={selectedEtabId}
+                            societe={societe}
+                            onOpenEditor={(code) => setEditorCode(code)}
                           />
                         )}
                         {hasDoc && preuve.code && docsGeneres[preuve.code]?.[0] && (() => {

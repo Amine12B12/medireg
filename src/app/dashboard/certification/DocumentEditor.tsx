@@ -172,12 +172,80 @@ Retournez ce questionnaire dans l'enveloppe jointe ou envoyez-le par email à : 
       },
     ]
   },
+  'ATTESTATION-DEVIS': {
+    titre: "Attestation de remise systématique des devis",
+    description: "Attestation officielle confirmant la remise de devis signés avant chaque livraison.",
+    sections: [
+      {
+        id: 's1', titre: "Identité du signataire", modifiable: true,
+        contenu: `Je soussigné(e), {{responsable_etablissement}}, agissant en qualité de responsable au sein de {{raison_sociale}} ({{forme_juridique}}), dont le siège social est situé {{adresse_siege}}, {{code_postal}} {{ville}},`,
+        aide: "Vérifiez que la personne responsable des livraisons est correctement indiquée."
+      },
+      {
+        id: 's2', titre: "Objet de l'attestation", modifiable: true,
+        contenu: `atteste sur l'honneur que notre entreprise remet systématiquement un devis signé par le patient ou son représentant légal avant chaque livraison de matériel médical à domicile.
+
+Cette pratique s'applique à l'ensemble de nos patients et est conforme aux exigences du critère 1.2.2 du référentiel de certification HAS PSDM (juin 2024).`,
+        aide: "Vous pouvez préciser la date de mise en place de cette pratique."
+      },
+      {
+        id: 's3', titre: "Conservation des documents", modifiable: true,
+        contenu: `Les devis originaux signés par les patients sont conservés dans notre logiciel métier ({{dossier_usager}}) pendant une durée minimale de 5 ans, conformément à la réglementation en vigueur.
+
+Ces documents sont disponibles sur demande de l'inspecteur HAS, dans le respect des règles de confidentialité des données patients (RGPD).`,
+        aide: "Précisez le nom de votre logiciel métier si nécessaire."
+      },
+      {
+        id: 's4', titre: "Engagement et signature", modifiable: false,
+        contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
+
+Fait à {{ville}}, le _______________
+
+Signature :`,
+        aide: ""
+      },
+    ]
+  },
+  'ATTESTATION-CONSENTEMENT': {
+    titre: "Attestation de recueil systématique du consentement",
+    description: "Attestation officielle confirmant le recueil du consentement du patient à chaque étape de la prestation.",
+    sections: [
+      {
+        id: 's1', titre: "Identité du signataire", modifiable: true,
+        contenu: `Je soussigné(e), {{responsable_etablissement}}, agissant en qualité de responsable au sein de {{raison_sociale}} ({{forme_juridique}}), dont le siège social est situé {{adresse_siege}}, {{code_postal}} {{ville}},`,
+        aide: "Vérifiez que la personne responsable est correctement indiquée."
+      },
+      {
+        id: 's2', titre: "Objet de l'attestation", modifiable: true,
+        contenu: `atteste sur l'honneur que notre entreprise recueille systématiquement le consentement éclairé du patient ou de son représentant légal avant chaque intervention, livraison ou modification de prestation.
+
+Ce consentement est matérialisé par la signature du patient sur le bon de livraison ou l'attestation d'installation remis lors de chaque intervention. Cette pratique est conforme au critère 1.2.4 du référentiel HAS PSDM (juin 2024).`,
+        aide: "Précisez les modalités de recueil du consentement si nécessaire."
+      },
+      {
+        id: 's3', titre: "Cas particuliers", modifiable: true,
+        contenu: `Dans les cas où le patient ne peut pas signer (handicap, hospitalisation, tutelle), le consentement est recueilli auprès du représentant légal ou de la personne de confiance désignée, conformément à nos procédures internes.
+
+Les documents signés sont conservés dans {{dossier_usager}} pendant une durée minimale de 5 ans.`,
+        aide: "Adaptez ce paragraphe à vos procédures réelles."
+      },
+      {
+        id: 's4', titre: "Engagement et signature", modifiable: false,
+        contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
+
+Fait à {{ville}}, le _______________
+
+Signature :`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",
     sections: [
       {
-        id: 's1', titre: 'Objet et champ d\'application', modifiable: true,
+        id: 's1', titre: "Objet et champ d'application", modifiable: true,
         contenu: `La présente procédure définit les modalités de réception, de vérification et de traitement des prescriptions médicales au sein de {{raison_sociale}}.
 
 Elle s'applique à l'ensemble du personnel en contact avec les prescriptions : {{responsable_etablissement}}, techniciens, livreurs et personnel administratif.
