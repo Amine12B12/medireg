@@ -362,6 +362,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
 
   async function saveDoc(statut = 'brouillon') {
     setSaving(true)
+    console.log('saveDoc — statut:', statut, 'etabId:', etabId, 'docId:', docId, 'signePar:', signePar)
     console.log('saveDoc appelé — statut:', statut, 'docId:', docId, 'etabId:', etabId, 'signePar:', signePar)
     const payload = {
       etablissement_id: etabId,
@@ -374,9 +375,11 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       updated_at: new Date().toISOString(),
     }
     if (docId) {
-      await supabase.from('documents_editables').update(payload).eq('id', docId)
+      const { error: upErr } = await supabase.from('documents_editables').update(payload).eq('id', docId)
+      console.log('update result — error:', upErr?.message || 'OK')
     } else {
-      const { data } = await supabase.from('documents_editables').insert([payload]).select('id').single()
+      const { data, error: insErr } = await supabase.from('documents_editables').insert([payload]).select('id').single()
+      console.log('insert result — data:', data, 'error:', insErr?.message || 'OK')
       if (data) setDocId(data.id)
     }
     setSaved(true)
