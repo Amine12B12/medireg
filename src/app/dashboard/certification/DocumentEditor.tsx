@@ -45,7 +45,7 @@ Nous évaluons régulièrement la satisfaction de nos usagers et mettons en plac
         id: 's5', titre: 'Signature et entrée en vigueur', modifiable: true,
         contenu: `La présente charte éthique est adoptée par {{raison_sociale}}, représentée par {{dirigeant}}, {{forme_juridique}} au capital social déclaré, dont le siège social est situé {{adresse_siege}}, {{code_postal}} {{ville}}.
 
-Elle entre en vigueur à compter de sa date de signature et est révisée annuellement.`,
+Elle entre en vigueur à compter de sa date de signature électronique et est révisée annuellement.`,
         aide: ""
       },
     ]
@@ -199,9 +199,7 @@ Ces documents sont disponibles sur demande de l'inspecteur HAS, dans le respect 
         id: 's4', titre: "Engagement et signature", modifiable: true,
         contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
 
-Fait à {{ville}}, le _______________
-
-Signature :`,
+La présente attestation fait foi dans le cadre de la certification HAS PSDM.`,
         aide: ""
       },
     ]
@@ -233,9 +231,7 @@ Les documents signés sont conservés dans {{dossier_usager}} pendant une durée
         id: 's4', titre: "Engagement et signature", modifiable: true,
         contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}}.
 
-Fait à {{ville}}, le _______________
-
-Signature :`,
+La présente attestation fait foi dans le cadre de la certification HAS PSDM.`,
         aide: ""
       },
     ]
