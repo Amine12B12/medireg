@@ -358,15 +358,19 @@ function RegistreRemises({ etabId }: { etabId: string }) {
 
   return (
     <div style={{ background: '#F8FAFF', border: '1px solid #E0E7FF', borderRadius: '10px', padding: '16px', marginTop: '12px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#4338CA', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <i className="ti ti-clipboard-list" style={{ fontSize: '14px' }} />
           Registre de remise documents ({entries.length} entrées)
         </div>
         <button onClick={() => setShowForm(!showForm)}
           style={{ padding: '5px 12px', background: '#4338CA', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-          + Ajouter
+          + Ajouter une entrée
         </button>
+      </div>
+      <div style={{ fontSize: '11px', color: '#6366F1', background: '#EEF2FF', padding: '8px 12px', borderRadius: '6px', marginBottom: '10px', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+        <i className="ti ti-lock" style={{ fontSize: '12px', flexShrink: 0, marginTop: '1px' }} />
+        <span><strong>Confidentialité :</strong> N&apos;inscrivez jamais le nom ou prénom d&apos;un patient. Utilisez uniquement des références anonymisées ex: &quot;Patient A — Août 2026&quot; ou &quot;Dossier 001&quot;.</span>
       </div>
 
       {showForm && (
