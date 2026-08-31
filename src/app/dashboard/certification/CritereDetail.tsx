@@ -334,7 +334,7 @@ function ChatCritere({ critereId, etabId, userRole }: { critereId: string; etabI
 // ─── Composant Registre Remises ───────────────────────────────
 function RegistreRemises({ etabId }: { etabId: string }) {
   const [entries, setEntries] = useState<any[]>([])
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(entries.length === 0)
   const [form, setForm] = useState({ date_remise: new Date().toISOString().split('T')[0], type_document: 'libre_choix', reference_patient: '', remis_par: '' })
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
@@ -395,7 +395,7 @@ function RegistreRemises({ etabId }: { etabId: string }) {
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Référence patient (anonymisée)</label>
               <input value={form.reference_patient} onChange={e => setForm(p => ({ ...p, reference_patient: e.target.value }))}
-                placeholder="ex: Patient A — Jan 2026"
+                placeholder="ex: Patient A — Août 2026 ou Dossier 001"
                 style={{ width: '100%', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '7px', fontSize: '12px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const }} />
             </div>
             <div>
@@ -827,9 +827,13 @@ export default function CritereDetail({
           {/* Upload preuve */}
           {!isConsultant && (
             <div style={{ marginTop: '16px', padding: '14px', background: '#F9FAFB', borderRadius: '10px', border: '2px dashed var(--border)' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
                 <i className="ti ti-upload" style={{ fontSize: '13px', marginRight: '6px' }} />
-                Uploader vos propres documents (devis signés, attestations, bons de livraison...)
+                Uploader vos propres documents de procédure
+              </div>
+              <div style={{ fontSize: '11px', color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                <i className="ti ti-alert-triangle" style={{ fontSize: '12px', flexShrink: 0, marginTop: '1px' }} />
+                <span><strong>Important :</strong> N&apos;uploadez jamais de document contenant le nom, prénom ou toute donnée identifiante d&apos;un patient. Le certificateur ne doit voir aucune donnée personnelle patient. Utilisez uniquement des procédures internes ou documents anonymisés.</span>
               </div>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#7C3AED', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 <i className="ti ti-paperclip" style={{ fontSize: '13px' }} />
