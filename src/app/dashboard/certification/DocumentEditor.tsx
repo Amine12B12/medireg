@@ -88,30 +88,33 @@ Garant PSDM : {{garant_psdm}}`,
     ]
   },
   'PRESTA-DOC-01': {
-    titre: "Attestation d'installation",
-    description: "Document remis et signé par le patient lors de chaque livraison ou installation de matériel.",
+    titre: "Attestation d'installation — Modèle exemple",
+    description: "Modèle d'attestation d'installation avec données fictives pour illustrer votre processus auprès de l'inspecteur. Les vraies attestations signées restent dans votre logiciel métier.",
     sections: [
       {
         id: 's1', titre: 'Informations de la prestation', modifiable: true,
         contenu: `Cette attestation est établie par {{raison_sociale}} — {{adresse_siege}}, {{code_postal}} {{ville}}.
 
-Date de l'intervention : _______________
-Nom du technicien intervenant : _______________
-Référence du dossier : _______________`,
-        aide: ""
+Date de l'intervention : [EXEMPLE : 15/09/2026]
+Nom du technicien intervenant : [EXEMPLE : Thomas Moreau]
+Référence du dossier : [EXEMPLE : Dossier 001]
+
+⚠️ Ce document est un modèle exemple — les données patient réelles sont dans votre logiciel métier.`,
+        aide: "Remplacez les exemples par des données fictives représentatives de vos interventions."
       },
       {
         id: 's2', titre: 'Matériel livré / installé', modifiable: true,
-        contenu: `Désignation du matériel : _______________
-Référence / N° de série : _______________
-Quantité : _______________
+        contenu: `Désignation du matériel : [EXEMPLE : Lit médicalisé électrique 2 plans]
+Référence / N° de série : [EXEMPLE : REF-2024-001]
+Quantité : [EXEMPLE : 1]
 
-Le matériel livré est conforme à la prescription médicale et aux attentes de l'usager.`,
-        aide: "Adaptez ce modèle à vos types de matériels habituels."
+Le matériel livré est conforme à la prescription médicale et aux attentes de l'usager.
+Le technicien a expliqué le fonctionnement du matériel et répondu aux questions du patient.`,
+        aide: "Adaptez les exemples à vos types de matériels habituels."
       },
       {
         id: 's3', titre: 'Déclaration du patient', modifiable: false,
-        contenu: `Je soussigné(e), _______________,
+        contenu: `Je soussigné(e), [Référence anonymisée — ex: Patient A],
 
 • Confirme avoir reçu le matériel et/ou la prestation décrits ci-dessus
 • Confirme avoir reçu les informations et explications nécessaires à l'utilisation du matériel
