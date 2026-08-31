@@ -401,27 +401,76 @@ interface Props {
 
 export default function DocumentEditor({ templateCode, societe, etabId, onClose, onSaved }: Props) {
   const template = TEMPLATES[templateCode]
+  const supabase = createClient()
   const [sections, setSections] = useState<{ id: string; titre: string; contenu: string; modifiable: boolean; aide?: string }[]>([])
   const [signePar, setSignePar] = useState('')
+  const [responsables, setResponsables] = useState<Record<string, string>>({})
   const [showSignature, setShowSignature] = useState(false)
   const [saving, setSaving] = useState(false)
   const [signing, setSigning] = useState(false)
   const [saved, setSaved] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [docId, setDocId] = useState<string | null>(null)
-  const supabase = createClient()
+  
 
   useEffect(() => {
-    if (template) {
-      // Remplacer les variables par les données de la société
-      const replacedSections = template.sections.map(s => ({
-        ...s,
-        contenu: replaceVars(s.contenu)
-      }))
-      setSections(replacedSections)
-      loadExisting(replacedSections)
+    if (template && etabId) {
+      loadResponsables()
     }
-  }, [templateCode, societe])
+  }, [templateCode, societe, etabId])
+
+  async function loadResponsables() {
+    // Charger les personnes et leurs responsabilités
+    const { data: etab } = await supabase
+      .from('etablissements_psdm')
+      .select('societe_id')
+      .eq('id', etabId)
+      .single()
+    
+    if (!etab) return
+
+    const { data: resps } = await supabase
+      .from('responsabilites_personnes')
+      .select('responsabilite, personnes(nom, prenom)')
+      .eq('etablissement_id', etabId)
+
+    const respMap: Record<string, string> = {}
+    for (const r of resps || []) {
+      const p = (r as any).personnes
+      if (p) respMap[r.responsabilite] = `${p.prenom} ${p.nom}`
+    }
+    setResponsables(respMap)
+    setSignePar(respMap['direction'] || respMap['responsable_etablissement'] || '')
+
+    // Remplacer les variables avec les responsables fraîchement chargés
+    const replacedSections = template!.sections.map(s => {
+      if (!societe) return s
+      const org = societe.organisation || {}
+      const replaced = s.contenu
+        .replace(/{{raison_sociale}}/g, societe.raison_sociale || '')
+        .replace(/{{nom_commercial}}/g, societe.nom_commercial || societe.raison_sociale || '')
+        .replace(/{{forme_juridique}}/g, societe.forme_juridique || '')
+        .replace(/{{siren}}/g, societe.siren || '')
+        .replace(/{{adresse_siege}}/g, societe.adresse_siege || '')
+        .replace(/{{code_postal}}/g, societe.code_postal || '')
+        .replace(/{{ville}}/g, societe.ville || '')
+        .replace(/{{telephone}}/g, societe.telephone || '')
+        .replace(/{{email}}/g, societe.email || '')
+        .replace(/{{dossier_usager}}/g, org.dossier_usager_detail || 'notre logiciel métier')
+        .replace(/{{dirigeant}}/g, respMap['direction'] || 'le représentant légal')
+        .replace(/{{garant_psdm}}/g, respMap['garant_psdm'] || 'Garant PSDM à désigner')
+        .replace(/{{dpo}}/g, respMap['dpo'] || 'DPO à désigner')
+        .replace(/{{responsable_reclamations}}/g, respMap['reclamations'] || 'Responsable réclamations à désigner')
+        .replace(/{{responsable_etablissement}}/g, respMap['responsable_etablissement'] || 'Responsable établissement à désigner')
+        .replace(/{{pharmacien}}/g, respMap['pharmacien'] || 'Pharmacien responsable à désigner')
+        .replace(/{{desinfection}}/g, respMap['desinfection'] || 'Responsable désinfection à désigner')
+        .replace(/{{sav_maintenance}}/g, respMap['sav_maintenance'] || 'Responsable SAV à désigner')
+        .replace(/{{pilote_certification}}/g, respMap['pilote_certification'] || 'Pilote certification à désigner')
+      return { ...s, contenu: replaced }
+    })
+    setSections(replacedSections)
+    loadExisting(replacedSections)
+  }
 
   function replaceVars(text: string): string {
     if (!societe) return text
@@ -437,11 +486,15 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       .replace(/{{telephone}}/g, societe.telephone || '')
       .replace(/{{email}}/g, societe.email || '')
       .replace(/{{dossier_usager}}/g, org.dossier_usager_detail || 'notre logiciel métier')
-      .replace(/{{dirigeant}}/g, 'le représentant légal')
-      .replace(/{{garant_psdm}}/g, 'le Garant PSDM désigné')
-      .replace(/{{dpo}}/g, 'le DPO désigné')
-      .replace(/{{responsable_reclamations}}/g, 'le responsable des réclamations')
-      .replace(/{{responsable_etablissement}}/g, 'le responsable d\'établissement')
+      .replace(/{{dirigeant}}/g, responsables['direction'] || 'le représentant légal')
+      .replace(/{{garant_psdm}}/g, responsables['garant_psdm'] || 'Garant PSDM à désigner')
+      .replace(/{{dpo}}/g, responsables['dpo'] || 'DPO à désigner')
+      .replace(/{{responsable_reclamations}}/g, responsables['reclamations'] || 'Responsable réclamations à désigner')
+      .replace(/{{responsable_etablissement}}/g, responsables['responsable_etablissement'] || 'Responsable établissement à désigner')
+      .replace(/{{pharmacien}}/g, responsables['pharmacien'] || 'Pharmacien responsable à désigner')
+      .replace(/{{desinfection}}/g, responsables['desinfection'] || 'Responsable désinfection à désigner')
+      .replace(/{{sav_maintenance}}/g, responsables['sav_maintenance'] || 'Responsable SAV à désigner')
+      .replace(/{{pilote_certification}}/g, responsables['pilote_certification'] || 'Pilote certification à désigner')
   }
 
   async function loadExisting(defaultSections: any[]) {
