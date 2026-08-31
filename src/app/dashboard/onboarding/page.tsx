@@ -316,6 +316,15 @@ export default function OnboardingPage() {
       const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
       if (!freshPers || !freshEtabs) throw new Error('Données non trouvées')
 
+      // Ne pas sauvegarder si le state est vide — évite d'effacer les données existantes
+      const hasResponsabilites = Object.keys(responsabilites).length > 0
+      if (!hasResponsabilites) {
+        if (!isEditing) setStep(5)
+        else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+        setSaving(false)
+        return
+      }
+
       if (freshPers.length > 0) {
         await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map((p: any) => p.id))
       }
@@ -345,6 +354,15 @@ export default function OnboardingPage() {
     try {
       const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
       if (!freshEtabs) throw new Error('Établissements non trouvés')
+
+      // Ne pas sauvegarder si le state est vide
+      const hasActivites = Object.keys(activites).length > 0
+      if (!hasActivites) {
+        if (!isEditing) setStep(6)
+        else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+        setSaving(false)
+        return
+      }
 
       if (freshEtabs.length > 0) {
         await supabase.from('activites_etablissement').delete().in('etablissement_id', freshEtabs.map((e: any) => e.id))
