@@ -312,32 +312,36 @@ export default function OnboardingPage() {
     const sid = societeId
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
+    console.log('saveResponsabilites — responsabilites state:', JSON.stringify(responsabilites))
     try {
-      // Recharger les IDs depuis la base pour eviter les problemes de state
       const { data: freshPers } = await supabase.from('personnes').select('id').eq('societe_id', sid).order('created_at')
       const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
+      console.log('freshPers:', freshPers?.length, 'freshEtabs:', freshEtabs?.length)
       if (!freshPers || !freshEtabs) throw new Error('Données non trouvées')
 
-      // Supprimer toutes les responsabilites existantes
       if (freshPers.length > 0) {
-        await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map(p => p.id))
+        const { error: delErr } = await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map(p => p.id))
+        console.log('delete:', delErr?.message || 'OK')
       }
 
-      // Recréer uniquement celles sélectionnées
-      for (const [resp, assignments] of Object.entries(responsabilites)) {
+      const entries = Object.entries(responsabilites)
+      console.log('entries à insérer:', entries.length)
+      for (const [resp, assignments] of entries) {
         for (const assignment of (assignments as any[])) {
           const persId = freshPers[assignment.personne_idx]?.id
           const etabId = freshEtabs[assignment.etablissement_idx]?.id
+          console.log('insert:', resp, persId, etabId)
           if (persId && etabId) {
-            await supabase.from('responsabilites_personnes').insert([{
+            const { error: insErr } = await supabase.from('responsabilites_personnes').insert([{
               personne_id: persId, etablissement_id: etabId, responsabilite: resp
             }])
+            if (insErr) console.log('insert error:', insErr.message)
           }
         }
       }
 
       if (!isEditing) setStep(5)
-      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
