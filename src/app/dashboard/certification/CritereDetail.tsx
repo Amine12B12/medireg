@@ -38,7 +38,6 @@ const CRITERES_CONFIG: Record<string, {
     conseil: "⭐ LA PREUVE CLÉ : le devis signé par le patient. Sans devis signé, ce critère ne peut pas être validé même si vous avez tous les autres documents. Conservez-les dans votre logiciel métier — l'inspecteur peut en demander un à la minute.",
     preuves: [
       { label: "⭐ Attestation de remise systématique des devis", description: "PREUVE PRINCIPALE — Confirmez que vous remettez systématiquement un devis signé avant chaque livraison. Les devis réels restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
-      { label: "Registre de suivi anonymisé", description: "Le registre ci-dessous trace chaque remise de devis avec une référence anonymisée. C'est cette trace que l'inspecteur accepte à la place du vrai devis.", type: 'registre' },
       { code: 'USA-DOC-01', label: "Charte éthique et information usager", description: "Complément documentaire — présente les tarifs, remboursements et droits du patient.", type: 'generer' },
       { code: 'USA-INFO-01', label: "Notice d'information patient", description: "Complément documentaire — notice complète sur les produits et prestations.", type: 'generer' },
     ],
@@ -47,7 +46,7 @@ const CRITERES_CONFIG: Record<string, {
       { id: 'q2', label: "Comment informez-vous le patient du reste à charge ?", type: 'choix', options: ["Sur le devis", "À l'oral lors de la livraison", "Par courrier/email", "Pas de procédure formelle"], requis: true },
       { id: 'q3', label: "Vos livreurs/techniciens sont-ils formés pour expliquer le fonctionnement du matériel ?", type: 'oui_non', requis: true, aide: "L'inspecteur peut interroger votre personnel sur ce point." },
     ],
-    registre: null
+    registre: 'remises'
   },
   '1.2.3': {
     inspecteur: "L'inspecteur va chercher à comprendre comment vous formez votre personnel à la bientraitance. Il peut demander à voir le programme de formation et s'entretenir avec des salariés.",
