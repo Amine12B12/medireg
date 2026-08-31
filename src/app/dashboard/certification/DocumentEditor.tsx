@@ -436,7 +436,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       .replace(/{{ville}}/g, societe.ville || '')
       .replace(/{{telephone}}/g, societe.telephone || '')
       .replace(/{{email}}/g, societe.email || '')
-      .replace(/{{dossier_usager}}/g, org.dossier_usager_detail || org.dossier_usager || 'notre logiciel métier')
+      .replace(/{{dossier_usager}}/g, org.dossier_usager_detail || 'notre logiciel métier')
       .replace(/{{dirigeant}}/g, 'le représentant légal')
       .replace(/{{garant_psdm}}/g, 'le Garant PSDM désigné')
       .replace(/{{dpo}}/g, 'le DPO désigné')
