@@ -390,11 +390,14 @@ export default function OnboardingPage() {
   // Recharger depuis la base à chaque fois qu'on arrive sur étape 4 ou 5
   useEffect(() => {
     if (step === 4) loadResponsabilites()
-  }, [step])
-
-  useEffect(() => {
     if (step === 5) loadActivites()
   }, [step])
+
+  // Aussi charger au montage si on démarre sur step 4 ou 5
+  useEffect(() => {
+    if (initialized && step === 4) loadResponsabilites()
+    if (initialized && step === 5) loadActivites()
+  }, [initialized])
 
   async function loadResponsabilites() {
     // Charger le societeId directement depuis la base via l'utilisateur connecté
