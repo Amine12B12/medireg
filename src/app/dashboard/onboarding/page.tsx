@@ -184,6 +184,7 @@ export default function OnboardingPage() {
               if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
               respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
             }
+            console.log('setResponsabilites appelé avec:', JSON.stringify(respMap))
             setResponsabilites(respMap)
           }
         }
