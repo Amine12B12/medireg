@@ -12,6 +12,8 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'PROC-PRESCRIPTION-01': ['2.2.1'],
   'ATTESTATION-DEVIS': ['1.2.2'],
   'ATTESTATION-CONSENTEMENT': ['1.2.4'],
+  'PROC-BIENTRAITANCE': ['1.2.3'],
+  'FORM-BIENTRAITANCE': ['1.2.3'],
 }
 
 
