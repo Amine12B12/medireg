@@ -186,6 +186,9 @@ export default function OnboardingPage() {
               respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
             }
             setResponsabilites(respMap)
+            setTimeout(() => {
+              console.log('responsabilites apres 1s:', JSON.stringify(respMap))
+            }, 1000)
           }
         }
       } else {
@@ -641,6 +644,7 @@ export default function OnboardingPage() {
         {/* STEP 4 */}
         {step === 4 && (
           <div>
+
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Responsabilités</div>
               <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Une même personne peut cumuler plusieurs responsabilités.</div>
