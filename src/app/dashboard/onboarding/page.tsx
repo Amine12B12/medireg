@@ -396,16 +396,23 @@ export default function OnboardingPage() {
   }, [step, societeId])
 
   async function loadResponsabilites() {
-    const { data: pers } = await supabase.from('personnes').select('id').eq('societe_id', societeId!).order('created_at')
-    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', societeId!).order('created_at')
+    // Charger le societeId directement depuis la base via l'utilisateur connecté
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
+    if (!prof?.client_id) return
+    const { data: soc } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
+    if (!soc) return
+
+    const { data: pers } = await supabase.from('personnes').select('id').eq('societe_id', soc.id).order('created_at')
+    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id).order('created_at')
     if (!pers || !etabs) return
-    setPersIds(pers.map(p => p.id))
-    setEtabIds(etabs.map(e => e.id))
+
     const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', pers.map(p => p.id))
-    if (!resps) return
+    
     const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
     const seen = new Set<string>()
-    for (const r of resps) {
+    for (const r of resps || []) {
       const pIdx = pers.findIndex(p => p.id === r.personne_id)
       const eIdx = etabs.findIndex(e => e.id === r.etablissement_id)
       if (pIdx === -1 || eIdx === -1) continue
@@ -419,14 +426,21 @@ export default function OnboardingPage() {
   }
 
   async function loadActivites() {
-    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', societeId!).order('created_at')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
+    if (!prof?.client_id) return
+    const { data: soc } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
+    if (!soc) return
+
+    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id).order('created_at')
     if (!etabs) return
-    setEtabIds(etabs.map(e => e.id))
+
     const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabs.map(e => e.id))
-    if (!acts) return
+    
     const actsMap: Record<number, Record<string, string>> = {}
     const seen = new Set<string>()
-    for (const act of acts) {
+    for (const act of acts || []) {
       const eIdx = etabs.findIndex(e => e.id === act.etablissement_id)
       if (eIdx === -1) continue
       const key = `${act.etablissement_id}_${act.activite}`
