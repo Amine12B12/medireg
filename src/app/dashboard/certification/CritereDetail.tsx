@@ -66,12 +66,10 @@ const CRITERES_CONFIG: Record<string, {
   '1.2.4': {
     inspecteur: "L'inspecteur va vérifier que le patient signe ou valide explicitement chaque étape de la prestation — livraison, installation, modification du matériel. Un bon de livraison signé est la preuve minimale.",
     contexte: "Vous ne pouvez pas modifier le matériel d'un patient, faire une livraison supplémentaire ou changer une prestation sans son accord explicite.",
-    conseil: "Le bon de livraison signé couvre souvent ce critère si vous l'avez déjà. L'essentiel est de le conserver et de pouvoir le retrouver.",
+    conseil: "Le bon de livraison signé couvre souvent ce critère. L'attestation d'installation que vous générez ici sert de modèle — le patient signe la version papier que vous conservez dans votre logiciel métier.",
     preuves: [
-      { code: 'PRESTA-DOC-01', label: "Attestation d'installation", description: "Inclut le recueil du consentement éclairé signé par le patient.", type: 'generer' },
-      { label: "⭐ Attestation de recueil du consentement", description: "PREUVE PRINCIPALE — Confirmez que vous faites systématiquement signer vos bons de livraison. Les originaux restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
-      { label: "Registre de suivi anonymisé", description: "Le registre trace chaque recueil de consentement avec une référence anonymisée — c'est la preuve que l'inspecteur accepte.", type: 'registre' },
-      { label: "Procédure de recueil du consentement", description: "Document décrivant comment vous recueillez le consentement à chaque étape.", type: 'upload' },
+      { label: "⭐ Attestation de recueil systématique du consentement", description: "PREUVE PRINCIPALE — Confirmez que vous faites systématiquement signer vos bons de livraison. Les originaux restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
+      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation", description: "Modèle de document remis au patient lors de chaque installation — à imprimer, faire signer et conserver dans votre logiciel métier.", type: 'generer' },
     ],
     questions: [
       { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?", type: 'oui_non', requis: true, aide: "C'est la preuve de consentement la plus simple et la plus acceptée par les inspecteurs." },
