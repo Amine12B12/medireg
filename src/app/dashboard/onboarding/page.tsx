@@ -59,10 +59,6 @@ const STEPS = [
   { id: 6, label: 'Organisation', icon: 'ti-settings' },
 ]
 
-// IDs réels depuis la base pour faire les updates sans supprimer
-type EtabRecord = { id: string; nom: string; siret: string; adresse: string; code_postal: string; ville: string; telephone: string; email: string; est_siege: boolean }
-type PersRecord = { id: string; nom: string; prenom: string; fonction_reelle: string; telephone: string; email: string }
-
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [clientId, setClientId] = useState<string | null>(null)
@@ -73,8 +69,6 @@ export default function OnboardingPage() {
   const [initialized, setInitialized] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [savedStep, setSavedStep] = useState<number | null>(null)
-
-  // IDs réels pour les updates
   const [etabIds, setEtabIds] = useState<string[]>([])
   const [persIds, setPersIds] = useState<string[]>([])
 
@@ -136,22 +130,26 @@ export default function OnboardingPage() {
         // Charger établissements
         const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', existingSoc.id).order('created_at')
         if (etabs && etabs.length > 0) {
-          setEtabIds(etabs.map(e => e.id))
-          setEtablissements(etabs.map(e => ({
+          const ids = etabs.map((e: any) => e.id)
+          setEtabIds(ids)
+          setEtablissements(etabs.map((e: any) => ({
             nom: e.nom || '', siret: e.siret || '', adresse: e.adresse || '',
             code_postal: e.code_postal || '', ville: e.ville || '',
             telephone: e.telephone || '', email: e.email || '', est_siege: e.est_siege || false
           })))
 
           // Charger activités
-          const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabs.map(e => e.id))
+          const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', ids)
           if (acts && acts.length > 0) {
             const actsMap: Record<number, Record<string, string>> = {}
+            const seenActs = new Set<string>()
             for (const act of acts) {
-              const eIdx = etabs.findIndex(e => e.id === act.etablissement_id)
+              const eIdx = ids.indexOf(act.etablissement_id)
               if (eIdx === -1) continue
+              const k = `${act.etablissement_id}_${act.activite}`
+              if (seenActs.has(k)) continue
+              seenActs.add(k)
               if (!actsMap[eIdx]) actsMap[eIdx] = {}
-              // Ne garder que le dernier mode pour chaque activité (éviter doublons)
               actsMap[eIdx][act.activite] = act.mode
             }
             setActivites(actsMap)
@@ -161,22 +159,25 @@ export default function OnboardingPage() {
         // Charger personnes
         const { data: pers } = await supabase.from('personnes').select('*').eq('societe_id', existingSoc.id).order('created_at')
         if (pers && pers.length > 0) {
-          setPersIds(pers.map(p => p.id))
-          setPersonnes(pers.map(p => ({
+          const persIdsArr = pers.map((p: any) => p.id)
+          setPersIds(persIdsArr)
+          setPersonnes(pers.map((p: any) => ({
             nom: p.nom || '', prenom: p.prenom || '',
             fonction_reelle: p.fonction_reelle || '',
             telephone: p.telephone || '', email: p.email || ''
           })))
 
           // Charger responsabilités
-          const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', pers.map(p => p.id))
-          if (resps && resps.length > 0) {
-            const { data: etabsForResp } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
+          const { data: etabsForResp } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', existingSoc.id).order('created_at')
+          const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', persIdsArr)
+          
+          if (resps && resps.length > 0 && etabsForResp) {
+            const etabIdsForResp = etabsForResp.map((e: any) => e.id)
             const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
             const seen = new Set<string>()
             for (const r of resps) {
-              const pIdx = pers.findIndex(p => p.id === r.personne_id)
-              const eIdx = (etabsForResp || []).findIndex(e => e.id === r.etablissement_id)
+              const pIdx = persIdsArr.indexOf(r.personne_id)
+              const eIdx = etabIdsForResp.indexOf(r.etablissement_id)
               if (pIdx === -1 || eIdx === -1) continue
               const key = `${r.responsabilite}_${pIdx}_${eIdx}`
               if (seen.has(key)) continue
@@ -184,7 +185,6 @@ export default function OnboardingPage() {
               if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
               respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
             }
-            console.log('setResponsabilites appelé avec:', JSON.stringify(respMap))
             setResponsabilites(respMap)
           }
         }
@@ -249,7 +249,6 @@ export default function OnboardingPage() {
     setSaving(true); setError(null)
     try {
       if (isEditing && etabIds.length > 0) {
-        // Update chaque établissement existant par ID — preserve les liaisons
         for (let i = 0; i < etabIds.length; i++) {
           const etab = etablissements[i]
           if (!etab || !etab.nom) continue
@@ -282,7 +281,6 @@ export default function OnboardingPage() {
     setSaving(true); setError(null)
     try {
       if (isEditing && persIds.length > 0) {
-        // Update chaque personne par ID — preserve les liaisons
         for (let i = 0; i < persIds.length; i++) {
           const pers = personnes[i]
           if (!pers || !pers.nom || !pers.prenom) continue
@@ -313,36 +311,29 @@ export default function OnboardingPage() {
     const sid = societeId
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
-    console.log('saveResponsabilites — responsabilites state:', JSON.stringify(responsabilites))
     try {
       const { data: freshPers } = await supabase.from('personnes').select('id').eq('societe_id', sid).order('created_at')
       const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
-      console.log('freshPers:', freshPers?.length, 'freshEtabs:', freshEtabs?.length)
       if (!freshPers || !freshEtabs) throw new Error('Données non trouvées')
 
       if (freshPers.length > 0) {
-        const { error: delErr } = await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map(p => p.id))
-        console.log('delete:', delErr?.message || 'OK')
+        await supabase.from('responsabilites_personnes').delete().in('personne_id', freshPers.map((p: any) => p.id))
       }
 
-      const entries = Object.entries(responsabilites)
-      console.log('entries à insérer:', entries.length)
-      for (const [resp, assignments] of entries) {
+      for (const [resp, assignments] of Object.entries(responsabilites)) {
         for (const assignment of (assignments as any[])) {
           const persId = freshPers[assignment.personne_idx]?.id
           const etabId = freshEtabs[assignment.etablissement_idx]?.id
-          console.log('insert:', resp, persId, etabId)
           if (persId && etabId) {
-            const { error: insErr } = await supabase.from('responsabilites_personnes').insert([{
+            await supabase.from('responsabilites_personnes').insert([{
               personne_id: persId, etablissement_id: etabId, responsabilite: resp
             }])
-            if (insErr) console.log('insert error:', insErr.message)
           }
         }
       }
 
       if (!isEditing) setStep(5)
-      if (isEditing) { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
+      else { setSavedStep(step); setTimeout(() => setSavedStep(null), 2000) }
     } catch (e: any) { setError(e.message) }
     setSaving(false)
   }
@@ -352,16 +343,13 @@ export default function OnboardingPage() {
     if (!sid) { setError('Erreur: société non trouvée'); return }
     setSaving(true); setError(null)
     try {
-      // Recharger les IDs depuis la base
       const { data: freshEtabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', sid).order('created_at')
       if (!freshEtabs) throw new Error('Établissements non trouvés')
 
-      // Supprimer toutes les activites existantes
       if (freshEtabs.length > 0) {
-        await supabase.from('activites_etablissement').delete().in('etablissement_id', freshEtabs.map(e => e.id))
+        await supabase.from('activites_etablissement').delete().in('etablissement_id', freshEtabs.map((e: any) => e.id))
       }
 
-      // Recréer uniquement celles sélectionnées
       for (const [etabIdx, acts] of Object.entries(activites)) {
         const etabId = freshEtabs[parseInt(etabIdx)]?.id
         if (!etabId) continue
@@ -385,75 +373,6 @@ export default function OnboardingPage() {
       router.push(isEditing ? '/dashboard/profil' : '/dashboard/certification')
     } catch (e: any) { setError(e.message) }
     setSaving(false)
-  }
-
-  // Recharger depuis la base à chaque fois qu'on arrive sur étape 4 ou 5
-  useEffect(() => {
-    if (step === 4) loadResponsabilites()
-    if (step === 5) loadActivites()
-  }, [step])
-
-  // Aussi charger au montage si on démarre sur step 4 ou 5
-  useEffect(() => {
-    if (initialized && step === 4) loadResponsabilites()
-    if (initialized && step === 5) loadActivites()
-  }, [initialized])
-
-  async function loadResponsabilites() {
-    // Charger le societeId directement depuis la base via l'utilisateur connecté
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
-    if (!prof?.client_id) return
-    const { data: soc } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
-    if (!soc) return
-
-    const { data: pers } = await supabase.from('personnes').select('id').eq('societe_id', soc.id).order('created_at')
-    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id).order('created_at')
-    if (!pers || !etabs) return
-
-    const { data: resps } = await supabase.from('responsabilites_personnes').select('*').in('personne_id', pers.map(p => p.id))
-    
-    const respMap: Record<string, { personne_idx: number; etablissement_idx: number }[]> = {}
-    const seen = new Set<string>()
-    for (const r of resps || []) {
-      const pIdx = pers.findIndex(p => p.id === r.personne_id)
-      const eIdx = etabs.findIndex(e => e.id === r.etablissement_id)
-      if (pIdx === -1 || eIdx === -1) continue
-      const key = `${r.responsabilite}_${pIdx}_${eIdx}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (!respMap[r.responsabilite]) respMap[r.responsabilite] = []
-      respMap[r.responsabilite].push({ personne_idx: pIdx, etablissement_idx: eIdx })
-    }
-    setResponsabilites(respMap)
-  }
-
-  async function loadActivites() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
-    if (!prof?.client_id) return
-    const { data: soc } = await supabase.from('societes').select('id').eq('client_id', prof.client_id).single()
-    if (!soc) return
-
-    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id).order('created_at')
-    if (!etabs) return
-
-    const { data: acts } = await supabase.from('activites_etablissement').select('*').in('etablissement_id', etabs.map(e => e.id))
-    
-    const actsMap: Record<number, Record<string, string>> = {}
-    const seen = new Set<string>()
-    for (const act of acts || []) {
-      const eIdx = etabs.findIndex(e => e.id === act.etablissement_id)
-      if (eIdx === -1) continue
-      const key = `${act.etablissement_id}_${act.activite}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (!actsMap[eIdx]) actsMap[eIdx] = {}
-      actsMap[eIdx][act.activite] = act.mode
-    }
-    setActivites(actsMap)
   }
 
   const toggleFamillesMat = (fam: string) => setOrganisation(prev => ({
@@ -544,7 +463,7 @@ export default function OnboardingPage() {
             </div>
           ))}
           <div style={{ marginLeft: '12px', fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
-            {isEditing ? 'Modification — ' : ''}{step}/{STEPS.length} — {STEPS[step - 1].label}
+            {step}/{STEPS.length} — {STEPS[step - 1].label}
           </div>
         </div>
       </div>
@@ -554,12 +473,12 @@ export default function OnboardingPage() {
           {savedStep ? (
             <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#059669', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="ti ti-circle-check" style={{ fontSize: '14px' }} />
-              Modifications enregistrées avec succès
+              Modifications enregistrées
             </div>
           ) : (
             <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="ti ti-edit" style={{ fontSize: '14px' }} />
-              Mode modification — cliquez sur n'importe quelle étape pour la modifier directement
+              Mode modification — cliquez sur une étape pour la modifier
             </div>
           )}
         </div>
@@ -568,7 +487,7 @@ export default function OnboardingPage() {
       {error && (
         <div style={{ maxWidth: '700px', margin: '16px auto 0', width: '100%', padding: '0 24px', boxSizing: 'border-box' as const }}>
           <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: '12px', color: '#DC2626' }}>
-            <i className="ti ti-alert-circle" style={{ fontSize: '14px', marginRight: '6px' }} />{error}
+            {error}
           </div>
         </div>
       )}
@@ -580,21 +499,18 @@ export default function OnboardingPage() {
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Votre société</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations seront utilisées automatiquement dans tous vos documents de certification.</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations seront utilisées automatiquement dans tous vos documents.</div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Logo</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '100px', height: '70px', border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-hover)', overflow: 'hidden', flexShrink: 0 }}>
-                  {societe.logo_url ? <img src={societe.logo_url} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ textAlign: 'center' }}><i className="ti ti-photo" style={{ fontSize: '24px', color: 'var(--text-tertiary)', display: 'block' }} /><div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Logo</div></div>}
+                  {societe.logo_url ? <img src={societe.logo_url} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ textAlign: 'center' }}><i className="ti ti-photo" style={{ fontSize: '24px', color: 'var(--text-tertiary)', display: 'block' }} /></div>}
                 </div>
-                <div>
-                  <label style={{ padding: '8px 16px', background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: '#1A56DB', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <i className="ti ti-upload" style={{ fontSize: '14px' }} />{uploadingLogo ? 'Upload...' : 'Uploader votre logo'}
-                    <input type='file' accept='image/*' style={{ display: 'none' }} onChange={handleUploadLogo} />
-                  </label>
-                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '6px' }}>PNG ou JPG — Apparaîtra en haut de tous vos documents</div>
-                </div>
+                <label style={{ padding: '8px 16px', background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: '#1A56DB', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="ti ti-upload" style={{ fontSize: '14px' }} />{uploadingLogo ? 'Upload...' : 'Uploader votre logo'}
+                  <input type='file' accept='image/*' style={{ display: 'none' }} onChange={handleUploadLogo} />
+                </label>
               </div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
@@ -602,16 +518,16 @@ export default function OnboardingPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Raison sociale *</label>
-                  <input value={societe.raison_sociale} onChange={e => setSociete(p => ({ ...p, raison_sociale: e.target.value }))} placeholder="SARL Oxygène Services Loire" style={inputStyle} autoFocus />
+                  <input value={societe.raison_sociale} onChange={e => setSociete(p => ({ ...p, raison_sociale: e.target.value }))} style={inputStyle} autoFocus />
                 </div>
-                <div><label style={labelStyle}>Nom commercial</label><input value={societe.nom_commercial} onChange={e => setSociete(p => ({ ...p, nom_commercial: e.target.value }))} placeholder="Si différent" style={inputStyle} /></div>
+                <div><label style={labelStyle}>Nom commercial</label><input value={societe.nom_commercial} onChange={e => setSociete(p => ({ ...p, nom_commercial: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Forme juridique</label><select value={societe.forme_juridique} onChange={e => setSociete(p => ({ ...p, forme_juridique: e.target.value }))} style={inputStyle}>{FORMES_JURIDIQUES.map(f => <option key={f}>{f}</option>)}</select></div>
-                <div><label style={labelStyle}>SIREN</label><input value={societe.siren} onChange={e => setSociete(p => ({ ...p, siren: e.target.value }))} placeholder="123 456 789" style={inputStyle} /></div>
-                <div><label style={labelStyle}>Code APE / NAF</label><input value={societe.code_ape} onChange={e => setSociete(p => ({ ...p, code_ape: e.target.value }))} placeholder="4774Z" style={inputStyle} /></div>
+                <div><label style={labelStyle}>SIREN</label><input value={societe.siren} onChange={e => setSociete(p => ({ ...p, siren: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Code APE</label><input value={societe.code_ape} onChange={e => setSociete(p => ({ ...p, code_ape: e.target.value }))} style={inputStyle} /></div>
               </div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées du siège</div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Adresse</label><input value={societe.adresse_siege} onChange={e => setSociete(p => ({ ...p, adresse_siege: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Code postal</label><input value={societe.code_postal} onChange={e => setSociete(p => ({ ...p, code_postal: e.target.value }))} style={inputStyle} /></div>
@@ -622,7 +538,7 @@ export default function OnboardingPage() {
             </div>
             <button onClick={saveSociete} disabled={saving || !societe.raison_sociale}
               style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-              {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
+              {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
             </button>
           </div>
         )}
@@ -632,7 +548,7 @@ export default function OnboardingPage() {
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Vos établissements</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Chaque établissement a son propre SIRET. Ajoutez tous vos sites.</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Chaque établissement a son propre SIRET.</div>
             </div>
             {etablissements.map((etab, i) => (
               <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '14px' }}>
@@ -642,7 +558,7 @@ export default function OnboardingPage() {
                     {etab.est_siege ? 'Siège social' : `Établissement ${i + 1}`}
                     {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
                   </div>
-                  {!etab.est_siege && <button onClick={() => setEtablissements(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer</button>}
+                  {!etab.est_siege && <button onClick={() => setEtablissements(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} /> Supprimer</button>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom *</label><input value={etab.nom} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, nom: e.target.value } : et))} style={inputStyle} /></div>
@@ -661,7 +577,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -681,7 +597,7 @@ export default function OnboardingPage() {
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
                     Personne {i + 1}
                   </div>
-                  {i > 0 && <button onClick={() => setPersonnes(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} />Supprimer</button>}
+                  {i > 0 && <button onClick={() => setPersonnes(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} /> Supprimer</button>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div><label style={labelStyle}>Nom *</label><input value={pers.nom} onChange={e => setPersonnes(prev => prev.map((p, idx) => idx === i ? { ...p, nom: e.target.value } : p))} style={inputStyle} /></div>
@@ -698,7 +614,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(2)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -737,7 +653,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setStep(3)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveResponsabilites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -779,7 +695,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(4)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
               <button onClick={saveActivites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer cette étape' : 'Continuer →'}
+                {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
           </div>
@@ -790,7 +706,7 @@ export default function OnboardingPage() {
           <div>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Organisation interne</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations permettent à MediReg de préremplir automatiquement les preuves du chapitre 2.</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations permettent à MediReg de préremplir automatiquement vos documents.</div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>Où tenez-vous le dossier de vos usagers ?</div>
@@ -832,7 +748,10 @@ export default function OnboardingPage() {
               </div>
               <div style={{ padding: '14px 16px', background: organisation.astreinte ? '#EBF2FF' : 'var(--surface-hover)', borderRadius: '10px', border: `1px solid ${organisation.astreinte ? '#BFDBFE' : 'var(--border)'}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: organisation.astreinte ? '12px' : '0' }}>
-                  <div><div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Astreinte 24h/24 — 7j/7</div><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Obligatoire si vous gérez l'oxygène ou les VPH</div></div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Astreinte 24h/24 — 7j/7</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Obligatoire si vous gérez l'oxygène ou les VPH</div>
+                  </div>
                   <button onClick={() => setOrganisation(p => ({ ...p, astreinte: !p.astreinte }))} style={{ width: '44px', height: '24px', borderRadius: '12px', background: organisation.astreinte ? '#1A56DB' : '#D1D5DB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
                     <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px', left: organisation.astreinte ? '23px' : '3px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </button>
