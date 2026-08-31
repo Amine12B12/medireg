@@ -236,6 +236,104 @@ La présente attestation fait foi dans le cadre de la certification HAS PSDM.`,
       },
     ]
   },
+  'PROC-BIENTRAITANCE': {
+    titre: "Procédure bientraitance et dignité des usagers",
+    description: "Procédure interne définissant les engagements et comportements attendus de vos collaborateurs au domicile des patients.",
+    sections: [
+      {
+        id: 's1', titre: "Objet et champ d'application", modifiable: true,
+        contenu: `La présente procédure définit les engagements de {{raison_sociale}} en matière de bientraitance et de respect de la dignité des usagers lors de toute intervention à domicile.
+
+Elle s'applique à l'ensemble du personnel en contact avec les patients : techniciens, livreurs, personnel administratif et {{responsable_etablissement}}.
+
+Responsable de cette procédure : {{garant_psdm}}`,
+        aide: "Vérifiez que les responsables sont bien désignés dans votre profil."
+      },
+      {
+        id: 's2', titre: "Principes fondamentaux", modifiable: true,
+        contenu: `Chaque collaborateur de {{raison_sociale}} s'engage à respecter les principes suivants lors de toute intervention au domicile d'un patient :
+
+✓ Respect de l'intimité et de la vie privée — frapper avant d'entrer, ne pas commenter l'environnement du patient
+✓ Respect de la dignité — s'adresser au patient avec courtoisie, utiliser le vouvoiement sauf demande contraire
+✓ Bienveillance — adapter son comportement à l'état de santé et à la vulnérabilité du patient
+✓ Discrétion — ne pas divulguer d'informations sur les patients à des tiers
+✓ Non-jugement — respecter les choix de vie et les convictions de chaque patient
+✓ Ponctualité — respecter les créneaux horaires convenus avec le patient`,
+        aide: "Adaptez cette liste à vos pratiques réelles. Soyez précis et concret."
+      },
+      {
+        id: 's3', titre: "Formation du personnel", modifiable: true,
+        contenu: `Tout nouveau collaborateur reçoit une sensibilisation à la bientraitance lors de son intégration, animée par {{responsable_etablissement}}.
+
+Une formation ou sensibilisation est organisée au minimum une fois par an pour l'ensemble du personnel.
+
+Les attestations de présence à ces formations sont conservées dans le dossier du personnel et disponibles sur demande de l'inspecteur HAS.`,
+        aide: "Précisez la fréquence et le format de vos formations (interne, externe, e-learning...)."
+      },
+      {
+        id: 's4', titre: "Procédure de signalement", modifiable: true,
+        contenu: `Tout collaborateur témoin ou informé d'une situation de maltraitance ou de manquement à la bientraitance doit :
+
+1. Informer immédiatement {{responsable_etablissement}} ou {{garant_psdm}}
+2. Consigner les faits par écrit avec la date, l'heure et la description de la situation
+3. Ne pas divulguer l'information à des tiers non concernés
+
+Le responsable déclenche une enquête interne et prend les mesures correctives nécessaires dans les 48 heures.
+
+En cas de danger immédiat pour le patient, contacter le 15 (SAMU) ou le 3977 (numéro national de lutte contre la maltraitance).`,
+        aide: "Adaptez les délais et les procédures à votre organisation."
+      },
+      {
+        id: 's5', titre: "Entrée en vigueur", modifiable: true,
+        contenu: `La présente procédure est adoptée par {{raison_sociale}} et entre en vigueur à compter de sa date de signature électronique.
+
+Elle est révisée annuellement et lors de tout changement organisationnel significatif.
+
+Elle fait partie intégrante du système qualité de {{raison_sociale}} dans le cadre de la certification HAS PSDM (référentiel juin 2024, critère 1.2.3).`,
+        aide: "Ce paragraphe peut être laissé tel quel."
+      },
+    ]
+  },
+  'FORM-BIENTRAITANCE': {
+    titre: "Attestation de sensibilisation bientraitance",
+    description: "Document attestant que vos collaborateurs ont été sensibilisés à la bientraitance.",
+    sections: [
+      {
+        id: 's1', titre: "Identité de l'entreprise", modifiable: false,
+        contenu: `{{raison_sociale}} — {{adresse_siege}}, {{code_postal}} {{ville}}
+Garant PSDM : {{garant_psdm}}`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Objet de l'attestation", modifiable: true,
+        contenu: `Je soussigné(e), {{responsable_etablissement}}, atteste que l'ensemble des collaborateurs de {{raison_sociale}} en contact avec les patients a reçu une sensibilisation à la bientraitance et au respect de la dignité des usagers.
+
+Cette sensibilisation a été réalisée en interne et porte sur :
+• Les principes fondamentaux de la bientraitance au domicile
+• Le respect de l'intimité et de la vie privée des patients  
+• La procédure de signalement en cas de manquement
+• Les obligations légales et réglementaires`,
+        aide: "Précisez le contenu de votre sensibilisation."
+      },
+      {
+        id: 's3', titre: "Personnel concerné", modifiable: true,
+        contenu: `La sensibilisation concerne l'ensemble du personnel en contact avec les patients, soit :
+• Les techniciens et livreurs intervenant au domicile
+• Le personnel administratif en contact téléphonique avec les patients
+• Tout nouveau collaborateur lors de son intégration
+
+La liste des participants et les dates de sensibilisation sont conservées dans notre système de gestion interne.`,
+        aide: "Adaptez la liste à votre organisation."
+      },
+      {
+        id: 's4', titre: "Engagement", modifiable: true,
+        contenu: `Cette sensibilisation est renouvelée au minimum une fois par an.
+
+La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critère 1.2.3).`,
+        aide: "Précisez la fréquence si elle est différente."
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",

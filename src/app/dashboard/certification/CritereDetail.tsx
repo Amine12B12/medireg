@@ -49,16 +49,16 @@ const CRITERES_CONFIG: Record<string, {
     registre: 'remises'
   },
   '1.2.3': {
-    inspecteur: "L'inspecteur va chercher à comprendre comment vous formez votre personnel à la bientraitance. Il peut demander à voir le programme de formation et s'entretenir avec des salariés.",
+    inspecteur: "L'inspecteur va chercher à comprendre comment vous formez votre personnel à la bientraitance. Il peut demander à voir le programme de formation et s'entretenir avec vos salariés directement.",
     contexte: "Vos techniciens interviennent au domicile de personnes vulnérables. L'inspecteur s'assure qu'ils respectent l'intimité, ne font pas de commentaires déplacés, et agissent avec bienveillance.",
-    conseil: "Beaucoup de PSDM ont des pratiques correctes mais rien d'écrit. Il suffit d'une page dans votre classeur qualité pour satisfaire ce critère.",
+    conseil: "Beaucoup de PSDM ont des pratiques correctes mais rien d'écrit. La procédure bientraitance et l'attestation de sensibilisation sont les deux documents clés pour valider ce critère.",
     preuves: [
-      { label: "Procédure bientraitance et dignité", description: "Charte interne définissant les comportements attendus au domicile des patients.", type: 'upload' },
-      { label: "Attestations de formation bientraitance", description: "Preuve que le personnel a été formé — attestation de présence ou certificat.", type: 'upload' },
+      { code: 'PROC-BIENTRAITANCE', label: "⭐ Procédure bientraitance et dignité", description: "PREUVE PRINCIPALE — Procédure interne définissant les comportements attendus de vos collaborateurs au domicile des patients.", type: 'generer', mention: 'principal' },
+      { code: 'FORM-BIENTRAITANCE', label: "Attestation de sensibilisation bientraitance", description: "Attestation que l'ensemble du personnel a été sensibilisé à la bientraitance.", type: 'generer' },
     ],
     questions: [
       { id: 'q1', label: "Avez-vous une procédure écrite sur la bientraitance ?", type: 'oui_non', requis: true, aide: "Une page suffit — l'essentiel est qu'elle existe et que le personnel la connaisse." },
-      { id: 'q2', label: "Vos employés ont-ils reçu une formation sur la bientraitance ?", type: 'oui_non', requis: true, aide: "Une sensibilisation interne compte. Notez la date et les participants." },
+      { id: 'q2', label: "Vos employés ont-ils reçu une formation ou sensibilisation à la bientraitance ?", type: 'oui_non', requis: true, aide: "Une sensibilisation interne compte. Notez la date et les participants." },
       { id: 'q3', label: "Comment gérez-vous un signalement de maltraitance d'un patient ?", type: 'texte', aide: "Décrivez votre procédure de remontée d'information en interne." },
     ],
     registre: null
