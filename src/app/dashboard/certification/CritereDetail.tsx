@@ -69,7 +69,7 @@ const CRITERES_CONFIG: Record<string, {
     conseil: "Le bon de livraison signé couvre souvent ce critère. L'attestation d'installation que vous générez ici sert de modèle — le patient signe la version papier que vous conservez dans votre logiciel métier.",
     preuves: [
       { label: "⭐ Attestation de recueil systématique du consentement", description: "PREUVE PRINCIPALE — Confirmez que vous faites systématiquement signer vos bons de livraison. Les originaux restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
-      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation", description: "Modèle de document remis au patient lors de chaque installation — à imprimer, faire signer et conserver dans votre logiciel métier.", type: 'generer' },
+      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation", description: "Modèle VIERGE à imprimer et faire signer par le patient lors de chaque installation. Le document signé avec le nom du patient reste dans votre logiciel métier — ne jamais l'uploader dans MediReg.", type: 'generer' },
     ],
     questions: [
       { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?", type: 'oui_non', requis: true, aide: "C'est la preuve de consentement la plus simple et la plus acceptée par les inspecteurs." },
@@ -79,17 +79,16 @@ const CRITERES_CONFIG: Record<string, {
     registre: 'remises'
   },
   '1.2.5': {
-    inspecteur: "L'inspecteur va vérifier que vous avez un registre des traitements RGPD, que vos données patients sont protégées, et que votre personnel est sensibilisé à la confidentialité.",
-    contexte: "Vous traitez des données médicales sensibles. Le RGPD impose un registre des traitements, une politique de confidentialité, et des mesures de sécurité.",
-    conseil: "Le registre des traitements RGPD effraie beaucoup de PSDM mais c'est un tableau simple. MediReg vous en génère un prérempli avec vos activités.",
+    inspecteur: "L'inspecteur va vérifier que vous avez un registre des traitements RGPD, une politique de confidentialité écrite, et que votre personnel a été sensibilisé. Il peut demander à voir ces documents et interroger vos collaborateurs.",
+    contexte: "Vous traitez des données médicales sensibles. Le RGPD impose un registre des traitements, une politique de confidentialité, et des mesures de sécurité. L'inspecteur HAS vérifie que vous êtes conformes.",
+    conseil: "Le registre des traitements RGPD effraie beaucoup de PSDM mais MediReg vous en génère un prérempli. L'attestation de sensibilisation est souvent oubliée — c'est pourtant ce que l'inspecteur demande en premier.",
     preuves: [
-      { code: 'USA-DOC-01', label: "Charte éthique (volet RGPD)", description: "Inclut l'engagement sur la confidentialité et le RGPD.", type: 'generer' },
-      { label: "Politique de confidentialité et RGPD", description: "Document décrivant comment vous protégez les données des patients.", type: 'upload' },
-      { label: "Registre des traitements de données", description: "Obligatoire RGPD — liste les données collectées, leur finalité et leur durée de conservation.", type: 'upload' },
-      { label: "Attestation de sensibilisation RGPD du personnel", description: "Preuve que votre équipe a été informée de ses obligations de confidentialité.", type: 'upload' },
+      { code: 'POLITIQUE-CONFIDENTIALITE', label: "⭐ Politique de confidentialité et RGPD", description: "PREUVE PRINCIPALE — Document officiel décrivant comment vous protégez les données de vos patients.", type: 'generer', mention: 'principal' },
+      { code: 'REGISTRE-TRAITEMENTS', label: "Registre des activités de traitement", description: "Document obligatoire RGPD — liste tous vos traitements de données avec les bases légales et durées de conservation.", type: 'generer' },
+      { code: 'ATTEST-RGPD', label: "Attestation de sensibilisation RGPD du personnel", description: "Attestation que votre équipe a été formée à la protection des données patients.", type: 'generer' },
     ],
     questions: [
-      { id: 'q1', label: "Avez-vous nommé un DPO ou référent RGPD ?", type: 'oui_non', aide: "Obligatoire si vous traitez des données de santé à grande échelle." },
+      { id: 'q1', label: "Avez-vous nommé un DPO ou référent RGPD ?", type: 'oui_non', aide: "Obligatoire si vous traitez des données de santé à grande échelle. Pour une petite structure, un référent interne suffit." },
       { id: 'q2', label: "Votre registre des traitements RGPD est-il à jour ?", type: 'oui_non', requis: true, aide: "Le registre des traitements est obligatoire pour toute entreprise traitant des données personnelles." },
       { id: 'q3', label: "Comment sont protégées les données patients dans votre logiciel métier ?", type: 'choix', options: ["Accès par mot de passe individuel", "Accès partagé par l'équipe", "Données sur papier uniquement", "Autre"], requis: true },
       { id: 'q4', label: "Vos données sont-elles sauvegardées régulièrement ?", type: 'oui_non', requis: true },

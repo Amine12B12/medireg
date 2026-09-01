@@ -14,6 +14,9 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'ATTESTATION-CONSENTEMENT': ['1.2.4'],
   'PROC-BIENTRAITANCE': ['1.2.3'],
   'FORM-BIENTRAITANCE': ['1.2.3'],
+  'POLITIQUE-CONFIDENTIALITE': ['1.2.5'],
+  'REGISTRE-TRAITEMENTS': ['1.2.5'],
+  'ATTEST-RGPD': ['1.2.5'],
 }
 
 

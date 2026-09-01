@@ -239,6 +239,131 @@ La présente attestation fait foi dans le cadre de la certification HAS PSDM.`,
       },
     ]
   },
+  'POLITIQUE-CONFIDENTIALITE': {
+    titre: "Politique de confidentialite et protection des donnees",
+    description: "Document decrivant comment votre entreprise protege les donnees personnelles de vos patients.",
+    sections: [
+      {
+        id: 's1', titre: "Responsable du traitement", modifiable: true,
+        contenu: `{{raison_sociale}} ({{forme_juridique}}, SIREN {{siren}}), dont le siege social est situe {{adresse_siege}}, {{code_postal}} {{ville}}, est responsable du traitement des donnees personnelles.
+
+Referent RGPD / DPO : {{dpo}}
+Contact : {{email}} — {{telephone}}`,
+        aide: "Verifiez que le DPO est bien designe dans votre profil."
+      },
+      {
+        id: 's2', titre: "Donnees collectees et finalites", modifiable: true,
+        contenu: `Dans le cadre de notre activite PSDM, nous collectons :
+
+- Donnees d'identification : nom, prenom, date de naissance, adresse
+- Donnees de sante : pathologie, prescription medicale, materiel utilise
+- Donnees de contact : telephone, email
+- Donnees administratives : numero de securite sociale, mutuelle
+
+Finalites : gestion des prestations, facturation, qualite des soins, obligations legales.`,
+        aide: "Adaptez la liste a votre activite reelle."
+      },
+      {
+        id: 's3', titre: "Duree de conservation", modifiable: true,
+        contenu: `- Dossiers patients : 5 ans apres la fin de la prestation
+- Documents de facturation : 10 ans
+- Registre des reclamations : 5 ans`,
+        aide: "Verifiez que ces durees correspondent a vos obligations legales."
+      },
+      {
+        id: 's4', titre: "Droits des personnes", modifiable: true,
+        contenu: `Vous disposez des droits d'acces, rectification, effacement et opposition sur vos donnees.
+
+Pour exercer ces droits : {{email}}
+Reclamation CNIL : www.cnil.fr`,
+        aide: "Ce paragraphe est conforme au RGPD."
+      },
+      {
+        id: 's5', titre: "Mesures de securite", modifiable: true,
+        contenu: `- Acces aux donnees limite aux personnes habilitees
+- Mots de passe individuels
+- Sauvegarde reguliere des donnees
+- Sensibilisation du personnel
+
+Responsable securite : {{responsable_etablissement}}`,
+        aide: "Adaptez ces mesures a votre organisation."
+      },
+    ]
+  },
+  'REGISTRE-TRAITEMENTS': {
+    titre: "Registre des activites de traitement — RGPD",
+    description: "Document obligatoire listant tous les traitements de donnees personnelles de votre entreprise.",
+    sections: [
+      {
+        id: 's1', titre: "Identification du responsable", modifiable: false,
+        contenu: `Responsable : {{raison_sociale}} — SIREN {{siren}}
+Adresse : {{adresse_siege}}, {{code_postal}} {{ville}}
+DPO : {{dpo}} — {{email}}`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Traitement 1 — Dossiers patients", modifiable: true,
+        contenu: `Finalite : Gestion et suivi des prestations de sante a domicile
+Base legale : Execution du contrat + obligation legale
+Personnes concernees : Patients / usagers
+Donnees : Identite, sante, prescription medicale
+Destinataires : Personnel habilite, medecin, CPAM
+Conservation : 5 ans apres fin de prestation
+Support : {{dossier_usager}}`,
+        aide: "Adaptez ce traitement a votre logiciel metier."
+      },
+      {
+        id: 's3', titre: "Traitement 2 — Facturation", modifiable: true,
+        contenu: `Finalite : Facturation et remboursements
+Base legale : Obligation legale
+Donnees : Identite, numero securite sociale, sante, finances
+Destinataires : Comptabilite, CPAM, mutuelles
+Conservation : 10 ans`,
+        aide: "Precisez votre logiciel de facturation."
+      },
+      {
+        id: 's4', titre: "Traitement 3 — Satisfaction et reclamations", modifiable: true,
+        contenu: `Finalite : Evaluation de la satisfaction et gestion des reclamations
+Base legale : Interet legitime + obligation HAS
+Donnees : Identite anonymisee, avis, reclamations
+Destinataires : Direction, responsable qualite
+Conservation : 5 ans
+Support : Registre MediReg (donnees anonymisees)`,
+        aide: "Ce traitement couvre vos registres dans MediReg."
+      },
+    ]
+  },
+  'ATTEST-RGPD': {
+    titre: "Attestation de sensibilisation RGPD du personnel",
+    description: "Attestation que vos collaborateurs ont ete informes de leurs obligations RGPD.",
+    sections: [
+      {
+        id: 's1', titre: "Identite du signataire", modifiable: true,
+        contenu: `Je soussigne(e), {{responsable_etablissement}}, agissant en qualite de responsable au sein de {{raison_sociale}},`,
+        aide: "Verifiez que la personne responsable est correctement indiquee."
+      },
+      {
+        id: 's2', titre: "Objet de l attestation", modifiable: true,
+        contenu: `atteste que l ensemble des collaborateurs de {{raison_sociale}} en contact avec des donnees patients a recu une sensibilisation RGPD portant sur :
+
+- Les principes fondamentaux du RGPD appliques a notre activite PSDM
+- La nature sensible des donnees de sante
+- Les regles de confidentialite
+- Les droits des patients sur leurs donnees
+- La procedure en cas de violation de donnees
+
+Referent RGPD : {{dpo}}`,
+        aide: "Precisez le contenu de votre sensibilisation."
+      },
+      {
+        id: 's3', titre: "Engagement", modifiable: true,
+        contenu: `Cette sensibilisation est realisee lors de l integration de tout nouveau collaborateur et renouvelee annuellement.
+
+La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critere 1.2.5).`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-BIENTRAITANCE': {
     titre: "Procédure bientraitance et dignité des usagers",
     description: "Procédure interne définissant les engagements et comportements attendus de vos collaborateurs au domicile des patients.",
