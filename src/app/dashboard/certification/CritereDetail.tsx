@@ -111,19 +111,17 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '1.3.2': {
-    inspecteur: "L'inspecteur va demander à voir votre registre des réclamations. Il compte les réclamations, vérifie que chacune a eu une réponse dans un délai raisonnable, et que vous avez analysé les causes.",
-    contexte: "Une réclamation non traitée est le signal d'alarme le plus fort pour un inspecteur. Si vous n'avez aucune réclamation depuis 2 ans, il sera suspicieux.",
-    conseil: "Commencez à remplir le registre dès maintenant même avec zéro réclamation — notez la date de mise en place. Un registre vide avec une date récente est mieux qu'un registre inexistant.",
+    inspecteur: "L'inspecteur va demander à voir votre registre des réclamations. Il compte les réclamations, vérifie que chacune a eu une réponse dans un délai raisonnable, et que vous avez analysé les causes pour éviter les récidives.",
+    contexte: "Une réclamation non traitée est le signal d'alarme le plus fort pour un inspecteur. Si vous n'avez aucune réclamation depuis 2 ans, il sera suspicieux — toute entreprise reçoit des réclamations.",
+    conseil: "Commencez à remplir le registre dès maintenant. Un registre vide avec une date de mise en place récente vaut mieux qu'un registre inexistant.",
     preuves: [
-      { label: "Registre des réclamations", description: "Journal de toutes les réclamations reçues avec date, nature, réponse apportée et délai.", type: 'registre' },
-      { label: "Procédure de gestion des réclamations", description: "Document décrivant le processus de réception, traitement et réponse aux réclamations.", type: 'upload' },
-      { label: "Analyse annuelle des réclamations", description: "Synthèse annuelle des types de réclamations et actions préventives mises en place.", type: 'upload' },
+      { code: 'PROC-RECLAMATIONS', label: "⭐ Procédure de gestion des réclamations", description: "PREUVE PRINCIPALE — Document officiel décrivant comment vous recevez, traitez et répondez aux réclamations.", type: 'generer', mention: 'principal' },
+      { label: "Registre des réclamations MediReg", description: "Le registre ci-dessous trace chaque réclamation avec sa réponse et son statut. C'est la preuve vivante de votre processus.", type: 'registre' },
     ],
     questions: [
-      { id: 'q1', label: "Comment les patients peuvent-ils vous adresser une réclamation ?", type: 'multiple', options: ["Par téléphone", "Par email", "Par courrier", "En magasin", "Via un formulaire en ligne"], requis: true, aide: "Plus les canaux sont accessibles, mieux c'est pour l'inspecteur." },
-      { id: 'q2', label: "Dans quel délai répondez-vous aux réclamations ?", type: 'choix', options: ["Moins de 48h", "Dans la semaine", "Dans le mois", "Pas de délai défini"], requis: true, aide: "Un délai défini et respecté est essentiel. 10 jours ouvrés est une bonne pratique." },
-      { id: 'q3', label: "Tenez-vous un registre des réclamations ?", type: 'oui_non', requis: true },
-      { id: 'q4', label: "Faites-vous une analyse annuelle de vos réclamations ?", type: 'oui_non', requis: true },
+      { id: 'q1', label: "Comment les patients peuvent-ils vous adresser une réclamation ?", type: 'multiple', options: ["Par téléphone", "Par email", "Par courrier", "En agence", "Via un formulaire en ligne"], requis: true },
+      { id: 'q2', label: "Dans quel délai répondez-vous aux réclamations ?", type: 'choix', options: ["Moins de 48h", "Dans la semaine", "Dans les 10 jours ouvrés", "Pas de délai défini"], requis: true, aide: "10 jours ouvrés est la bonne pratique HAS." },
+      { id: 'q3', label: "Faites-vous une analyse annuelle de vos réclamations ?", type: 'oui_non', requis: true },
     ],
     registre: 'reclamations'
   },

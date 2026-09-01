@@ -18,6 +18,7 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'REGISTRE-TRAITEMENTS': ['1.2.5'],
   'ATTEST-RGPD': ['1.2.5'],
   'RAPPORT-SATISFACTION': ['1.3.1'],
+  'PROC-RECLAMATIONS': ['1.3.2'],
 }
 
 

@@ -513,6 +513,58 @@ Responsable : {{garant_psdm}}`,
       },
     ]
   },
+  'PROC-RECLAMATIONS': {
+    titre: "Procedure de gestion des reclamations",
+    description: "Procedure interne decrivant comment votre entreprise recoit, traite et repond aux reclamations de vos patients.",
+    sections: [
+      {
+        id: 's1', titre: "Objet et champ d application", modifiable: true,
+        contenu: `La presente procedure definit les modalites de reception, de traitement et de reponse aux reclamations des usagers au sein de {{raison_sociale}}.
+
+Elle s'applique a toute reclamation recue par quelque canal que ce soit : telephone, email, courrier, ou en agence.
+
+Responsable des reclamations : {{reclamations}}
+Garant PSDM : {{garant_psdm}}`,
+        aide: "Verifiez que le responsable des reclamations est bien designe dans votre profil."
+      },
+      {
+        id: 's2', titre: "Canaux de reception", modifiable: true,
+        contenu: `Les patients peuvent adresser leurs reclamations par les canaux suivants :
+
+- Telephone : {{telephone}} (du lundi au vendredi, 9h-18h)
+- Email : {{email}}
+- Courrier : {{adresse_siege}}, {{code_postal}} {{ville}}
+- En agence : lors de tout contact avec notre personnel
+
+Toute reclamation recue est enregistree dans le registre des reclamations le jour meme de sa reception.`,
+        aide: "Adaptez les horaires et les canaux a votre organisation."
+      },
+      {
+        id: 's3', titre: "Traitement et delai de reponse", modifiable: true,
+        contenu: `A reception d'une reclamation, le responsable {{reclamations}} :
+
+1. Accuse reception au patient dans les 48h ouvrables
+2. Analyse la reclamation et identifie les causes
+3. Apporte une reponse complete au patient dans les 10 jours ouvrables
+4. Enregistre la reclamation, la reponse apportee et le statut dans le registre MediReg
+5. Si necessaire, met en place une action corrective pour eviter la recurrence
+
+En cas de reclamation grave ou urgente, le responsable en informe immediatement {{direction}}.`,
+        aide: "Adaptez les delais a votre organisation. 10 jours ouvrables est la bonne pratique HAS."
+      },
+      {
+        id: 's4', titre: "Analyse et amelioration continue", modifiable: true,
+        contenu: `Le registre des reclamations est analyse annuellement par {{pilote_certification}} afin de :
+
+- Identifier les types de reclamations les plus frequents
+- Mettre en place des actions preventives
+- Mesurer l'efficacite des actions correctives deja mises en place
+
+Cette analyse est presentee a la direction et integree dans le plan d'amelioration de la certification HAS PSDM.`,
+        aide: "Ce paragraphe montre a l'inspecteur votre demarche d'amelioration continue."
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",
