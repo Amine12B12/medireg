@@ -4,122 +4,135 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const CHAPITRES: Record<string, { label: string; color: string; bg: string }> = {
-  '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF' },
-  '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF' },
-  '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE' },
-  '4': { label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7' },
+const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  '1': { label: 'Éthique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
+  '2': { label: 'Distribution et réalisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE' },
+  '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0' },
+  '4': { label: 'Qualité et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' },
 }
 
-const NOMS_DOCS: Record<string, string> = {
-  'USA-INFO-01': 'Définitions libre choix et consentement',
-  'USA-DOC-01': 'Charte éthique',
-  'PRESTA-DOC-01': "Attestation d'installation",
-  'QR-DOC-01': 'Enquête de satisfaction',
-  'PROC-PRESCRIPTION-01': 'Procédure réception des prescriptions',
-}
-
-// Pour chaque code document, quels critères il couvre
-const CRITERES_PAR_DOC: Record<string, string[]> = {
-  'USA-INFO-01': ['1.2.1', '1.2.2'],
-  'USA-DOC-01': ['1.2.1', '1.2.5'],
-  'PRESTA-DOC-01': ['1.2.1', '1.2.4'],
-  'QR-DOC-01': ['1.3.1', '1.3.2'],
-  'PROC-PRESCRIPTION-01': ['2.2.1'],
+const DOC_META: Record<string, { titre: string; chapitre: string; criteres: string[] }> = {
+  'USA-INFO-01': { titre: "Notice d'information libre choix", chapitre: '1', criteres: ['1.2.1', '1.2.2'] },
+  'USA-DOC-01': { titre: 'Charte éthique', chapitre: '1', criteres: ['1.2.1', '1.2.5'] },
+  'PRESTA-DOC-01': { titre: "Attestation d'installation (modèle)", chapitre: '1', criteres: ['1.2.4'] },
+  'QR-DOC-01': { titre: 'Questionnaire de satisfaction', chapitre: '1', criteres: ['1.3.1'] },
+  'ATTESTATION-DEVIS': { titre: 'Attestation remise systématique des devis', chapitre: '1', criteres: ['1.2.2'] },
+  'ATTESTATION-CONSENTEMENT': { titre: 'Attestation recueil consentement', chapitre: '1', criteres: ['1.2.4'] },
+  'PROC-BIENTRAITANCE': { titre: 'Procédure bientraitance et dignité', chapitre: '1', criteres: ['1.2.3'] },
+  'FORM-BIENTRAITANCE': { titre: 'Attestation sensibilisation bientraitance', chapitre: '1', criteres: ['1.2.3'] },
+  'POLITIQUE-CONFIDENTIALITE': { titre: 'Politique de confidentialité RGPD', chapitre: '1', criteres: ['1.2.5'] },
+  'REGISTRE-TRAITEMENTS': { titre: 'Registre des activités de traitement', chapitre: '1', criteres: ['1.2.5'] },
+  'ATTEST-RGPD': { titre: 'Attestation sensibilisation RGPD', chapitre: '1', criteres: ['1.2.5'] },
+  'RAPPORT-SATISFACTION': { titre: 'Rapport annuel de satisfaction', chapitre: '1', criteres: ['1.3.1'] },
+  'PROC-RECLAMATIONS': { titre: 'Procédure gestion des réclamations', chapitre: '1', criteres: ['1.3.2'] },
+  'PROC-PRESCRIPTION-01': { titre: 'Procédure réception des prescriptions', chapitre: '2', criteres: ['2.2.1'] },
 }
 
 export default function DocumentsPage() {
-  const [docs, setDocs] = useState<any[]>([])
-  const [criteres, setCriteres] = useState<any[]>([])
+  const [docsEditables, setDocsEditables] = useState<any[]>([])
+  const [docsQualite, setDocsQualite] = useState<any[]>([])
   const [societe, setSociete] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'tous' | 'generes' | 'preuves'>('tous')
-  const [search, setSearch] = useState('')
+  const [chapitreFilter, setChapitreFilter] = useState('tous')
+  const [exporting, setExporting] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: prof } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
-      if (!prof?.client_id) { setLoading(false); return }
+  useEffect(() => { load() }, [])
 
-      const { data: soc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
-      setSociete(soc)
-      if (!soc) { setLoading(false); return }
+  async function load() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
+    if (!prof?.client_id) { setLoading(false); return }
+    const { data: soc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
+    setSociete(soc)
+    if (!soc) { setLoading(false); return }
+    const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
+    const etabId = etabs?.[0]?.id
+    if (!etabId) { setLoading(false); return }
 
-      const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
-      const etabId = etabs?.[0]?.id
-      if (!etabId) { setLoading(false); return }
+    // Documents éditables signés
+    const { data: editables } = await supabase.from('documents_editables').select('*').eq('etablissement_id', etabId).eq('statut', 'signe').order('created_at', { ascending: false })
+    setDocsEditables(editables || [])
 
-      const { data: documents } = await supabase.from('documents_qualite').select('*').eq('etablissement_id', etabId).order('created_at', { ascending: false })
-      setDocs(documents || [])
+    // Documents qualité (anciens)
+    const { data: qualite } = await supabase.from('documents_qualite').select('*').eq('etablissement_id', etabId).order('created_at', { ascending: false })
+    setDocsQualite(qualite || [])
 
-      const { data: crits } = await supabase.from('criteres_psdm').select('id, code, titre, chapitre').order('code')
-      setCriteres(crits || [])
-
-      setLoading(false)
-    }
-    load()
-  }, [])
-
-  const isPreuve = (doc: any) => doc.code_doc?.startsWith('PREUVE_')
-
-  // Critere pour les preuves uploadées
-  const getCritereForPreuve = (doc: any) => {
-    const code = doc.code_doc.replace('PREUVE_', '')
-    return criteres.find(c => c.code === code)
+    setLoading(false)
   }
 
-  // Critères couverts par un document généré
-  const getCriteresForDoc = (doc: any): any[] => {
-    const codes = CRITERES_PAR_DOC[doc.code_doc] || []
-    return codes.map(code => criteres.find(c => c.code === code)).filter(Boolean)
+  // Construire liste unifiée
+  const allDocs = [
+    ...docsEditables.map(d => ({
+      id: d.id,
+      code: d.template_code,
+      titre: d.titre,
+      type: 'editable' as const,
+      signe_par: d.signe_par,
+      signe_le: d.signe_le,
+      created_at: d.created_at,
+      url: null,
+      meta: DOC_META[d.template_code],
+    })),
+    ...docsQualite.filter(d => !d.code_doc?.startsWith('PREUVE_')).map(d => ({
+      id: d.id,
+      code: d.code_doc,
+      titre: DOC_META[d.code_doc]?.titre || d.nom || d.code_doc,
+      type: 'qualite' as const,
+      signe_par: null,
+      signe_le: null,
+      created_at: d.created_at,
+      url: d.url,
+      meta: DOC_META[d.code_doc],
+    })),
+    ...docsQualite.filter(d => d.code_doc?.startsWith('PREUVE_')).map(d => ({
+      id: d.id,
+      code: d.code_doc,
+      titre: d.nom || d.code_doc,
+      type: 'preuve' as const,
+      signe_par: null,
+      signe_le: null,
+      created_at: d.created_at,
+      url: d.url,
+      meta: { chapitre: d.code_doc.replace('PREUVE_', '').split('.')[0], criteres: [d.code_doc.replace('PREUVE_', '')], titre: d.nom },
+    })),
+  ]
+
+  // Grouper par chapitre
+  const docsParChapitre: Record<string, typeof allDocs> = {}
+  for (const doc of allDocs) {
+    const chap = doc.meta?.chapitre || '?'
+    if (!docsParChapitre[chap]) docsParChapitre[chap] = []
+    docsParChapitre[chap].push(doc)
   }
 
-  const filtered = docs.filter(d => {
-    if (filter === 'generes' && isPreuve(d)) return false
-    if (filter === 'preuves' && !isPreuve(d)) return false
-    if (search) {
-      const name = isPreuve(d) ? d.nom : (NOMS_DOCS[d.code_doc] || d.code_doc)
-      return name.toLowerCase().includes(search.toLowerCase()) || d.code_doc?.toLowerCase().includes(search.toLowerCase())
-    }
-    return true
-  })
+  const filteredDocs = chapitreFilter === 'tous' ? allDocs : allDocs.filter(d => d.meta?.chapitre === chapitreFilter)
 
-  const nbGeneres = docs.filter(d => !isPreuve(d)).length
-  const nbPreuves = docs.filter(d => isPreuve(d)).length
+  async function exportZip() {
+    setExporting(true)
+    // Créer une liste des documents téléchargeables
+    const lines = allDocs.map(d => {
+      if (d.type === 'editable') return `${d.titre} — Signé par ${d.signe_par} le ${new Date(d.signe_le).toLocaleDateString('fr-FR')} — /api/download-editable?id=${d.id}`
+      if (d.url) return `${d.titre} — ${d.url}`
+      return null
+    }).filter(Boolean)
 
-  function getExt(url: string) {
-    const ext = url.split('.').pop()?.toUpperCase() || 'DOC'
-    return ext.length > 4 ? 'DOC' : ext
-  }
-
-  function getDocIcon(doc: any) {
-    if (isPreuve(doc)) return { icon: 'ti-paperclip', color: '#7C3AED', bg: '#F5F3FF' }
-    const ext = getExt(doc.url || '')
-    if (ext === 'DOCX' || ext === 'DOC') return { icon: 'ti-file-word', color: '#1A56DB', bg: '#EBF2FF' }
-    if (ext === 'PDF') return { icon: 'ti-file-type-pdf', color: '#DC2626', bg: '#FEE2E2' }
-    return { icon: 'ti-file', color: '#6B7280', bg: '#F3F4F6' }
+    const content = `LISTE DES DOCUMENTS QUALITE — ${societe?.raison_sociale}\nExport du ${new Date().toLocaleDateString('fr-FR')}\n\n${lines.join('\n')}`
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `documents_qualite_${new Date().toISOString().split('T')[0]}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+    setExporting(false)
   }
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
       Chargement...
-    </div>
-  )
-
-  if (!societe) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)' }}>
-      <div style={{ textAlign: 'center' }}>
-        <i className="ti ti-files" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
-        <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Configurez votre profil pour accéder aux documents</div>
-        <button onClick={() => router.push('/dashboard/onboarding')}
-          style={{ marginTop: '16px', padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-          Configurer mon profil
-        </button>
-      </div>
     </div>
   )
 
@@ -130,152 +143,163 @@ export default function DocumentsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Documents qualité</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{societe.raison_sociale} · {docs.length} document{docs.length > 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{societe?.raison_sociale} · {allDocs.length} document{allDocs.length > 1 ? 's' : ''}</div>
         </div>
-        <button onClick={() => router.push('/dashboard/certification')}
-          style={{ padding: '9px 18px', background: 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px', boxShadow: '0 1px 4px rgba(26,86,219,0.25)' }}>
-          <i className="ti ti-plus" style={{ fontSize: '14px' }} />
-          Ajouter depuis la certification
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={exportZip} disabled={exporting || allDocs.length === 0}
+            style={{ padding: '9px 16px', background: allDocs.length === 0 ? '#F3F4F6' : '#F0FDF4', border: `1px solid ${allDocs.length === 0 ? 'var(--border)' : '#A7F3D0'}`, borderRadius: '9px', color: allDocs.length === 0 ? '#9CA3AF' : '#059669', fontSize: '13px', fontWeight: '600', cursor: allDocs.length === 0 ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-download" style={{ fontSize: '14px' }} />
+            {exporting ? 'Export...' : 'Exporter la liste'}
+          </button>
+          <button onClick={() => router.push('/dashboard/certification')}
+            style={{ padding: '9px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <i className="ti ti-plus" style={{ fontSize: '14px' }} />
+            Créer un document
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
         {[
-          { label: 'Total', value: docs.length, icon: 'ti-files', color: '#1A56DB', bg: '#EBF2FF' },
-          { label: 'Générés par MediReg', value: nbGeneres, icon: 'ti-sparkles', color: '#059669', bg: '#D1FAE5' },
-          { label: 'Preuves uploadées', value: nbPreuves, icon: 'ti-upload', color: '#7C3AED', bg: '#F5F3FF' },
+          { label: 'Documents signés', value: docsEditables.length, icon: 'ti-signature', color: '#059669', bg: '#ECFDF5' },
+          { label: 'Preuves uploadées', value: docsQualite.filter(d => d.code_doc?.startsWith('PREUVE_')).length, icon: 'ti-paperclip', color: '#7C3AED', bg: '#F5F3FF' },
+          { label: 'Chapitres couverts', value: Object.keys(docsParChapitre).filter(k => k !== '?').length, icon: 'ti-book', color: '#1A56DB', bg: '#EBF2FF' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <i className={`ti ${s.icon}`} style={{ fontSize: '18px', color: s.color }} />
             </div>
             <div>
-              <div style={{ fontSize: '22px', fontWeight: '700', color: s.color, letterSpacing: '-0.5px', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: '22px', fontWeight: '700', color: s.color, lineHeight: 1 }}>{s.value}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{s.label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Filtres */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <i className="ti ti-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: 'var(--text-tertiary)' }} />
-          <input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-            style={{ padding: '8px 12px 8px 32px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface)', width: '200px' }} />
-        </div>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {[
-            { key: 'tous', label: 'Tous' },
-            { key: 'generes', label: 'Générés' },
-            { key: 'preuves', label: 'Preuves' },
-          ].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key as any)}
-              style={{ padding: '7px 14px', borderRadius: '20px', border: `1px solid ${filter === f.key ? '#1A56DB' : 'var(--border)'}`, background: filter === f.key ? '#EBF2FF' : 'var(--surface)', color: filter === f.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filter === f.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-              {f.label}
+      {/* Filtres chapitres */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <button onClick={() => setChapitreFilter('tous')}
+          style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${chapitreFilter === 'tous' ? '#1A56DB' : 'var(--border)'}`, background: chapitreFilter === 'tous' ? '#EBF2FF' : 'var(--surface)', color: chapitreFilter === 'tous' ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: chapitreFilter === 'tous' ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+          Tous ({allDocs.length})
+        </button>
+        {['1', '2', '3', '4'].map(chap => {
+          const ch = CHAPITRES[chap]
+          const count = docsParChapitre[chap]?.length || 0
+          return (
+            <button key={chap} onClick={() => setChapitreFilter(chap)}
+              style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${chapitreFilter === chap ? ch.color : 'var(--border)'}`, background: chapitreFilter === chap ? ch.bg : 'var(--surface)', color: chapitreFilter === chap ? ch.color : 'var(--text-secondary)', fontSize: '12px', fontWeight: chapitreFilter === chap ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              Ch.{chap} ({count})
             </button>
-          ))}
+          )
+        })}
+      </div>
+
+      {/* Documents vides */}
+      {allDocs.length === 0 ? (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '64px', textAlign: 'center' }}>
+          <i className="ti ti-files" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
+          <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun document pour le moment</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Créez vos premiers documents depuis la page Certification</div>
+          <button onClick={() => router.push('/dashboard/certification')}
+            style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            Aller à la certification
+          </button>
+        </div>
+      ) : (
+        /* Groupé par chapitre */
+        chapitreFilter === 'tous' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {['1', '2', '3', '4'].filter(chap => docsParChapitre[chap]?.length > 0).map(chap => {
+              const ch = CHAPITRES[chap]
+              const docs = docsParChapitre[chap]
+              return (
+                <div key={chap}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: ch.bg, border: `1px solid ${ch.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: '12px', fontWeight: '800', color: ch.color }}>{chap}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: ch.color }}>{ch.label}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', background: ch.bg, padding: '2px 8px', borderRadius: '20px' }}>{docs.length} doc{docs.length > 1 ? 's' : ''}</div>
+                  </div>
+                  <DocList docs={docs} router={router} />
+                </div>
+              )
+            })}
+            {docsParChapitre['?']?.length > 0 && (
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '12px' }}>Autres documents</div>
+                <DocList docs={docsParChapitre['?']} router={router} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <DocList docs={filteredDocs} router={router} />
+        )
+      )}
+    </div>
+  )
+}
+
+function DocList({ docs, router }: { docs: any[]; router: any }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {docs.map(doc => <DocItem key={doc.id} doc={doc} router={router} />)}
+    </div>
+  )
+}
+
+function DocItem({ doc, router }: { doc: any; router: any }) {
+  const isEditable = doc.type === 'editable'
+  const isPreuve = doc.type === 'preuve'
+  const ch = CHAPITRES[doc.meta?.chapitre || '']
+
+  return (
+    <div style={{ background: 'var(--surface)', border: `1px solid ${isEditable ? '#A7F3D0' : 'var(--border)'}`, borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+
+      {/* Icone */}
+      <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: isEditable ? '#ECFDF5' : isPreuve ? '#F5F3FF' : '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <i className={`ti ${isEditable ? 'ti-signature' : isPreuve ? 'ti-paperclip' : 'ti-file-text'}`}
+          style={{ fontSize: '18px', color: isEditable ? '#059669' : isPreuve ? '#7C3AED' : '#1A56DB' }} />
+      </div>
+
+      {/* Infos */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{doc.titre}</span>
+          {isEditable && <span style={{ fontSize: '10px', color: '#059669', background: '#ECFDF5', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Signé</span>}
+          {isPreuve && <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Uploadé</span>}
+          {doc.code && !isPreuve && <span style={{ fontSize: '10px', color: '#6B7280', background: '#F3F4F6', padding: '1px 7px', borderRadius: '20px' }}>{doc.code}</span>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {doc.meta?.criteres?.map((c: string) => ch ? (
+            <span key={c} style={{ fontSize: '10px', color: ch.color, background: ch.bg, padding: '1px 7px', borderRadius: '4px', fontWeight: '600' }}>{c}</span>
+          ) : null)}
+          {doc.signe_par && <span style={{ fontSize: '11px', color: '#6B7280' }}>par {doc.signe_par}</span>}
+          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+            {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </span>
         </div>
       </div>
 
-      {/* Liste */}
-      {filtered.length === 0 ? (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '64px', textAlign: 'center' }}>
-          <i className="ti ti-files" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
-          <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
-            {docs.length === 0 ? 'Aucun document pour le moment' : 'Aucun résultat'}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
-            {docs.length === 0 ? 'Générez vos premiers documents depuis la page Certification' : 'Modifiez votre recherche'}
-          </div>
-          {docs.length === 0 && (
-            <button onClick={() => router.push('/dashboard/certification')}
-              style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-              Aller à la certification
-            </button>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {filtered.map(doc => {
-            const preuve = isPreuve(doc)
-            const criterePreuve = preuve ? getCritereForPreuve(doc) : null
-            const criteuresDoc = !preuve ? getCriteresForDoc(doc) : []
-            const nomDoc = preuve ? doc.nom : (NOMS_DOCS[doc.code_doc] || doc.nom || doc.code_doc)
-            const iconStyle = getDocIcon(doc)
-            const filename = doc.url?.split('/').pop() || ''
-            const ext = getExt(doc.url || '')
-
-            return (
-              <div key={doc.id}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', transition: 'all 0.1s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#BFDBFE'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
-
-                {/* Icone */}
-                <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: iconStyle.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className={`ti ${iconStyle.icon}`} style={{ fontSize: '20px', color: iconStyle.color }} />
-                </div>
-
-                {/* Infos */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{nomDoc}</span>
-                    {!preuve && doc.code_doc && (
-                      <span style={{ fontSize: '10px', color: '#1A56DB', background: '#EBF2FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '500' }}>{doc.code_doc}</span>
-                    )}
-                    {preuve && (
-                      <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '500' }}>Preuve uploadée</span>
-                    )}
-                  </div>
-
-                  {/* Critères associés */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    {/* Pour les preuves — un seul critère */}
-                    {criterePreuve && (() => {
-                      const chap = CHAPITRES[criterePreuve.chapitre]
-                      return (
-                        <button onClick={() => router.push('/dashboard/certification')}
-                          style={{ fontSize: '11px', color: chap?.color, background: chap?.bg, padding: '2px 8px', borderRadius: '4px', fontWeight: '600', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <i className="ti ti-link" style={{ fontSize: '10px' }} />
-                          {criterePreuve.code} — {criterePreuve.titre.substring(0, 35)}{criterePreuve.titre.length > 35 ? '...' : ''}
-                        </button>
-                      )
-                    })()}
-
-                    {/* Pour les documents générés — plusieurs critères possibles */}
-                    {criteuresDoc.map((crit: any) => {
-                      const chap = CHAPITRES[crit.chapitre]
-                      return (
-                        <button key={crit.id} onClick={() => router.push('/dashboard/certification')}
-                          style={{ fontSize: '11px', color: chap?.color, background: chap?.bg, padding: '2px 8px', borderRadius: '4px', fontWeight: '600', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <i className="ti ti-link" style={{ fontSize: '10px' }} />
-                          {crit.code}
-                        </button>
-                      )
-                    })}
-
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                      {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', background: 'var(--surface-hover)', padding: '1px 6px', borderRadius: '4px' }}>{ext}</span>
-                  </div>
-                </div>
-
-                {/* Action */}
-                <div style={{ flexShrink: 0 }}>
-                  <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download={filename}
-                    style={{ height: '34px', padding: '0 14px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
-                    <i className="ti ti-download" style={{ fontSize: '13px' }} />
-                    Télécharger
-                  </a>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+        {isEditable && (
+          <a href={`/api/download-editable?id=${doc.id}`} target="_blank"
+            style={{ height: '34px', padding: '0 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#059669', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none', cursor: 'pointer' }}>
+            <i className="ti ti-download" style={{ fontSize: '13px' }} />
+            Télécharger
+          </a>
+        )}
+        {!isEditable && doc.url && (
+          <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
+            style={{ height: '34px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
+            <i className="ti ti-download" style={{ fontSize: '13px' }} />
+            Télécharger
+          </a>
+        )}
+      </div>
     </div>
   )
 }
