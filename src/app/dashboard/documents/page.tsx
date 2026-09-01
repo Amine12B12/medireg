@@ -28,6 +28,8 @@ const DOC_META: Record<string, { titre: string; chapitre: string; criteres: stri
   'PROC-PRESCRIPTION-01': { titre: 'Procédure réception des prescriptions', chapitre: '2', criteres: ['2.2.1'] },
 }
 
+const supabase = createClient()
+
 export default function DocumentsPage() {
   const [docsEditables, setDocsEditables] = useState<any[]>([])
   const [docsQualite, setDocsQualite] = useState<any[]>([])
@@ -35,7 +37,6 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [chapitreFilter, setChapitreFilter] = useState('tous')
   const [exporting, setExporting] = useState(false)
-  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => { load() }, [])
