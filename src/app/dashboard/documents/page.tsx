@@ -42,18 +42,24 @@ export default function DocumentsPage() {
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('user:', user?.id)
     if (!user) return
     const { data: prof } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
+    console.log('prof client_id:', prof?.client_id)
     if (!prof?.client_id) { setLoading(false); return }
     const { data: soc } = await supabase.from('societes').select('*').eq('client_id', prof.client_id).single()
+    console.log('soc:', soc?.id)
     setSociete(soc)
     if (!soc) { setLoading(false); return }
     const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
+    console.log('etabs:', etabs)
     const etabId = etabs?.[0]?.id
+    console.log('etabId:', etabId)
     if (!etabId) { setLoading(false); return }
 
     // Documents éditables signés
-    const { data: editables } = await supabase.from('documents_editables').select('*').eq('etablissement_id', etabId).eq('statut', 'signe').order('created_at', { ascending: false })
+    const { data: editables, error: editErr } = await supabase.from('documents_editables').select('*').eq('etablissement_id', etabId).eq('statut', 'signe').order('created_at', { ascending: false })
+    console.log('editables:', editables?.length, 'error:', editErr?.message)
     setDocsEditables(editables || [])
 
     // Documents qualité (anciens)
