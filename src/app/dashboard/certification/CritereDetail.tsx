@@ -96,13 +96,12 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '1.3.1': {
-    inspecteur: "L'inspecteur va demander à voir vos enquêtes de satisfaction — pas juste le formulaire vide, mais les résultats et ce que vous en avez fait. Il cherche une démarche d'amélioration continue.",
-    contexte: "Ce critère oblige à écouter vraiment vos patients et à améliorer vos pratiques. L'inspecteur peut demander à voir les résultats des 12 derniers mois et les actions correctrices prises.",
-    conseil: "Le piège classique : avoir le questionnaire mais pas les résultats compilés. Créez un tableau annuel avec les résultats et les actions prises — c'est ce que l'inspecteur demande.",
+    inspecteur: "L'inspecteur va demander à voir vos enquêtes de satisfaction — pas juste le formulaire vide, mais les résultats et ce que vous en avez fait. Il cherche une démarche d'amélioration continue. Il peut demander les résultats des 12 derniers mois.",
+    contexte: "Ce critère oblige à écouter vraiment vos patients et à améliorer vos pratiques. Sans résultats compilés et sans actions d'amélioration documentées, ce critère ne peut pas être validé.",
+    conseil: "Le piège classique : avoir le questionnaire mais pas les résultats compilés. Le rapport annuel de satisfaction est ce que l'inspecteur demande — MediReg vous en génère un modèle à compléter.",
     preuves: [
-      { code: 'QR-DOC-01', label: "Questionnaire de satisfaction usager", description: "Formulaire de satisfaction adapté à l'activité PSDM.", type: 'generer' },
-      { label: "Résultats de l'enquête satisfaction (12 mois)", description: "Synthèse des résultats — taux de retour, notes, commentaires, et actions prises.", type: 'upload' },
-      { label: "Plan d'amélioration issu de la satisfaction", description: "Document montrant les actions concrètes prises suite aux retours patients.", type: 'upload' },
+      { code: 'QR-DOC-01', label: "⭐ Questionnaire de satisfaction usager", description: "PREUVE 1 — Formulaire de satisfaction adapté à l'activité PSDM. À remettre régulièrement à vos patients.", type: 'generer', mention: 'principal' },
+      { code: 'RAPPORT-SATISFACTION', label: "⭐ Rapport annuel de satisfaction", description: "PREUVE 2 — Synthèse des résultats et actions d'amélioration. C'est ce que l'inspecteur demande à voir.", type: 'generer', mention: 'principal' },
     ],
     questions: [
       { id: 'q1', label: "À quelle fréquence réalisez-vous des enquêtes de satisfaction ?", type: 'choix', options: ["Après chaque prestation", "Trimestrielle", "Semestrielle", "Annuelle", "Pas encore en place"], requis: true, aide: "Une fois par an minimum est requis." },

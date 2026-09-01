@@ -462,6 +462,57 @@ La présente attestation est établie pour valoir ce que de droit dans le cadre 
       },
     ]
   },
+  'RAPPORT-SATISFACTION': {
+    titre: "Rapport annuel de satisfaction usagers",
+    description: "Synthese des resultats de vos enquetes de satisfaction avec les actions d'amelioration.",
+    sections: [
+      {
+        id: 's1', titre: "Presentation de la demarche", modifiable: true,
+        contenu: `{{raison_sociale}} evalue regulierement la satisfaction de ses usagers (critere 1.3.1 HAS PSDM 2024).
+
+Periode : [EXEMPLE : Janvier 2026 - Decembre 2026]
+Responsable : {{pilote_certification}}
+Questionnaires distribues : [EXEMPLE : 45]
+Reponses recues : [EXEMPLE : 28]
+Taux de retour : [EXEMPLE : 62%]`,
+        aide: "Remplacez les exemples par vos vraies donnees."
+      },
+      {
+        id: 's2', titre: "Resultats par thematique", modifiable: true,
+        contenu: `Qualite du materiel :
+- Tres satisfait : [EXEMPLE : 18 reponses - 64%]
+- Satisfait : [EXEMPLE : 8 reponses - 29%]
+- Peu satisfait : [EXEMPLE : 2 reponses - 7%]
+
+Ponctualite des interventions :
+- Tres satisfait : [EXEMPLE : 20 reponses - 71%]
+- Satisfait : [EXEMPLE : 6 reponses - 21%]
+- Peu satisfait : [EXEMPLE : 2 reponses - 7%]
+
+Amabilite de l'equipe :
+- Tres satisfait : [EXEMPLE : 22 reponses - 79%]
+- Satisfait : [EXEMPLE : 5 reponses - 18%]
+- Peu satisfait : [EXEMPLE : 1 reponse - 3%]`,
+        aide: "Remplacez tous les exemples par vos vraies donnees."
+      },
+      {
+        id: 's3', titre: "Actions d amelioration mises en place", modifiable: true,
+        contenu: `Suite a l'analyse des resultats, les actions suivantes ont ete mises en place :
+
+Action 1 : [EXEMPLE : Amelioration des delais de livraison]
+Probleme : [EXEMPLE : 2 patients ont signale des retards]
+Action : [EXEMPLE : Confirmation RDV 48h avant livraison]
+Responsable : {{responsable_etablissement}}
+Resultat : [EXEMPLE : Aucune reclamation de retard depuis]
+
+Action 2 : [EXEMPLE : Formation sur explication du materiel]
+Probleme : [EXEMPLE : Patients demandant plus d'explications]
+Action : [EXEMPLE : Formation equipe pedagogie patient]
+Responsable : {{garant_psdm}}`,
+        aide: "Documentez chaque action avec un responsable et un resultat."
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",
