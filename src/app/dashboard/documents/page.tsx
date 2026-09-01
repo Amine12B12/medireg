@@ -37,6 +37,8 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [chapitreFilter, setChapitreFilter] = useState('tous')
   const [exporting, setExporting] = useState(false)
+  const [etabId, setEtabId] = useState<string | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => { load() }, [])
@@ -56,6 +58,8 @@ export default function DocumentsPage() {
     console.log('etabs:', etabs)
     const etabId = etabs?.[0]?.id
     console.log('etabId:', etabId)
+    setEtabId(etabId || null)
+    setClientId(prof.client_id)
     if (!etabId) { setLoading(false); return }
 
     // Documents éditables signés
@@ -118,22 +122,26 @@ export default function DocumentsPage() {
   const filteredDocs = chapitreFilter === 'tous' ? allDocs : allDocs.filter(d => d.meta?.chapitre === chapitreFilter)
 
   async function exportZip() {
+    if (!etabId || !clientId) return
     setExporting(true)
-    // Créer une liste des documents téléchargeables
-    const lines = allDocs.map(d => {
-      if (d.type === 'editable') return `${d.titre} — Signé par ${d.signe_par} le ${new Date(d.signe_le).toLocaleDateString('fr-FR')} — /api/download-editable?id=${d.id}`
-      if (d.url) return `${d.titre} — ${d.url}`
-      return null
-    }).filter(Boolean)
-
-    const content = `LISTE DES DOCUMENTS QUALITE — ${societe?.raison_sociale}\nExport du ${new Date().toLocaleDateString('fr-FR')}\n\n${lines.join('\n')}`
-    const blob = new Blob([content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `documents_qualite_${new Date().toISOString().split('T')[0]}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+    try {
+      const res = await fetch(`/api/export-zip?etabId=${etabId}&clientId=${clientId}`)
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error || 'Erreur export')
+        setExporting(false)
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `documents_qualite_${new Date().toISOString().split('T')[0]}.zip`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      alert('Erreur lors de l export')
+    }
     setExporting(false)
   }
 
