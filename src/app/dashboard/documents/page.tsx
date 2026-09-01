@@ -164,7 +164,7 @@ export default function DocumentsPage() {
           <button onClick={exportZip} disabled={exporting || allDocs.length === 0}
             style={{ padding: '9px 16px', background: allDocs.length === 0 ? '#F3F4F6' : '#F0FDF4', border: `1px solid ${allDocs.length === 0 ? 'var(--border)' : '#A7F3D0'}`, borderRadius: '9px', color: allDocs.length === 0 ? '#9CA3AF' : '#059669', fontSize: '13px', fontWeight: '600', cursor: allDocs.length === 0 ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className="ti ti-download" style={{ fontSize: '14px' }} />
-            {exporting ? 'Export...' : 'Exporter la liste'}
+            {exporting ? 'Export...' : 'Exporter le dossier'}
           </button>
           <button onClick={() => router.push('/dashboard/certification')}
             style={{ padding: '9px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
