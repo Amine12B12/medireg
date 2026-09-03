@@ -26,6 +26,9 @@ const DOC_META: Record<string, { titre: string; chapitre: string; criteres: stri
   'RAPPORT-SATISFACTION': { titre: 'Rapport annuel de satisfaction', chapitre: '1', criteres: ['1.3.1'] },
   'PROC-RECLAMATIONS': { titre: 'Procédure gestion des réclamations', chapitre: '1', criteres: ['1.3.2'] },
   'PROC-PRESCRIPTION-01': { titre: 'Procédure réception des prescriptions', chapitre: '2', criteres: ['2.2.1'] },
+  'PROC-ACCESSIBILITE': { titre: "Procédure accessibilité et accueil", chapitre: '2', criteres: ['2.1.1'] },
+  'INFO-ACTIVITES': { titre: "Information sur les activités", chapitre: '2', criteres: ['2.1.2'] },
+  'PROC-HANDICAP': { titre: "Procédure accès personnes handicapées", chapitre: '2', criteres: ['2.1.3'] },
 }
 
 const supabase = createClient()
@@ -164,7 +167,7 @@ export default function DocumentsPage() {
           <button onClick={exportZip} disabled={exporting || allDocs.length === 0}
             style={{ padding: '9px 16px', background: allDocs.length === 0 ? '#F3F4F6' : '#F0FDF4', border: `1px solid ${allDocs.length === 0 ? 'var(--border)' : '#A7F3D0'}`, borderRadius: '9px', color: allDocs.length === 0 ? '#9CA3AF' : '#059669', fontSize: '13px', fontWeight: '600', cursor: allDocs.length === 0 ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className="ti ti-download" style={{ fontSize: '14px' }} />
-            {exporting ? 'Export...' : 'Exporter le dossier'}
+            {exporting ? 'Export...' : 'Exporter la liste'}
           </button>
           <button onClick={() => router.push('/dashboard/certification')}
             style={{ padding: '9px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>

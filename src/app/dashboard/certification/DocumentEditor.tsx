@@ -364,6 +364,134 @@ La presente attestation est etablie pour valoir ce que de droit dans le cadre de
       },
     ]
   },
+  'PROC-ACCESSIBILITE': {
+    titre: "Procedure d accessibilite et d accueil des usagers",
+    description: "Document decrivant comment votre entreprise assure l accessibilite de ses services pour tous les usagers.",
+    sections: [
+      {
+        id: 's1', titre: "Coordonnees et horaires d ouverture", modifiable: true,
+        contenu: `{{raison_sociale}} est accessible aux usagers selon les modalites suivantes :
+
+Adresse : {{adresse_siege}}, {{code_postal}} {{ville}}
+Telephone : {{telephone}}
+Email : {{email}}
+
+Horaires d ouverture : [EXEMPLE : Lundi au vendredi, 8h30 - 18h00]
+Permanence telephonique : [EXEMPLE : Lundi au vendredi, 8h00 - 19h00]
+
+En dehors des horaires d ouverture, un repondeur enregistre les messages. Toute demande urgente est traitee dans les plus brefs delais par notre service d astreinte.`,
+        aide: "Precisez vos vrais horaires d ouverture."
+      },
+      {
+        id: 's2', titre: "Canaux de contact", modifiable: true,
+        contenu: `Les usagers peuvent contacter {{raison_sociale}} par les moyens suivants :
+
+- Telephone : {{telephone}} (appel ou SMS)
+- Email : {{email}}
+- Courrier : {{adresse_siege}}, {{code_postal}} {{ville}}
+- En agence : sur rendez-vous ou sans rendez-vous selon disponibilite
+
+Responsable de l accueil : {{responsable_etablissement}}
+Toute demande est traitee dans un delai maximum de [EXEMPLE : 24h ouvrables].`,
+        aide: "Adaptez les canaux a votre organisation."
+      },
+      {
+        id: 's3', titre: "Delais de prise en charge", modifiable: true,
+        contenu: `{{raison_sociale}} s engage sur les delais de prise en charge suivants :
+
+- Premiere prise de contact : [EXEMPLE : sous 24h ouvrables]
+- Mise en place d une prestation standard : [EXEMPLE : sous 5 jours ouvrables]
+- Mise en place urgente (prescription medicale urgente) : [EXEMPLE : sous 24h]
+- Depannage / remplacement materiel : [EXEMPLE : sous 48h]
+
+Ces delais peuvent varier selon la disponibilite du materiel et la zone geographique.`,
+        aide: "Adaptez les delais a votre organisation reelle."
+      },
+    ]
+  },
+  'INFO-ACTIVITES': {
+    titre: "Information sur les activites et prestations",
+    description: "Document presentant l ensemble des activites et prestations proposees par votre entreprise.",
+    sections: [
+      {
+        id: 's1', titre: "Presentation de l entreprise", modifiable: true,
+        contenu: `{{raison_sociale}} est un prestataire de services et distributeur de materiel medical a domicile (PSDM), agree et certifie HAS.
+
+SIREN : {{siren}}
+Adresse : {{adresse_siege}}, {{code_postal}} {{ville}}
+Telephone : {{telephone}} — Email : {{email}}
+
+Garant PSDM : {{garant_psdm}}`,
+        aide: "Ces informations sont remplies automatiquement depuis votre profil."
+      },
+      {
+        id: 's2', titre: "Activites exercees", modifiable: true,
+        contenu: `{{raison_sociale}} propose les activites suivantes :
+
+[A COMPLETER selon vos activites reelles — exemples :]
+- Vente et location de materiel medical
+- Livraison et installation a domicile
+- Formation des patients et de leur entourage
+- Maintenance et SAV du materiel
+- Reprise du materiel en fin de prestation
+- Conseil et accompagnement des prescripteurs
+
+Familles de materiels pris en charge :
+[A COMPLETER : fauteuils roulants, lits medicalises, oxygene, nutrition, etc.]`,
+        aide: "Completez avec vos vraies activites issues de l onboarding."
+      },
+      {
+        id: 's3', titre: "Zone d intervention", modifiable: true,
+        contenu: `{{raison_sociale}} intervient sur le territoire suivant :
+[EXEMPLE : Departement 44 — Loire-Atlantique et departements limitrophes]
+
+Pour toute demande hors zone, nous orientons l usager vers un prestataire partenaire agreee afin d assurer la continuite du service.`,
+        aide: "Precisez votre zone d intervention reelle."
+      },
+    ]
+  },
+  'PROC-HANDICAP': {
+    titre: "Procedure d acces pour les personnes en situation de handicap",
+    description: "Document decrivant les dispositions prises pour faciliter l acces aux prestations pour les personnes handicapees.",
+    sections: [
+      {
+        id: 's1', titre: "Accessibilite des locaux", modifiable: true,
+        contenu: `{{raison_sociale}} s engage a faciliter l acces de ses services aux personnes en situation de handicap ou ayant des difficultes particulieres.
+
+Accessibilite de nos locaux :
+[A COMPLETER selon votre situation reelle — exemples :]
+- Acces de plain-pied ou rampe d acces
+- Parking reserve aux personnes a mobilite reduite
+- Interphone accessible en fauteuil roulant
+- Documents disponibles en grands caracteres sur demande`,
+        aide: "Decrivez votre situation reelle. Si vos locaux ne sont pas accessibles, indiquez les alternatives."
+      },
+      {
+        id: 's2', titre: "Alternatives et services adaptes", modifiable: true,
+        contenu: `Pour les usagers ne pouvant pas se deplacer en agence, {{raison_sociale}} propose :
+
+- Rendez-vous a domicile pour les personnes a mobilite reduite
+- Livraison et installation directement au domicile de l usager
+- Contact telephonique et email pour toutes les demarches administratives
+- Interlocuteur dedie pour les situations particulieres : {{responsable_etablissement}}
+
+Toute demande de prise en charge adaptee est traitee au cas par cas avec bienveillance et dans les meilleurs delais.`,
+        aide: "Adaptez les services a votre organisation."
+      },
+      {
+        id: 's3', titre: "Formation du personnel", modifiable: true,
+        contenu: `Le personnel de {{raison_sociale}} est sensibilise a l accueil et a la prise en charge des personnes en situation de handicap ou de vulnerabilite.
+
+Cette sensibilisation porte sur :
+- L adaptation du discours et du rythme selon les besoins de l usager
+- La patience et la bienveillance dans les echanges
+- L orientation vers les services specialises si necessaire
+
+Responsable de la formation : {{responsable_etablissement}}`,
+        aide: "Ce paragraphe peut etre laisse tel quel."
+      },
+    ]
+  },
   'PROC-BIENTRAITANCE': {
     titre: "Procédure bientraitance et dignité des usagers",
     description: "Procédure interne définissant les engagements et comportements attendus de vos collaborateurs au domicile des patients.",
