@@ -1255,8 +1255,8 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                 <select value={signePar} onChange={e => setSignePar(e.target.value)}
                   style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const, background: '#fff', marginBottom: '8px' }}>
                   <option value="">-- Sélectionner un signataire --</option>
-                  {Object.entries(responsables).map(([resp, nom]) => (
-                    <option key={resp} value={nom}>{nom} ({resp.replace(/_/g, ' ')})</option>
+                  {[...new Set(Object.values(responsables))].map((nom: string) => (
+                    <option key={nom} value={nom}>{nom}</option>
                   ))}
                 </select>
                 <input value={signePar} onChange={e => setSignePar(e.target.value)}
