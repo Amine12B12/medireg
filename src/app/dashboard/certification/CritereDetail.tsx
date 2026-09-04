@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import DocumentEditor from './DocumentEditor'
+import MeditrackWidget from './MeditrackWidget'
 import { createClient } from '@/lib/supabase'
 
 // ─────────────────────────────────────────────────────────────
@@ -124,6 +125,48 @@ const CRITERES_CONFIG: Record<string, {
       { id: 'q3', label: "Faites-vous une analyse annuelle de vos réclamations ?", type: 'oui_non', requis: true },
     ],
     registre: 'reclamations'
+  },
+  '2.1.1': {
+    inspecteur: "L'inspecteur va verifier que vos patients peuvent facilement vous joindre — par telephone, email, en agence. Il peut tester lui-meme en appelant votre numero.",
+    contexte: "Un patient qui ne peut pas vous joindre rapidement en cas de probleme est un risque. L'inspecteur verifie que vous avez des horaires clairs et des canaux accessibles.",
+    conseil: "Affichez clairement vos horaires sur tous vos supports. Si vous avez un repondeur hors horaires, assurez-vous de rappeler dans les 24h.",
+    preuves: [
+      { code: 'PROC-ACCESSIBILITE', label: "Procedure d'accessibilite et d'accueil", description: "Document officiel decrivant vos horaires, canaux de contact et delais de reponse.", type: 'generer' as const, mention: 'principal' },
+    ],
+    questions: [
+      { id: 'q1', label: "Quels sont vos horaires d'ouverture ?", type: 'texte' as const, requis: true, aide: "Precisez les horaires telephoniques et d'accueil en agence." },
+      { id: 'q2', label: "Comment gerez-vous les appels en dehors des horaires ?", type: 'choix' as const, options: ["Repondeur avec rappel sous 24h", "Astreinte telephonique", "Redirection vers un autre numero", "Pas de prise en charge hors horaires"], requis: true },
+      { id: 'q3', label: "Quel est votre delai moyen de reponse aux emails ?", type: 'choix' as const, options: ["Moins de 4h", "Sous 24h", "Sous 48h", "Pas de delai defini"], requis: true },
+    ],
+    registre: null
+  },
+  '2.1.2': {
+    inspecteur: "L'inspecteur va verifier que le patient peut facilement s'informer sur vos activites — site web, plaquette, affichage en agence.",
+    contexte: "Le patient doit pouvoir connaitre vos prestations, vos tarifs et vos zones d'intervention avant meme de vous contacter.",
+    conseil: "Une simple plaquette ou une page web claire suffit. L'essentiel est que l'information soit accessible et a jour.",
+    preuves: [
+      { code: 'INFO-ACTIVITES', label: "Document d'information sur les activites", description: "Presentation de vos activites, prestations et zone d'intervention.", type: 'generer' as const, mention: 'principal' },
+    ],
+    questions: [
+      { id: 'q1', label: "Comment informez-vous les patients sur vos activites ?", type: 'multiple' as const, options: ["Site internet", "Plaquette papier", "Affichage en agence", "Reseaux sociaux", "Bouche a oreille uniquement"], requis: true },
+      { id: 'q2', label: "Votre information sur les tarifs et remboursements est-elle disponible ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Votre zone d'intervention est-elle clairement definie et communiquee ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '2.1.3': {
+    inspecteur: "L'inspecteur va verifier que vous avez pense aux patients handicapes ou en situation de vulnerabilite — acces en fauteuil, livraison a domicile, interlocuteur dedie.",
+    contexte: "Vos patients sont souvent des personnes agees ou handicapees. L'inspecteur verifie que vous ne creez pas de barriere a l'acces a vos services.",
+    conseil: "Si vos locaux ne sont pas accessibles, ce n'est pas un probleme a condition d'avoir des alternatives comme le rendez-vous a domicile.",
+    preuves: [
+      { code: 'PROC-HANDICAP', label: "Procedure d'acces pour personnes handicapees", description: "Document decrivant vos dispositions pour faciliter l'acces aux personnes en situation de handicap.", type: 'generer' as const, mention: 'principal' },
+    ],
+    questions: [
+      { id: 'q1', label: "Vos locaux sont-ils accessibles aux personnes en fauteuil roulant ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Proposez-vous des rendez-vous a domicile pour les patients ne pouvant pas se deplacer ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Avez-vous un interlocuteur dedie pour les situations particulieres ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
   },
   '2.2.1': {
     inspecteur: "L'inspecteur va vérifier que vous étudiez chaque prescription avant de vous engager et que vous contactez le prescripteur si elle est incomplète. Il cherche des traces écrites de ces échanges.",
@@ -551,8 +594,16 @@ export default function CritereDetail({
 }: Props) {
   const supabase = createClient()
   const config = CRITERES_CONFIG[critere.code]
+  const MEDITRACK_CRITERES = ['2.2.1', '2.3.2', '2.4.3', '2.5.1']
+
+  useEffect(() => {
+    if (societe?.meditrack_etablissement_id) {
+      setMeditrackEtabId(societe.meditrack_etablissement_id)
+    }
+  }, [societe])
   const [editorCode, setEditorCode] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [meditrackEtabId, setMeditrackEtabId] = useState<string | null>(null)
   const statut = reponse?.statut || 'non_analyse'
   const st = STATUTS.find(s => s.key === statut) || STATUTS[0]
   const isConsultant = userRole === 'consultant'
@@ -880,6 +931,20 @@ export default function CritereDetail({
           </div>
           <div style={{ fontSize: '12px', color: '#166534', lineHeight: '1.5' }}>{config.conseil}</div>
         </div>
+      )}
+
+      {/* Widget MediTrack pour les critères opérationnels */}
+      {MEDITRACK_CRITERES.includes(critere.code) && !isConsultant && (
+        <MeditrackWidget
+          meditrackEtabId={meditrackEtabId}
+          critereCode={critere.code}
+          onLink={async (etabId) => {
+            setMeditrackEtabId(etabId)
+            // Sauvegarder dans la société
+            const supabase = (await import('@/lib/supabase')).createClient()
+            await supabase.from('societes').update({ meditrack_etablissement_id: etabId }).eq('id', societe?.id)
+          }}
+        />
       )}
 
       {/* Chat */}
