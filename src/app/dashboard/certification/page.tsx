@@ -133,6 +133,24 @@ export default function CertificationPage() {
       await supabase.from('reponses_criteres').insert([{ etablissement_id: selectedEtabId, critere_id: critereId, statut }])
     }
     setReponses(prev => ({ ...prev, [critereId]: { ...prev[critereId], statut } }))
+
+    // Notifier le consultant quand le client valide un critère
+    if (userRole === 'client' && statut === 'procedure_a_valider') {
+      const { data: { user } } = await supabase.auth.getUser()
+      const critere = criteres.find(c => c.id === critereId)
+      const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
+      for (const consultant of consultants || []) {
+        await supabase.from('notifications').insert([{
+          consultant_id: consultant.id,
+          client_id: societe?.client_id,
+          type: 'critere_a_valider',
+          message: `Critère ${critere?.code} — ${critere?.titre?.substring(0, 50)} — En attente de validation`,
+          critere_code: critere?.code,
+          lu: false,
+        }])
+      }
+    }
+
     if (userRole === 'consultant') {
       const critere = criteres.find(c => c.id === critereId)
       const { data: { user } } = await supabase.auth.getUser()
