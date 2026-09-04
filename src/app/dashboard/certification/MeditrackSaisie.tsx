@@ -184,8 +184,8 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
                     <label style={labelStyle}>Mode de disposition</label>
                     <select value={equipForm.mode_dispo} onChange={e => setEquipForm(p => ({ ...p, mode_dispo: e.target.value }))} style={inp}>
                       <option value="location">Location</option>
-                      <option value="vente">Vente</option>
-                      <option value="pret">Prêt</option>
+                      <option value="achat">Achat / Vente</option>
+                      <option value="mad">MAD (Mise à disposition)</option>
                     </select>
                   </div>
                   <div>
