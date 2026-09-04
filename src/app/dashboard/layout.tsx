@@ -9,7 +9,6 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/clients': { title: 'Clients', sub: 'Etablissements accompagnes' },
   '/dashboard/certification': { title: 'Certification', sub: '60 criteres HAS PSDM' },
   '/dashboard/documents': { title: 'Documents', sub: 'Vos documents qualite' },
-  '/dashboard/assistant': { title: 'Assistant IA', sub: 'Expert reglementaire' },
   '/dashboard/onboarding': { title: 'Configuration', sub: 'Mise en place de votre profil' },
   '/dashboard/profil': { title: 'Mon profil', sub: 'Informations etablissement' },
   '/dashboard/rh': { title: 'Ressources Humaines', sub: 'Compétences et formations' },
@@ -18,7 +17,6 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
 const navConsultant = [
   { path: '/dashboard', icon: 'ti-home', label: 'Tableau de bord' },
   { path: '/dashboard/clients', icon: 'ti-building-hospital', label: 'Clients' },
-  { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
 ]
 
 const navClient = [
@@ -26,7 +24,6 @@ const navClient = [
   { path: '/dashboard/certification', icon: 'ti-shield-check', label: 'Certification' },
   { path: '/dashboard/documents', icon: 'ti-files', label: 'Documents' },
   { path: '/dashboard/rh', icon: 'ti-users', label: 'Ressources Humaines' },
-  { path: '/dashboard/assistant', icon: 'ti-sparkles', label: 'Assistant IA' },
   { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
 ]
 
