@@ -461,9 +461,9 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      {/* Panneau latéral chat */}
+      {/* Panneau latéral chat — overlay flottant */}
       {selectedCritere && (
-        <div style={{ width: '360px', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--surface)', flexShrink: 0, height: '100%' }}>
+        <div style={{ position: 'fixed', top: '58px', right: 0, width: '520px', height: 'calc(100vh - 58px)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--surface)', zIndex: 200, boxShadow: '-4px 0 24px rgba(0,0,0,0.08)' }}>
 
           {/* Header panneau */}
           <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}>
