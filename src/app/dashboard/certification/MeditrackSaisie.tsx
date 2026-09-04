@@ -56,12 +56,12 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
   })
   const [livrForm, setLivrForm] = useState({
     equipement_id: '', date_prevue: new Date().toISOString().split('T')[0],
-    statut: 'planifiee', notes: ''
+    statut: 'planifie', notes: ''
   })
   const [maintForm, setMaintForm] = useState({
     equipement_id: '', type: 'preventive',
     date_prevue: new Date().toISOString().split('T')[0],
-    date_realisee: '', statut: 'planifiee', notes: ''
+    date_realisee: '', statut: 'planifie', notes: ''
   })
 
   useEffect(() => { loadData() }, [meditrackEtabId])
@@ -208,9 +208,9 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
                     <label style={labelStyle}>Statut</label>
                     <select value={equipForm.statut} onChange={e => setEquipForm(p => ({ ...p, statut: e.target.value }))} style={inp}>
                       <option value="en_service">En service</option>
-                      <option value="disponible">Disponible</option>
-                      <option value="en_maintenance">En maintenance</option>
-                      <option value="retire">Retiré</option>
+                      <option value="en_preparation">En préparation</option>
+                      <option value="maintenance">En maintenance</option>
+                      <option value="hors_service">Hors service</option>
                     </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
@@ -312,14 +312,14 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
                   {livraisons.map((lv: any) => (
                     <div key={lv.id} style={{ padding: '12px 16px', background: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: lv.statut === 'realisee' ? '#ECFDF5' : '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <i className="ti ti-truck-delivery" style={{ fontSize: '16px', color: lv.statut === 'realisee' ? '#059669' : '#1A56DB' }} />
+                        <i className="ti ti-truck-delivery" style={{ fontSize: '16px', color: lv.statut === 'termine' ? '#059669' : '#1A56DB' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{(lv as any).equipements?.designation || 'Équipement'}</div>
                         <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{lv.notes || '—'}</div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: lv.statut === 'realisee' ? '#059669' : '#1A56DB', background: lv.statut === 'realisee' ? '#D1FAE5' : '#EBF2FF', padding: '2px 8px', borderRadius: '20px' }}>{lv.statut}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: lv.statut === 'termine' ? '#059669' : '#1A56DB', background: lv.statut === 'termine' ? '#D1FAE5' : '#EBF2FF', padding: '2px 8px', borderRadius: '20px' }}>{lv.statut}</span>
                         <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{new Date(lv.date_prevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                       </div>
                     </div>
@@ -353,17 +353,15 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
                       <label style={labelStyle}>Type</label>
                       <select value={maintForm.type} onChange={e => setMaintForm(p => ({ ...p, type: e.target.value }))} style={inp}>
                         <option value="preventive">Préventive</option>
-                        <option value="corrective">Corrective (panne)</option>
-                        <option value="revision">Révision périodique</option>
-                        <option value="nettoyage">Nettoyage / Désinfection</option>
+                        <option value="curative">Curative (panne)</option>
                       </select>
                     </div>
                     <div>
                       <label style={labelStyle}>Statut</label>
                       <select value={maintForm.statut} onChange={e => setMaintForm(p => ({ ...p, statut: e.target.value }))} style={inp}>
-                        <option value="planifiee">Planifiée</option>
+                        <option value="planifie">Planifiée</option>
                         <option value="en_cours">En cours</option>
-                        <option value="realisee">Réalisée</option>
+                        <option value="termine">Terminée</option>
                       </select>
                     </div>
                     <div>
@@ -397,14 +395,14 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
                   {maintenances.map((mn: any) => (
                     <div key={mn.id} style={{ padding: '12px 16px', background: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: mn.statut === 'realisee' ? '#ECFDF5' : '#FFF7F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <i className="ti ti-tool" style={{ fontSize: '16px', color: mn.statut === 'realisee' ? '#059669' : '#C2410C' }} />
+                        <i className="ti ti-tool" style={{ fontSize: '16px', color: mn.statut === 'termine' ? '#059669' : '#C2410C' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{(mn as any).equipements?.designation || 'Équipement'}</div>
                         <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{mn.type} · {mn.notes || '—'}</div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: mn.statut === 'realisee' ? '#059669' : '#C2410C', background: mn.statut === 'realisee' ? '#D1FAE5' : '#FFF7F0', padding: '2px 8px', borderRadius: '20px' }}>{mn.statut}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: mn.statut === 'termine' ? '#059669' : '#C2410C', background: mn.statut === 'termine' ? '#D1FAE5' : '#FFF7F0', padding: '2px 8px', borderRadius: '20px' }}>{mn.statut}</span>
                         <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{mn.date_realisee ? new Date(mn.date_realisee).toLocaleDateString('fr-FR') : new Date(mn.date_prevue).toLocaleDateString('fr-FR')}</span>
                       </div>
                     </div>
