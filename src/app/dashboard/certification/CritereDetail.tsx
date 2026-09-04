@@ -935,9 +935,9 @@ export default function CritereDetail({
       {/* Widget MediTrack pour les critères opérationnels */}
       {MEDITRACK_CRITERES.includes(critere.code) && !isConsultant && (
         <MeditrackWidget
-          meditrackEtabId={meditrackEtabId || null}
+          meditrackEtabId={meditrackEtabId ?? null}
           critereCode={critere.code}
-          onLink={async (etabId) => {
+          onLink={async (etabId: string) => {
             if (onSaveMeditrackId) await onSaveMeditrackId(etabId)
           }}
         />
