@@ -401,6 +401,271 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
 
+  '3.2.1': {
+    inspecteur: "L'inspecteur va visiter vos locaux et verifier la separation des circuits propre et sale.",
+    contexte: "Un materiel propre qui cotoie un materiel sale est une faute grave.",
+    conseil: "Documentez comment vous organisez la separation des flux dans votre espace de travail.",
+    preuves: [
+      { label: "Plan ou photos des locaux avec circuits identifies", description: "Schema ou photos montrant la separation propre/sale et les zones de stockage.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une zone de stockage dediee au materiel propre ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Le circuit propre et le circuit sale sont-ils clairement separes ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Le materiel en attente de desinfection est-il identifie et isole ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.2.2': {
+    inspecteur: "L'inspecteur va verifier que vos locaux permettent d'accueillir les patients dans des conditions adaptees.",
+    contexte: "Vos locaux doivent etre accessibles et offrir un espace d'accueil correct.",
+    conseil: "Si vos locaux ne sont pas parfaitement accessibles, documentez les alternatives.",
+    preuves: [
+      { code: 'PROC-HANDICAP', label: "Procedure d'acces personnes handicapees", description: "Decrit les dispositions pour l'accueil des personnes en situation de handicap.", type: 'generer' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Vos locaux sont-ils accessibles aux personnes en fauteuil roulant ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Disposez-vous d'un espace d'accueil adapte ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.2.3': {
+    inspecteur: "L'inspecteur va verifier que vous avez un espace pour realiser des essais de materiel si necessaire.",
+    contexte: "Pour certains materiels (fauteuils roulants, lits medicalises), des essais sont necessaires.",
+    conseil: "Documentez comment vous gerez les essais chez le patient si c'est votre pratique.",
+    preuves: [
+      { label: "Description de l'espace d'essai ou procedure d'essai a domicile", description: "Document decrivant comment vous realisez les essais.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Realisez-vous des essais de materiel ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Les essais sont-ils realises en agence ou au domicile du patient ?", type: 'choix' as const, options: ["En agence", "Au domicile du patient", "Les deux selon les cas", "Pas d'essais necessaires"], requis: true },
+    ],
+    registre: null
+  },
+  '3.3.1': {
+    inspecteur: "L'inspecteur va verifier l'hygiene generale de vos locaux.",
+    contexte: "Des locaux sales ou desorganises sont un signal d'alarme immediat.",
+    conseil: "Un planning de nettoyage affiche et renseigne suffit.",
+    preuves: [
+      { label: "Planning de nettoyage des locaux", description: "Tableau de bord du nettoyage avec frequences et responsables.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un planning de nettoyage des locaux ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Le nettoyage est-il trace ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Qui est responsable de l'hygiene des locaux ?", type: 'texte' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.3.2': {
+    inspecteur: "L'inspecteur va demander votre procedure de desinfection du materiel et le registre de tracabilite.",
+    contexte: "La desinfection du materiel entre deux patients est une obligation absolue.",
+    conseil: "Incluez la desinfection comme type de maintenance dans MediTrack pour une tracabilite automatique.",
+    preuves: [
+      { label: "Procedure de nettoyage et desinfection du materiel", description: "Document decrivant le processus de desinfection selon les types de materiels.", type: 'upload' as const },
+      { label: "Registre de tracabilite des desinfections", description: "Registre des desinfections realisees.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une procedure formalisee de desinfection du materiel ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Tracez-vous chaque desinfection ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Quel produit desinfectant utilisez-vous ?", type: 'texte' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.3.3': {
+    inspecteur: "L'inspecteur va verifier que vous avez une procedure d'hygiene pour vos vehicules.",
+    contexte: "Un vehicule qui transporte du materiel propre et du materiel sale est une source de contamination.",
+    conseil: "Une simple procedure decrivant le nettoyage de vos vehicules suffit.",
+    preuves: [
+      { label: "Procedure de nettoyage des vehicules", description: "Document decrivant les mesures d'hygiene lors du transport.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une procedure d'hygiene pour vos vehicules ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Le materiel propre et le materiel sale sont-ils separes dans le vehicule ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "A quelle frequence nettoyez-vous vos vehicules ?", type: 'choix' as const, options: ["Quotidien", "Hebdomadaire", "Mensuel", "Apres chaque tournee"], requis: true },
+    ],
+    registre: null
+  },
+  '3.4.1': {
+    inspecteur: "L'inspecteur va verifier que vous avez un systeme de gestion des dispositifs medicaux permettant de tracer leur circuit complet.",
+    contexte: "Vous devez pouvoir retracer l'historique de chaque dispositif medical.",
+    conseil: "MediTrack est votre systeme de gestion des dispositifs medicaux.",
+    preuves: [
+      { code: 'ATTEST-MAINTENANCE', label: "Attestation de tracabilite MediTrack", description: "MediTrack trace le circuit complet de chaque dispositif medical.", type: 'generer' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Utilisez-vous un logiciel pour gerer votre parc de dispositifs medicaux ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Chaque dispositif medical a-t-il un numero de serie enregistre ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Tracez-vous l'historique complet de chaque dispositif ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.2': {
+    inspecteur: "L'inspecteur va verifier que vous respectez les exigences reglementaires — marquage CE, LPP.",
+    contexte: "Vous ne pouvez pas distribuer un dispositif medical sans marquage CE conforme.",
+    conseil: "Conservez les fiches techniques et declarations de conformite de chaque type de materiel.",
+    preuves: [
+      { label: "Liste des dispositifs medicaux avec marquage CE", description: "Inventaire de vos materiels avec reference CE et numero LPP.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Verifiez-vous le marquage CE de vos dispositifs a la reception ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Conservez-vous les declarations de conformite de vos fournisseurs ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.3': {
+    inspecteur: "L'inspecteur va verifier que vous avez une procedure d'achats organisee.",
+    contexte: "Acheter n'importe quoi a n'importe qui est un risque qualite.",
+    conseil: "Une liste de fournisseurs references avec les criteres de selection suffit.",
+    preuves: [
+      { label: "Liste des fournisseurs references", description: "Liste de vos fournisseurs avec criteres de selection.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une liste de fournisseurs references ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Evaluez-vous vos fournisseurs regulierement ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Avez-vous des criteres formalises pour selectionner un nouveau fournisseur ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.4': {
+    inspecteur: "L'inspecteur va verifier que vous avez les informations techniques sur l'utilisation de chaque dispositif.",
+    contexte: "Vous devez avoir les notices d'utilisation et les guides d'entretien de chaque materiel.",
+    conseil: "Conservez les manuels d'utilisation de vos fabricants.",
+    preuves: [
+      { label: "Classeur ou base documentaire des notices techniques", description: "Organisation de vos notices d'utilisation par famille de materiel.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous les notices d'utilisation de tous vos materiels ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Ces notices sont-elles accessibles a votre personnel ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Les remettez-vous aux patients lors de l'installation ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.5': {
+    inspecteur: "L'inspecteur va verifier que vous gerez vos consommables correctement — stock, tracabilite, dates de peremption.",
+    contexte: "Un consommable perime livre a un patient est une faute grave.",
+    conseil: "Un systeme FIFO et un controle des dates de peremption a la reception suffisent.",
+    preuves: [
+      { label: "Procedure de gestion des consommables", description: "Document decrivant la reception, le stockage et la gestion des dates de peremption.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Verifiez-vous les dates de peremption a la reception ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Appliquez-vous la methode FIFO pour la gestion de vos stocks ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Vos consommables sont-ils stockes dans des conditions adaptees ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.6': {
+    inspecteur: "L'inspecteur va verifier que vos maintenances preventives et curatives sont assurees et tracees.",
+    contexte: "La maintenance est obligatoire pour garantir la securite des patients.",
+    conseil: "MediTrack trace toutes vos maintenances — c'est votre preuve principale.",
+    preuves: [
+      { code: 'ATTEST-MAINTENANCE', label: "Attestation de tracabilite des maintenances", description: "MediTrack trace chaque maintenance preventive et curative.", type: 'generer' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un calendrier de maintenances preventives ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Toutes vos maintenances sont-elles tracees dans MediTrack ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Faites-vous appel a des prestataires de maintenance externalises ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+  '3.4.7': {
+    inspecteur: "L'inspecteur va verifier que vos equipements de mesure sont verifies periodiquement.",
+    contexte: "Les equipements de mesure doivent etre etalon regulierement.",
+    conseil: "Si vous n'avez pas d'equipements de mesure, indiquez-le clairement.",
+    preuves: [
+      { label: "Certificats d'etalonnage ou de verification", description: "Documents attestant la verification periodique de vos equipements.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous des equipements de mesure et de controle ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Ces equipements sont-ils verifies ou etalons periodiquement ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Conservez-vous les certificats de verification ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+  '3.4.8': {
+    inspecteur: "L'inspecteur va verifier que vous controlez techniquement le materiel en location entre deux patients.",
+    contexte: "Un materiel en location doit etre verifie et desinfecte entre chaque patient.",
+    conseil: "MediTrack trace la reprise et la remise en service.",
+    preuves: [
+      { code: 'ATTEST-MAINTENANCE', label: "Attestation de verification entre patients", description: "Atteste que chaque materiel en location est verifie avant reattribution.", type: 'generer' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Realisez-vous une verification technique du materiel apres chaque reprise ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Cette verification est-elle tracee ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Le materiel est-il desinfecte avant reattribution ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.4.9': {
+    inspecteur: "L'inspecteur va verifier que vous communiquez avec les fabricants en cas de probleme (materiovigilance).",
+    contexte: "Vous avez une obligation de signalement en cas d'incident avec un dispositif medical.",
+    conseil: "Designez un correspondant materiovigilance et documentez vos echanges.",
+    preuves: [
+      { label: "Procedure de materiovigilance", description: "Document decrivant comment vous signalez les incidents.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous designe un correspondant materiovigilance ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous une procedure pour gerer les alertes fabricants ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.5.1': {
+    inspecteur: "L'inspecteur va verifier que vous gerez vos dechets de maniere adaptee — DASRI, DEEE.",
+    contexte: "Certains dechets issus de vos activites sont dangereux et necessitent une filiere specifique.",
+    conseil: "Identifiez les types de dechets produits et documentez vos filieres d'elimination.",
+    preuves: [
+      { label: "Procedure de gestion des dechets", description: "Document identifiant les types de dechets et les filieres d'elimination.", type: 'upload' as const },
+      { label: "Bordereaux d'enlevement des dechets", description: "Preuves de collecte par des prestataires agrees.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Produisez-vous des DASRI ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous une filiere de collecte pour vos DEEE ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Vos filieres d'elimination sont-elles tracees ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.6.1': {
+    inspecteur: "L'inspecteur va verifier que vos dossiers patients sont complets, a jour et accessibles.",
+    contexte: "Un dossier patient incomplet est une non-conformite majeure.",
+    conseil: "Documentez votre logiciel metier et montrez qu'il permet une gestion fiable.",
+    preuves: [
+      { label: "Description du systeme de gestion des dossiers", description: "Document decrivant votre logiciel metier et la gestion des dossiers patients.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Quel logiciel utilisez-vous pour gerer les dossiers de vos patients ?", type: 'texte' as const, requis: true },
+      { id: 'q2', label: "Chaque dossier contient-il la prescription, le bon de livraison et les suivis ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Les dossiers sont-ils accessibles rapidement en cas de besoin urgent ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.6.2': {
+    inspecteur: "L'inspecteur va verifier que vous protegez les donnees personnelles de vos patients (RGPD).",
+    contexte: "Ce critere rejoint le 1.2.5 — il s'applique ici aux donnees operationnelles.",
+    conseil: "Votre politique de confidentialite et registre des traitements generes pour le 1.2.5 couvrent ce critere.",
+    preuves: [
+      { code: 'POLITIQUE-CONFIDENTIALITE', label: "Politique de confidentialite RGPD", description: "Deja generee pour le critere 1.2.5 — couvre egalement ce critere.", type: 'generer' as const },
+      { code: 'REGISTRE-TRAITEMENTS', label: "Registre des activites de traitement", description: "Deja genere pour le critere 1.2.5.", type: 'generer' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une politique de confidentialite a jour ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "L'acces a votre logiciel metier est-il securise par identifiant individuel ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.7.1': {
+    inspecteur: "L'inspecteur va verifier que vous avez des contrats de sous-traitance et que vous controlez la qualite.",
+    contexte: "Si vous sous-traitez des prestations, vous restez responsable de la qualite.",
+    conseil: "Pour chaque sous-traitant, ayez un contrat mentionnant les exigences qualite.",
+    preuves: [
+      { label: "Contrats de sous-traitance", description: "Contrats avec vos sous-traitants incluant les exigences qualite.", type: 'upload' as const },
+      { label: "Evaluations des sous-traitants", description: "Bilan annuel de la qualite des prestations.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous recours a des sous-traitants ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous des contrats formalises avec vos sous-traitants ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Evaluez-vous regulierement la qualite de vos sous-traitants ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
 }
 
 const STATUTS = [
