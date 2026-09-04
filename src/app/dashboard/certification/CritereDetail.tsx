@@ -887,7 +887,7 @@ function AttestationButton({ critereCode, critereId, etabId, societe, onOpenEdit
 }
 
 // ─── Composant Chat ───────────────────────────────────────────
-function ChatCritere({ critereId, etabId, userRole }: { critereId: string; etabId: string; userRole: string }) {
+function ChatCritere({ critereId, etabId, userRole, fullHeight }: { critereId: string; etabId: string; userRole: string; fullHeight?: boolean }) {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -1233,7 +1233,8 @@ export default function CritereDetail({
     .flatMap(([, docs]) => docs)
 
   return (
-    <div style={{ fontFamily: 'var(--font)' }}>
+    <div style={{ fontFamily: 'var(--font)', display: isConsultant ? 'grid' : 'block', gridTemplateColumns: isConsultant ? '1fr 340px' : 'none', gap: isConsultant ? '20px' : '0', alignItems: 'start' }}>
+    <div>
 
       {/* Ce que l'inspecteur cherche */}
       {config && (
@@ -1546,8 +1547,10 @@ export default function CritereDetail({
         />
       )}
 
-      {/* Chat */}
-      <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'client'} />
+      {/* Chat inline pour client */}
+      {!isConsultant && (
+        <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'client'} />
+      )}
 
       {/* Editeur de document */}
       {editorCode && (
@@ -1559,6 +1562,20 @@ export default function CritereDetail({
           onSaved={() => { setEditorCode(null); onReloadDocs(); setReloadKey(k => k + 1) }}
         />
       )}
+    </div>
+
+    {/* Chat en sidebar fixe pour consultant */}
+    {isConsultant && (
+      <div style={{ position: 'sticky', top: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="ti ti-message-circle" style={{ fontSize: '15px', color: '#1A56DB' }} />
+          Discussion avec le client
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+          <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'consultant'} fullHeight />
+        </div>
+      </div>
+    )}
     </div>
   )
 }
