@@ -1031,7 +1031,8 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       if (p) respMap[r.responsabilite] = `${p.prenom} ${p.nom}`
     }
     setResponsables(respMap)
-    setSignePar(respMap['direction'] || respMap['responsable_etablissement'] || '')
+    // Ne pas pre-remplir le signataire — le client choisit
+    if (!signePar) setSignePar('')
 
     // Remplacer les variables avec les responsables fraîchement chargés
     const replacedSections = template!.sections.map(s => {
