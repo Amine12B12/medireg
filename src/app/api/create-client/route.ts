@@ -8,7 +8,7 @@ const supabase = createClient(
 
 const meditrackSupabase = createClient(
   'https://nkfivuqomqubhpsvgdfm.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rZml2dXFvbXF1Ymhwc3ZnZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTI3OTQsImV4cCI6MjA5NjQyODc5NH0.KctQtysEc1EkFW7BzoKloJbiIzbsNgSfZDkLFdQpP9I'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rZml2dXFvbXF1Ymhwc3ZnZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg1Mjc5NCwiZXhwIjoyMDk2NDI4Nzk0fQ.d9MRLh_1p7HDZccijNZzUwMLEaKJ0GBNWI8oX6YWIMk'
 )
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!
@@ -154,6 +154,28 @@ export async function POST(req: NextRequest) {
         .update({ meditrack_etablissement_id: meditrackEtab.id })
         .eq('id', client.id)
       console.log('MediTrack link saved:', meditrackEtab.id)
+
+        // Créer le compte auth MediTrack avec le même email et mot de passe
+        try {
+          const { data: meditrackUser, error: authErr } = await meditrackSupabase.auth.admin.createUser({
+            email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { nom, etablissement_id: meditrackEtab.id }
+          })
+          console.log('MediTrack auth user:', meditrackUser?.user?.id, 'error:', authErr?.message)
+
+          if (meditrackUser?.user?.id) {
+            await meditrackSupabase.from('profiles').insert([{
+              id: meditrackUser.user.id,
+              nom,
+              role: 'client',
+              etablissement_id: meditrackEtab.id
+            }])
+          }
+        } catch (authErr: any) {
+          console.error('MediTrack auth error:', authErr.message)
+        }
     }
 
     return NextResponse.json({ success: true, client_id: client.id })

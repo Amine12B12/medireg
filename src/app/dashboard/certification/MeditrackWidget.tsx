@@ -11,6 +11,7 @@ const meditrackClient = createClient(MEDITRACK_URL, MEDITRACK_KEY)
 interface Props {
   meditrackEtabId: string | null
   critereCode: string
+  userEmail?: string
   onLink?: (etabId: string) => void
 }
 
@@ -53,7 +54,7 @@ const CRITERE_CONFIG: Record<string, {
   },
 }
 
-export default function MeditrackWidget({ meditrackEtabId, critereCode, onLink }: Props) {
+export default function MeditrackWidget({ meditrackEtabId, critereCode, userEmail, onLink }: Props) {
   const [stats, setStats] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
   const [etabs, setEtabs] = useState<any[]>([])
