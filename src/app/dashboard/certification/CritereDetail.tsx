@@ -14,7 +14,7 @@ const CRITERES_CONFIG: Record<string, {
   conseil?: string
   preuves: { code?: string; label: string; description: string; type: 'generer' | 'upload' | 'registre' | 'attester'; mention?: string }[]
   questions: { id: string; label: string; type: 'choix' | 'texte' | 'oui_non' | 'multiple'; options?: string[]; aide?: string; requis?: boolean }[]
-  registre?: 'remises' | 'reclamations' | null
+  registre?: 'remises' | 'reclamations' | 'evenements_indesirables' | null
 }> = {
   '1.2.1': {
     inspecteur: "L'inspecteur va vérifier que le patient a bien eu le choix de son prestataire et qu'il n'a pas été orienté de façon imposée. Il cherche une preuve écrite que le libre choix a été respecté et expliqué.",
