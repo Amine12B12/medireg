@@ -85,7 +85,10 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
   async function saveEquipement() {
     if (!equipForm.designation) return
     setSaving(true)
-    const { error } = await meditrack.from('equipements').insert([{ ...equipForm, etablissement_id: meditrackEtabId }])
+    const payload = { ...equipForm, etablissement_id: meditrackEtabId }
+    console.log('saveEquipement payload:', JSON.stringify(payload))
+    const { error } = await meditrack.from('equipements').insert([payload])
+    console.log('saveEquipement error:', error?.message, error?.details)
     if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setEquipForm({ designation: '', categorie: '', fabricant: '', modele: '', numero_serie: '', mode_dispo: 'location', statut: 'en_service', date_mes: new Date().toISOString().split('T')[0], commentaires: '' }) }
     setSaving(false)
   }
