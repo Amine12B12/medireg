@@ -22,6 +22,13 @@ const DOC_META: Record<string, { titre: string; chapitre: string; criteres: stri
   'RAPPORT-SATISFACTION': { titre: 'Rapport satisfaction annuel', chapitre: '1', criteres: ['1.3.1'] },
   'PROC-RECLAMATIONS': { titre: 'Procedure reclamations', chapitre: '1', criteres: ['1.3.2'] },
   'PROC-PRESCRIPTION-01': { titre: 'Procedure prescriptions', chapitre: '2', criteres: ['2.2.1'] },
+  'PROC-ACCESSIBILITE': { titre: 'Procedure accessibilite et accueil', chapitre: '2', criteres: ['2.1.1'] },
+  'INFO-ACTIVITES': { titre: 'Information sur les activites', chapitre: '2', criteres: ['2.1.2'] },
+  'PROC-HANDICAP': { titre: 'Procedure acces personnes handicapees', chapitre: '2', criteres: ['2.1.3'] },
+  'ATTEST-LIVRAISONS': { titre: 'Attestation tracabilite livraisons', chapitre: '2', criteres: ['2.2.1', '2.3.2', '2.3.3'] },
+  'ATTEST-MAINTENANCE': { titre: 'Attestation tracabilite maintenances', chapitre: '2', criteres: ['2.4.1', '2.4.3'] },
+  'ATTEST-REPRISES': { titre: 'Attestation tracabilite reprises', chapitre: '2', criteres: ['2.5.1', '2.5.2'] },
+  'PROC-DESINFECTION': { titre: 'Procedure nettoyage et desinfection DM', chapitre: '3', criteres: ['3.2.1', '3.3.2'] },
 }
 
 const CHAPITRES: Record<string, string> = {
