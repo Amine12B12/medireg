@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const nav = role === 'consultant' ? navConsultant : navClient
   const page = pageTitles[pathname] || { title: 'MediReg', sub: '' }
-  const roleLabel = role === 'consultant' ? 'Consultant' : 'Administrateur'
+  const roleLabel = role === 'consultant' ? 'Consultant' : 'Mon espace'
   const roleColor = role === 'consultant' ? '#7C3AED' : '#1A56DB'
   const roleBg = role === 'consultant' ? '#F5F3FF' : '#EBF2FF'
 
