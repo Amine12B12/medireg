@@ -665,7 +665,122 @@ const CRITERES_CONFIG: Record<string, {
       { id: 'q3', label: "Evaluez-vous regulierement la qualite de vos sous-traitants ?", type: 'oui_non' as const },
     ],
     registre: null
+  },  '4.1.1': {
+    inspecteur: "L'inspecteur va verifier que vous faites une veille active sur la reglementation — LPP, HAS, ANSM.",
+    contexte: "La reglementation PSDM evolue frequemment. Ne pas etre a jour peut invalider vos pratiques.",
+    conseil: "Abonnez-vous aux newsletters de l'ANSM, de la HAS et de votre syndicat professionnel. Notez les mises a jour dans un registre de veille.",
+    preuves: [
+      { label: "Registre de veille reglementaire", description: "Journal des evolutions reglementaires suivies avec date et source.", type: 'upload' as const },
+      { label: "Abonnements aux sources officielles", description: "Preuves d'abonnement aux newsletters ANSM, HAS, syndicats.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Qui est responsable de la veille reglementaire dans votre structure ?", type: 'texte' as const, requis: true },
+      { id: 'q2', label: "Etes-vous abonne aux newsletters de l'ANSM et de la HAS ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Avez-vous un registre ou document de suivi des evolutions reglementaires ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
   },
+  '4.1.2': {
+    inspecteur: "L'inspecteur va verifier que vos pratiques sont conformes aux exigences LPP actuelles et aux recommandations des fabricants.",
+    contexte: "La LPP evolue regulierement — des materiels remboursables peuvent changer de conditions ou de tarifs.",
+    conseil: "Documentez que vous verifiez la conformite LPP de chaque materiel avant de le proposer et que vous appliquez les recommandations fabricants.",
+    preuves: [
+      { label: "Procedure de conformite LPP", description: "Document decrivant comment vous verifiez la conformite LPP de vos materiels.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Verifiez-vous regulierement la conformite LPP de vos materiels ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Appliquez-vous les recommandations des fabricants pour l'utilisation de vos materiels ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Vos tarifs sont-ils conformes aux tarifs LPP en vigueur ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '4.2.1': {
+    inspecteur: "L'inspecteur va verifier que vous avez l'autorisation prefectorale pour exercer l'activite oxygene.",
+    contexte: "La distribution d'oxygene medicinal est reglementee et necessite une autorisation specifique.",
+    conseil: "Ce critere ne s'applique qu'aux PSDM qui distribuent de l'oxygene. Si ce n'est pas votre cas, indiquez 'Non applicable'.",
+    preuves: [
+      { label: "Autorisation prefectorale d'exercer l'activite oxygene", description: "Document officiel autorisant votre structure a distribuer de l'oxygene medicinal.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Distribuez-vous de l'oxygene medicinal ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Disposez-vous de l'autorisation prefectorale requise ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Cette autorisation est-elle a jour ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+  '4.3.1': {
+    inspecteur: "L'inspecteur va verifier que votre systeme de materiovigilance est operationnel — correspondant designe, procedure, signalements.",
+    contexte: "La materiovigilance est obligatoire. Tout incident grave avec un dispositif medical doit etre signale a l'ANSM.",
+    conseil: "MediTrack trace vos pannes et incidents — utilisez ces donnees comme base de votre materiovigilance.",
+    preuves: [
+      { label: "Procedure de materiovigilance", description: "Document decrivant le circuit de signalement des incidents avec dispositifs medicaux.", type: 'upload' as const },
+      { label: "Designation du correspondant materiovigilance", description: "Document officialisant la designation de votre correspondant materiovigilance.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous designe un correspondant en materiovigilance ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous une procedure de signalement des incidents a l'ANSM ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Avez-vous deja realise un signalement de materiovigilance ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+  '4.3.2': {
+    inspecteur: "L'inspecteur va verifier que votre systeme de pharmacovigilance est operationnel.",
+    contexte: "La pharmacovigilance concerne les medicaments — applicable si vous distribuez des medicaments ou des dispositifs contenant des substances medicamenteuses.",
+    conseil: "Ce critere s'applique principalement aux PSDM distribuant de l'oxygene ou des medicaments. Verifiez si votre activite est concernee.",
+    preuves: [
+      { label: "Procedure de pharmacovigilance", description: "Document decrivant le circuit de signalement des effets indesirables.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Ce critere s'applique-t-il a votre activite ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous une procedure de pharmacovigilance ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Avez-vous un correspondant pharmacovigilance designe ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+  '4.4.1': {
+    inspecteur: "L'inspecteur va verifier que vous avez identifie vos processus a risque et mis en place des actions de prevention.",
+    contexte: "Une cartographie des risques montre a l'inspecteur que vous avez une demarche qualite proactive.",
+    conseil: "Listez vos 5 risques principaux (livraison, maintenance, hygiene, donnees patients, ressources humaines) et documentez vos actions preventives.",
+    preuves: [
+      { label: "Cartographie des risques", description: "Document identifiant vos principaux risques avec niveau de gravite et actions preventives.", type: 'upload' as const },
+      { label: "Plan de prevention des risques", description: "Actions preventives mises en place pour chaque risque identifie.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous realise une analyse des risques de votre activite ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Avez-vous mis en place des actions preventives pour vos risques principaux ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Cette analyse est-elle revue periodiquement ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '4.4.2': {
+    inspecteur: "L'inspecteur va verifier que vous avez un plan de continuite d'activite en cas de crise.",
+    contexte: "Un sinistre, une pandemie ou une defaillance informatique peut paralyser votre activite et mettre vos patients en danger.",
+    conseil: "Un plan simple decrivant comment vous continuez a servir vos patients en cas de probleme majeur suffit.",
+    preuves: [
+      { label: "Plan de continuite d'activite (PCA)", description: "Document decrivant les mesures pour maintenir l'activite en cas de crise.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un plan de continuite d'activite documente ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Ce plan a-t-il ete teste ou simule ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Vos patients seraient-ils pris en charge en cas d'indisponibilite de votre structure ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '4.4.3': {
+    inspecteur: "L'inspecteur va demander a voir votre registre des evenements indesirables et verifier que vous analysez vos incidents.",
+    contexte: "Tout PSDM qui dit n'avoir aucun evenement indesirable est suspect. L'inspecteur cherche une culture de signalement et d'amelioration.",
+    conseil: "Le registre des evenements indesirables dans MediReg vous permet de tracer chaque incident et les actions correctives — c'est votre preuve principale.",
+    preuves: [
+      { label: "Registre des evenements indesirables MediReg", description: "Le registre ci-dessous trace chaque incident avec son analyse et les actions correctives.", type: 'registre' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un systeme de recueil des evenements indesirables ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Chaque evenement fait-il l'objet d'une analyse ?", type: 'oui_non' as const, requis: true },
+      { id: 'q3', label: "Mettez-vous en place des actions correctives suite aux incidents ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: 'evenements_indesirables'
+  },
+
 }
 
 const STATUTS = [
@@ -1377,6 +1492,7 @@ export default function CritereDetail({
       {/* Registres */}
       {config?.registre === 'remises' && <RegistreRemises etabId={selectedEtabId} />}
       {config?.registre === 'reclamations' && <RegistreReclamations etabId={selectedEtabId} />}
+      {config?.registre === 'evenements_indesirables' && <RegistreEI etabId={selectedEtabId} />}
 
       {/* Preuves uploadées */}
       {preuvesUploadees.length > 0 && (
@@ -1437,6 +1553,143 @@ export default function CritereDetail({
           onClose={() => setEditorCode(null)}
           onSaved={() => { setEditorCode(null); onReloadDocs(); setReloadKey(k => k + 1) }}
         />
+      )}
+    </div>
+  )
+}
+
+// ─── Composant Registre Événements Indésirables ──────────────
+function RegistreEI({ etabId }: { etabId: string }) {
+  const supabase = createClient()
+  const [entries, setEntries] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    date_evenement: new Date().toISOString().split('T')[0],
+    type: 'Incident materiel',
+    description: '',
+    gravite: 'mineur',
+    actions_correctives: '',
+    statut: 'ouvert'
+  })
+
+  useEffect(() => { load() }, [etabId])
+
+  async function load() {
+    const { data } = await supabase.from('evenements_indesirables').select('*').eq('etablissement_id', etabId).order('date_evenement', { ascending: false })
+    setEntries(data || [])
+    setLoading(false)
+  }
+
+  async function save() {
+    if (!form.description) return
+    setSaving(true)
+    await supabase.from('evenements_indesirables').insert([{ ...form, etablissement_id: etabId }])
+    setForm({ date_evenement: new Date().toISOString().split('T')[0], type: 'Incident materiel', description: '', gravite: 'mineur', actions_correctives: '', statut: 'ouvert' })
+    setShowForm(false)
+    await load()
+    setSaving(false)
+  }
+
+  async function updateStatut(id: string, statut: string) {
+    await supabase.from('evenements_indesirables').update({ statut }).eq('id', id)
+    await load()
+  }
+
+  const inp = { width: '100%', padding: '9px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '12px', fontFamily: 'var(--font)', outline: 'none', background: '#fff', boxSizing: 'border-box' as const }
+  const lbl = { display: 'block' as const, fontSize: '10px', fontWeight: '600' as const, color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.4px' }
+
+  const GRAVITE_COLORS: Record<string, { color: string; bg: string }> = {
+    mineur: { color: '#059669', bg: '#ECFDF5' },
+    modere: { color: '#D97706', bg: '#FFFBEB' },
+    grave: { color: '#DC2626', bg: '#FEF2F2' },
+  }
+
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid #FDE68A', borderRadius: '12px', padding: '16px 18px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#B45309', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: '16px' }} />
+          Registre des événements indésirables ({entries.length})
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          style={{ padding: '6px 14px', background: '#B45309', border: 'none', borderRadius: '7px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <i className="ti ti-plus" style={{ fontSize: '13px' }} />
+          Déclarer un incident
+        </button>
+      </div>
+
+      {showForm && (
+        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div><label style={lbl}>Date *</label><input type="date" value={form.date_evenement} onChange={e => setForm(p => ({ ...p, date_evenement: e.target.value }))} style={inp} /></div>
+            <div><label style={lbl}>Type</label>
+              <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inp}>
+                {['Incident matériel', 'Erreur de livraison', 'Chute patient', 'Problème hygiène', 'Incident informatique', 'Réclamation grave', 'Autre'].map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Gravité</label>
+              <select value={form.gravite} onChange={e => setForm(p => ({ ...p, gravite: e.target.value }))} style={inp}>
+                <option value="mineur">Mineur</option>
+                <option value="modere">Modéré</option>
+                <option value="grave">Grave</option>
+              </select>
+            </div>
+            <div><label style={lbl}>Statut</label>
+              <select value={form.statut} onChange={e => setForm(p => ({ ...p, statut: e.target.value }))} style={inp}>
+                <option value="ouvert">Ouvert</option>
+                <option value="en_cours">En cours d'analyse</option>
+                <option value="clos">Clôturé</option>
+              </select>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Description de l'incident *</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Décrivez l'incident survenu..." rows={2} style={{ ...inp, resize: 'vertical' }} /></div>
+            <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Actions correctives mises en place</label><textarea value={form.actions_correctives} onChange={e => setForm(p => ({ ...p, actions_correctives: e.target.value }))} placeholder="Décrivez les actions prises pour éviter la récurrence..." rows={2} style={{ ...inp, resize: 'vertical' }} /></div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setShowForm(false)} style={{ padding: '7px 14px', background: '#F3F4F6', border: 'none', borderRadius: '7px', color: '#6B7280', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
+            <button onClick={save} disabled={!form.description || saving} style={{ padding: '7px 14px', background: '#B45309', border: 'none', borderRadius: '7px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>{saving ? 'Enregistrement...' : 'Déclarer'}</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF', fontSize: '12px' }}>Chargement...</div>
+      ) : entries.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px', color: '#9CA3AF', fontSize: '12px', background: '#FFFBEB', borderRadius: '8px', border: '1px dashed #FDE68A' }}>
+          Aucun événement déclaré — commencez à tracer vos incidents pour prouver votre démarche qualité
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {entries.map((e: any) => {
+            const g = GRAVITE_COLORS[e.gravite] || GRAVITE_COLORS.mineur
+            return (
+              <div key={e.id} style={{ padding: '12px 16px', background: '#fff', borderRadius: '9px', border: `1px solid ${g.bg}`, display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: g.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-alert-triangle" style={{ fontSize: '16px', color: g.color }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#111827' }}>{e.type}</span>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: g.color, background: g.bg, padding: '2px 8px', borderRadius: '20px' }}>{e.gravite}</span>
+                    <span style={{ fontSize: '10px', color: e.statut === 'clos' ? '#059669' : e.statut === 'en_cours' ? '#D97706' : '#DC2626', background: e.statut === 'clos' ? '#ECFDF5' : e.statut === 'en_cours' ? '#FFFBEB' : '#FEF2F2', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>
+                      {e.statut === 'clos' ? '✓ Clôturé' : e.statut === 'en_cours' ? 'En cours' : 'Ouvert'}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{new Date(e.date_evenement).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#374151', marginBottom: e.actions_correctives ? '6px' : '0' }}>{e.description}</div>
+                  {e.actions_correctives && <div style={{ fontSize: '11px', color: '#059669', background: '#F0FDF4', padding: '6px 10px', borderRadius: '6px' }}>Actions : {e.actions_correctives}</div>}
+                </div>
+                {e.statut !== 'clos' && (
+                  <button onClick={() => updateStatut(e.id, e.statut === 'ouvert' ? 'en_cours' : 'clos')}
+                    style={{ padding: '5px 10px', background: '#F3F4F6', border: 'none', borderRadius: '6px', color: '#6B7280', fontSize: '11px', cursor: 'pointer', fontFamily: 'var(--font)', flexShrink: 0 }}>
+                    {e.statut === 'ouvert' ? 'Analyser →' : 'Clôturer ✓'}
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
