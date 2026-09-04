@@ -209,6 +209,8 @@ interface Props {
   generatingDoc: string | null
   saving: boolean
   userRole?: string
+  meditrackEtabId?: string | null
+  onSaveMeditrackId?: (id: string) => Promise<void>
 }
 
 
@@ -590,20 +592,17 @@ function RegistreReclamations({ etabId }: { etabId: string }) {
 // ─── Composant principal CritereDetail ───────────────────────
 export default function CritereDetail({
   critere, reponse, docsGeneres, societe, selectedEtabId,
-  onUpdateStatut, onGenererDoc, onUploadPreuve, onReloadDocs, generatingDoc, userRole = 'client'
+  onUpdateStatut, onGenererDoc, onUploadPreuve, onReloadDocs, generatingDoc, userRole = 'client',
+  meditrackEtabId, onSaveMeditrackId
 }: Props) {
   const supabase = createClient()
   const config = CRITERES_CONFIG[critere.code]
   const MEDITRACK_CRITERES = ['2.2.1', '2.3.2', '2.4.3', '2.5.1']
 
-  useEffect(() => {
-    if (societe?.meditrack_etablissement_id) {
-      setMeditrackEtabId(societe.meditrack_etablissement_id)
-    }
-  }, [societe])
+
   const [editorCode, setEditorCode] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
-  const [meditrackEtabId, setMeditrackEtabId] = useState<string | null>(null)
+
   const statut = reponse?.statut || 'non_analyse'
   const st = STATUTS.find(s => s.key === statut) || STATUTS[0]
   const isConsultant = userRole === 'consultant'
@@ -936,13 +935,10 @@ export default function CritereDetail({
       {/* Widget MediTrack pour les critères opérationnels */}
       {MEDITRACK_CRITERES.includes(critere.code) && !isConsultant && (
         <MeditrackWidget
-          meditrackEtabId={meditrackEtabId}
+          meditrackEtabId={meditrackEtabId || null}
           critereCode={critere.code}
           onLink={async (etabId) => {
-            setMeditrackEtabId(etabId)
-            // Sauvegarder dans la société
-            const supabase = (await import('@/lib/supabase')).createClient()
-            await supabase.from('societes').update({ meditrack_etablissement_id: etabId }).eq('id', societe?.id)
+            if (onSaveMeditrackId) await onSaveMeditrackId(etabId)
           }}
         />
       )}

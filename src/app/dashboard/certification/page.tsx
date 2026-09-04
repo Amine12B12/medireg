@@ -49,8 +49,9 @@ export default function CertificationPage() {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null)
   const [docsGeneres, setDocsGeneres] = useState<Record<string, any[]>>({})
-  const [messagesNonLus, setMessagesNonLus] = useState<Record<string, number>>({})  
+  const [messagesNonLus, setMessagesNonLus] = useState<Record<string, number>>({})
   const [userRole, setUserRole] = useState<string>('client')
+  const [meditrackEtabId, setMeditrackEtabId] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -69,6 +70,11 @@ export default function CertificationPage() {
       const { data: soc } = await supabase.from('societes').select('*, personnes(*, responsabilites_personnes(*))').eq('client_id', cId).single()
       if (!soc) { router.push('/dashboard/onboarding'); return }
       setSociete(soc)
+
+      // Charger meditrack_etablissement_id depuis clients
+      const { data: clientData } = await supabase.from('clients').select('meditrack_etablissement_id').eq('id', cId).single()
+      if (clientData?.meditrack_etablissement_id) setMeditrackEtabId(clientData.meditrack_etablissement_id)
+
       const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', soc.id).order('created_at')
       setEtablissements(etabs || [])
       if (etabs && etabs.length > 0) {
@@ -89,21 +95,13 @@ export default function CertificationPage() {
       if (!docsMap[d.code_doc]) docsMap[d.code_doc] = []
       docsMap[d.code_doc].push(d)
     }
-
-    // Charger aussi les documents editables signés
-    const { data: docsEditables } = await supabase
-      .from('documents_editables')
-      .select('*')
-      .eq('etablissement_id', etabId)
-      .eq('statut', 'signe')
+    const { data: docsEditables } = await supabase.from('documents_editables').select('*').eq('etablissement_id', etabId).eq('statut', 'signe')
     for (const d of docsEditables || []) {
       if (!docsMap[d.template_code]) docsMap[d.template_code] = []
-      // Eviter les doublons
       if (!docsMap[d.template_code].find((x: any) => x.id === d.id)) {
         docsMap[d.template_code].push({ ...d, code_doc: d.template_code, nom: d.titre, url: null, type_doc: 'editable' })
       }
     }
-
     setDocsGeneres(docsMap)
     const { data: acts } = await supabase.from('activites_etablissement').select('activite').eq('etablissement_id', etabId).neq('mode', 'non_concerne')
     setActivites((acts || []).map((a: any) => a.activite))
@@ -111,17 +109,10 @@ export default function CertificationPage() {
     const repMap: Record<string, any> = {}
     for (const r of reps || []) repMap[r.critere_id] = r
     setReponses(repMap)
-
-    // Charger messages non lus
     const champLu = userRole === 'consultant' ? 'lu_consultant' : 'lu_client'
-    const { data: msgs } = await supabase.from('messages_critere')
-      .select('critere_id')
-      .eq('etablissement_id', etabId)
-      .eq(champLu, false)
+    const { data: msgs } = await supabase.from('messages_critere').select('critere_id').eq('etablissement_id', etabId).eq(champLu, false)
     const nonLusMap: Record<string, number> = {}
-    for (const m of msgs || []) {
-      nonLusMap[m.critere_id] = (nonLusMap[m.critere_id] || 0) + 1
-    }
+    for (const m of msgs || []) nonLusMap[m.critere_id] = (nonLusMap[m.critere_id] || 0) + 1
     setMessagesNonLus(nonLusMap)
   }
 
@@ -142,36 +133,23 @@ export default function CertificationPage() {
       await supabase.from('reponses_criteres').insert([{ etablissement_id: selectedEtabId, critere_id: critereId, statut }])
     }
     setReponses(prev => ({ ...prev, [critereId]: { ...prev[critereId], statut } }))
-
-    // Message automatique si consultant valide ou rejette
     if (userRole === 'consultant') {
       const critere = criteres.find(c => c.id === critereId)
       const { data: { user } } = await supabase.auth.getUser()
       if (statut === 'pret_audit' && user) {
         await supabase.from('messages_critere').insert([{
-          etablissement_id: selectedEtabId,
-          critere_id: critereId,
-          auteur_id: user.id,
-          auteur_role: 'consultant',
-          contenu: `Critere ${critere?.code || ""} valide - pret pour audit sur ce point`,
-          type: 'validation',
-          lu_client: false,
-          lu_consultant: true,
+          etablissement_id: selectedEtabId, critere_id: critereId, auteur_id: user.id,
+          auteur_role: 'consultant', contenu: `Critere ${critere?.code || ""} valide - pret pour audit sur ce point`,
+          type: 'validation', lu_client: false, lu_consultant: true,
         }])
       } else if (statut === 'action_corrective' && user) {
         await supabase.from('messages_critere').insert([{
-          etablissement_id: selectedEtabId,
-          critere_id: critereId,
-          auteur_id: user.id,
-          auteur_role: 'consultant',
-          contenu: `Action corrective necessaire sur le critere ${critere?.code || ""}. Consultez les commentaires.`,
-          type: 'rejet',
-          lu_client: false,
-          lu_consultant: true,
+          etablissement_id: selectedEtabId, critere_id: critereId, auteur_id: user.id,
+          auteur_role: 'consultant', contenu: `Action corrective necessaire sur le critere ${critere?.code || ""}. Consultez les commentaires.`,
+          type: 'rejet', lu_client: false, lu_consultant: true,
         }])
       }
     }
-
     setSavingId(null)
   }
 
@@ -182,12 +160,7 @@ export default function CertificationPage() {
       if (!docsMap[d.code_doc]) docsMap[d.code_doc] = []
       docsMap[d.code_doc].push(d)
     }
-    // Charger aussi les documents editables signés
-    const { data: docsEditables } = await supabase
-      .from('documents_editables')
-      .select('*')
-      .eq('etablissement_id', selectedEtabId)
-      .eq('statut', 'signe')
+    const { data: docsEditables } = await supabase.from('documents_editables').select('*').eq('etablissement_id', selectedEtabId).eq('statut', 'signe')
     for (const d of docsEditables || []) {
       if (!docsMap[d.template_code]) docsMap[d.template_code] = []
       if (!docsMap[d.template_code].find((x: any) => x.id === d.id)) {
@@ -231,33 +204,20 @@ export default function CertificationPage() {
     const { error } = await supabase.storage.from('modeles').upload(path, file, { upsert: true })
     if (!error) {
       await supabase.from('documents_qualite').insert([{
-        etablissement_id: selectedEtabId,
-        critere_id: selectedCritere.id,
-        code_doc: `PREUVE_${selectedCritere.code}`,
-        nom: label,
-        type_doc: 'preuve',
-        url: path,
-        statut: 'genere'
+        etablissement_id: selectedEtabId, critere_id: selectedCritere.id,
+        code_doc: `PREUVE_${selectedCritere.code}`, nom: label,
+        type_doc: 'preuve', url: path, statut: 'genere'
       }])
       await reloadDocs()
-
-      // Créer notification en base pour les consultants
-      console.log('userRole:', userRole, 'client_id:', societe?.client_id)
       if (userRole === 'client') {
-        const { data: consultants } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'consultant')
-        console.log('consultants:', consultants?.length)
+        const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
         for (const consultant of consultants || []) {
-          const { error: notifError } = await supabase.from('notifications').insert([{
-            consultant_id: consultant.id,
-            client_id: societe.client_id,
+          await supabase.from('notifications').insert([{
+            consultant_id: consultant.id, client_id: societe.client_id,
             type: 'document_uploade',
             message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
             critere_code: selectedCritere.code,
           }])
-          console.log('notif insert error:', notifError?.message || 'OK')
         }
       }
     }
@@ -300,7 +260,6 @@ export default function CertificationPage() {
     </div>
   )
 
-  // VUE DETAIL
   if (selectedCritere) {
     const ch = CHAPITRES[selectedCritere.chapitre]
     return (
@@ -346,6 +305,11 @@ export default function CertificationPage() {
             generatingDoc={generatingDoc}
             saving={savingId === selectedCritere.id}
             userRole={userRole}
+            meditrackEtabId={meditrackEtabId}
+            onSaveMeditrackId={async (id: string) => {
+              setMeditrackEtabId(id)
+              await supabase.from('clients').update({ meditrack_etablissement_id: id }).eq('id', societe?.client_id)
+            }}
           />
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginTop: '24px' }}>
             <button onClick={() => prevCritere && setSelectedCritere(prevCritere)} disabled={!prevCritere}
@@ -369,7 +333,6 @@ export default function CertificationPage() {
     )
   }
 
-  // VUE LISTE
   return (
     <div style={{ padding: '28px', fontFamily: 'var(--font)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
@@ -388,7 +351,6 @@ export default function CertificationPage() {
         )}
       </div>
 
-      {/* Score */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 24px', marginBottom: '20px', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', width: '72px', height: '72px', flexShrink: 0 }}>
@@ -433,7 +395,6 @@ export default function CertificationPage() {
         </div>
       </div>
 
-      {/* Filtres */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chapitre</span>
         {(['tous', '1', '2', '3', '4'] as const).map(ch => (
@@ -452,7 +413,6 @@ export default function CertificationPage() {
         ))}
       </div>
 
-      {/* Cards */}
       {['1', '2', '3', '4'].map(chap => {
         const critChap = criteresFiltres.filter(c => c.chapitre === chap)
         if (critChap.length === 0) return null
