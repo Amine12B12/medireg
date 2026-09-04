@@ -64,16 +64,22 @@ interface Habilitation {
   date_obtention: string; date_expiration: string; statut: string
 }
 
+interface RHDocument {
+  id: string; personne_id: string; titre: string; type: string; url: string; created_at: string
+}
+
 export default function RHPage() {
   const [personnes, setPersonnes] = useState<Personne[]>([])
   const [formations, setFormations] = useState<Formation[]>([])
   const [competences, setCompetences] = useState<Competence[]>([])
   const [entretiens, setEntretiens] = useState<Entretien[]>([])
   const [habilitations, setHabilitations] = useState<Habilitation[]>([])
+  const [rhDocuments, setRhDocuments] = useState<RHDocument[]>([])
+  const [uploadingDoc, setUploadingDoc] = useState(false)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<View>('list')
   const [selectedPersonne, setSelectedPersonne] = useState<Personne | null>(null)
-  const [activeTab, setActiveTab] = useState<'formations' | 'entretiens' | 'habilitations' | 'competences'>('competences')
+  const [activeTab, setActiveTab] = useState<'formations' | 'entretiens' | 'habilitations' | 'competences' | 'documents'>('competences')
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState<string | null>(null)
   const router = useRouter()
@@ -129,6 +135,19 @@ export default function RHPage() {
     await load(); setSaving(false)
   }
 
+  async function uploadDocument(file: File, titre: string, type: string) {
+    if (!selectedPersonne) return
+    setUploadingDoc(true)
+    const path = `rh/${selectedPersonne.id}/${Date.now()}_${file.name}`
+    const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
+      await supabase.from('rh_documents').insert([{ personne_id: selectedPersonne.id, titre, type, url: urlData.publicUrl }])
+      await load()
+    }
+    setUploadingDoc(false)
+  }
+
   async function saveHabilitation() {
     if (!selectedPersonne || !habilitationForm.titre) return
     setSaving(true)
@@ -154,6 +173,7 @@ export default function RHPage() {
   const getPersCompetences = (id: string) => competences.filter(c => c.personne_id === id).map(c => c.competence)
   const getPersEntretiens = (id: string) => entretiens.filter(e => e.personne_id === id)
   const getPersHabilitations = (id: string) => habilitations.filter(h => h.personne_id === id)
+  const getPersDocuments = (id: string) => rhDocuments.filter(d => d.personne_id === id)
 
   // Alertes globales
   const today = new Date()
@@ -242,6 +262,7 @@ export default function RHPage() {
             { key: 'formations', label: 'Formations', icon: 'ti-school', count: persFormations.length },
             { key: 'entretiens', label: 'Entretiens', icon: 'ti-clipboard-list', count: persEntretiens.length },
             { key: 'habilitations', label: 'Habilitations', icon: 'ti-certificate', count: persHabilitations.length },
+            { key: 'documents', label: 'Documents', icon: 'ti-paperclip', count: getPersDocuments(selectedPersonne.id).length },
           ] as const).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               style={{ padding: '12px 18px', background: 'transparent', border: 'none', borderBottom: activeTab === tab.key ? '2px solid #1A56DB' : '2px solid transparent', color: activeTab === tab.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '13px', fontWeight: activeTab === tab.key ? '700' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -481,6 +502,56 @@ export default function RHPage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+          </div>
+        )}
+        {/* DOCUMENTS */}
+        {activeTab === 'documents' && (
+          <div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                <i className="ti ti-upload" style={{ fontSize: '13px' }} />
+                {uploadingDoc ? 'Upload...' : 'Uploader un document'}
+                <input type="file" style={{ display: 'none' }} onChange={async e => {
+                  if (!e.target.files?.[0]) return
+                  const file = e.target.files[0]
+                  const titre = file.name.replace(/\.[^/.]+$/, '')
+                  const type = file.name.endsWith('.pdf') ? 'PDF' : file.name.endsWith('.docx') ? 'Word' : 'Autre'
+                  await uploadDocument(file, titre, type)
+                  e.target.value = ''
+                }} />
+              </label>
+            </div>
+
+            {getPersDocuments(selectedPersonne.id).length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '13px', background: '#F9FAFB', borderRadius: '12px', border: '1px dashed #E5E7EB' }}>
+                Aucun document — uploadez des attestations, diplômes ou certificats
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {getPersDocuments(selectedPersonne.id).map(doc => (
+                  <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', background: 'var(--surface)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={`ti ${doc.type === 'PDF' ? 'ti-file-type-pdf' : doc.type === 'Word' ? 'ti-file-word' : 'ti-paperclip'}`} style={{ fontSize: '18px', color: '#1A56DB' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.titre}</div>
+                      <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{doc.type} · {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                      <a href={doc.url} target="_blank"
+                        style={{ height: '32px', padding: '0 12px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '7px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="ti ti-download" style={{ fontSize: '13px' }} />
+                        Télécharger
+                      </a>
+                      <button onClick={() => deleteItem('rh_documents', doc.id)}
+                        style={{ width: '32px', height: '32px', border: 'none', borderRadius: '7px', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="ti ti-trash" style={{ fontSize: '13px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
