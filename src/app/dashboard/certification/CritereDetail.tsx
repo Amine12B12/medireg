@@ -404,9 +404,10 @@ const CRITERES_CONFIG: Record<string, {
   '3.2.1': {
     inspecteur: "L'inspecteur va visiter vos locaux et verifier la separation des circuits propre et sale.",
     contexte: "Un materiel propre qui cotoie un materiel sale est une faute grave.",
-    conseil: "Documentez comment vous organisez la separation des flux dans votre espace de travail.",
+    conseil: "La procedure de desinfection generee pour le 3.3.2 inclut le schema de marche en avant — utilisez-la pour ce critere aussi.",
     preuves: [
-      { label: "Plan ou photos des locaux avec circuits identifies", description: "Schema ou photos montrant la separation propre/sale et les zones de stockage.", type: 'upload' as const },
+      { code: 'PROC-DESINFECTION', label: "Procedure de desinfection avec schema de marche en avant", description: "Inclut le circuit propre/sale et la separation des zones — couvre les criteres 3.2.1 et 3.3.2.", type: 'generer' as const },
+      { label: "Plan ou photos des locaux avec circuits identifies", description: "Schema ou photos montrant la separation propre/sale.", type: 'upload' as const },
     ],
     questions: [
       { id: 'q1', label: "Avez-vous une zone de stockage dediee au materiel propre ?", type: 'oui_non' as const, requis: true },
@@ -458,9 +459,9 @@ const CRITERES_CONFIG: Record<string, {
   '3.3.2': {
     inspecteur: "L'inspecteur va demander votre procedure de desinfection du materiel et le registre de tracabilite.",
     contexte: "La desinfection du materiel entre deux patients est une obligation absolue.",
-    conseil: "Incluez la desinfection comme type de maintenance dans MediTrack pour une tracabilite automatique.",
+    conseil: "MediReg genere une procedure complete de desinfection en 8 etapes conforme HAS — c'est exactement ce que l'inspecteur cherche.",
     preuves: [
-      { label: "Procedure de nettoyage et desinfection du materiel", description: "Document decrivant le processus de desinfection selon les types de materiels.", type: 'upload' as const },
+      { code: 'PROC-DESINFECTION', label: "Procedure de nettoyage et desinfection des DM", description: "PREUVE PRINCIPALE — Procedure complete en 8 etapes : reception, nettoyage, desinfection, sechage, controle, tracabilite. Conforme HAS 3.3.2.", type: 'generer' as const, mention: 'principal' },
       { label: "Registre de tracabilite des desinfections", description: "Registre des desinfections realisees.", type: 'upload' as const },
     ],
     questions: [

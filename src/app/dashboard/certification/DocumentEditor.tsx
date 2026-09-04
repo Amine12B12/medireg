@@ -802,6 +802,132 @@ Cette tracabilite est conforme au critere 2.5.1 du referentiel HAS PSDM (juin 20
       },
     ]
   },
+  'PROC-DESINFECTION': {
+    titre: "Procedure de nettoyage, desinfection et remise en circulation des dispositifs medicaux",
+    description: "Procedure definissant la methode homogene, sure et tracable pour le nettoyage, la desinfection et la remise en circulation des dispositifs medicaux reutilisables.",
+    sections: [
+      {
+        id: 's1', titre: "Objet et objectif", modifiable: true,
+        contenu: `Definir une methode homogene, sure, documentee et tracable pour la reception, le nettoyage, la desinfection, le sechage, le controle et la remise en circulation des dispositifs medicaux (DM) reutilisables pris en charge par {{raison_sociale}}.
+
+Cette procedure vise a prevenir le risque infectieux, eviter les contaminations croisees et garantir la separation entre materiel sale et materiel propre.
+
+Elle repond au critere 3.3.2 du referentiel HAS des bonnes pratiques professionnelles des PSDM : circuits sale/propre distincts, identification des zones, marche en avant, procedure ecrite et validee, tracabilite du processus.
+
+Responsable de la procedure : {{desinfection}}`,
+        aide: "La procedure est pre-remplie avec votre responsable desinfection depuis votre profil."
+      },
+      {
+        id: 's2', titre: "Champ d application", modifiable: true,
+        contenu: `Sont concernes par cette procedure :
+- Lits medicalises, barrieres, potences et accessoires
+- Fauteuils roulants manuels et electriques et accessoires reutilisables
+- Leve-personnes, verticalisateurs et sangles reutilisables
+- Chaises de douche, chaises percees
+- Tables de lit / tables a manger
+- Matelas mousse, matelas a air, compresseurs, coussins
+- Tout autre materiel reutilisable entrant dans le parc de {{raison_sociale}}`,
+        aide: "Adaptez la liste aux familles de materiels que vous gerez."
+      },
+      {
+        id: 's3', titre: "Responsabilites", modifiable: true,
+        contenu: `Responsable de la procedure de desinfection : {{desinfection}}
+Responsable de l etablissement : {{responsable_etablissement}}
+Garant PSDM : {{garant_psdm}}
+
+Tout le personnel de {{raison_sociale}} intervenant sur le materiel est forme a cette procedure lors de son integration et chaque annee.`,
+        aide: "Les responsables sont remplis automatiquement depuis votre profil."
+      },
+      {
+        id: 's4', titre: "Organisation du circuit - marche en avant", modifiable: true,
+        contenu: `RETOUR / REPRISE → ZONE SALE → TRI / DEMONTAGE → NETTOYAGE → DESINFECTION → SECHAGE → CONTROLE → IDENTIFICATION → ZONE PROPRE
+
+Regles absolues :
+- Le materiel repris est considere comme sale tant que le cycle n est pas termine et trace
+- Le materiel sale ne traverse pas la zone propre
+- Les accessoires de nettoyage souilles sont separes des accessoires propres
+- Apres traitement, le DM est manipule avec des mains propres ou des gants propres
+- Tout retour en zone sale apres desinfection impose une nouvelle evaluation et si necessaire un nouveau traitement`,
+        aide: "Ce schema de marche en avant est conforme aux exigences HAS."
+      },
+      {
+        id: 's5', titre: "Hygiene de l operateur et EPI", modifiable: true,
+        contenu: `Avant le traitement :
+- Tenue de travail propre, cheveux attaches si necessaire
+- Hygiene des mains et EPI adaptes
+- Gants de protection adaptes au produit et a la tache
+- Protection oculaire / faciale si indiquee par la FDS
+- Tablier ou surblouse en cas de risque de projection
+
+Les gants ne remplacent pas l hygiene des mains. Changer de gants entre une activite sale et une activite propre.`,
+        aide: "Adaptez les EPI a vos produits de desinfection."
+      },
+      {
+        id: 's6', titre: "Procedure generale de traitement - 8 etapes", modifiable: true,
+        contenu: `1. RECEPTION EN ZONE SALE
+Identifier le DM (type, modele, numero de serie), l origine du retour et les anomalies visibles. Ne pas introduire le materiel directement en zone propre.
+
+2. EVALUATION PREALABLE
+Rechercher les souillures, l humidite, les matieres organiques, les dommages. Verifier la notice fabricant si necessaire.
+
+3. DEMONTAGE
+Retirer les accessoires demontables. Isoler les consommables a usage unique et les elements non reutilisables.
+
+4. NETTOYAGE
+Eliminer les salissures avant desinfection. Proceder du haut vers le bas, du plus propre vers le plus sale. Changer microfibre/bonnette des saturation.
+
+5. DESINFECTION
+Appliquer le procede compatible avec le DM selon les instructions fabricant et les fiches de donnees de securite.
+
+6. SECHAGE
+Eliminer l humidite residuelle avec un textile propre et sec. Laisser secher completement avant remontage et stockage.
+
+7. CONTROLE
+Verifier proprete visuelle, integrite, remontage, fonctionnement et securite.
+
+8. TRACABILITE ET LIBERATION
+Renseigner la fiche/registre. Le DM ne passe en zone propre qu apres validation. Identifier clairement son statut.`,
+        aide: "Ces 8 etapes sont conformes au referentiel HAS PSDM 2024."
+      },
+      {
+        id: 's7', titre: "Cas particuliers et non-conformites", modifiable: true,
+        contenu: `Souillure importante ou matiere biologique : isoler le DM, appliquer un protocole renforce et utiliser les EPI adaptes.
+
+Materiel deteriore, fissure ou impossible a nettoyer : ne pas liberer, placer en quarantaine et decider reparation ou reforme.
+
+Echec du nettoyage / residu visible : recommencer le traitement avant liberation.
+
+Erreur de circuit : reclasser le DM comme sale et retraiter.
+
+Produit perime ou absence de FDS : ne pas utiliser.`,
+        aide: "Documentez chaque non-conformite dans votre registre d evenements indesirables."
+      },
+      {
+        id: 's8', titre: "Stockage et transport apres traitement", modifiable: true,
+        contenu: `- Stocker le DM sec dans la zone propre identifiee, a l abri des souillures
+- Maintenir une separation physique claire avec les retours sales
+- Lors du transport, proteger le materiel propre et eviter tout contact avec du materiel sale
+- Si un vehicule transporte du sale et du propre, appliquer la procedure vehicule
+
+Responsable du stockage : {{responsable_etablissement}}`,
+        aide: "Adaptez les modalites de stockage a vos locaux."
+      },
+      {
+        id: 's9', titre: "Tracabilite et engagement", modifiable: true,
+        contenu: `Chaque operation de nettoyage et desinfection est tracee dans le registre de {{raison_sociale}} avec :
+- La date de traitement
+- Le type et l identifiant du DM
+- L operateur ayant realise le traitement
+- Le produit utilise et son numero de lot
+- Le statut de liberation
+
+La presente procedure est validee par {{desinfection}} et sera revisee annuellement ou en cas de changement de produits ou de materiels.
+
+Elle est conforme au critere 3.3.2 du referentiel HAS PSDM (juin 2024).`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",
