@@ -693,6 +693,115 @@ Cette analyse est presentee a la direction et integree dans le plan d'ameliorati
       },
     ]
   },
+  'ATTEST-LIVRAISONS': {
+    titre: "Attestation de tracabilite des livraisons et installations",
+    description: "Attestation confirmant l utilisation de MediTrack pour tracer toutes les livraisons et installations.",
+    sections: [
+      {
+        id: 's1', titre: "Identite du signataire", modifiable: true,
+        contenu: `Je soussigne(e), {{responsable_etablissement}}, agissant en qualite de responsable au sein de {{raison_sociale}} ({{forme_juridique}}), dont le siege social est situe {{adresse_siege}}, {{code_postal}} {{ville}},`,
+        aide: "Verifiez que le responsable est bien designe dans votre profil."
+      },
+      {
+        id: 's2', titre: "Utilisation de MediTrack", modifiable: true,
+        contenu: `atteste que {{raison_sociale}} utilise le logiciel MediTrack (meditrack-app.fr) pour tracer systematiquement l ensemble de ses livraisons et installations de materiel medical a domicile.
+
+Chaque operation est enregistree dans MediTrack avec :
+- La date de livraison ou d installation
+- La designation et le numero de serie du materiel
+- Le statut de l operation
+- Une reference anonymisee du dossier patient
+
+Cette traçabilite est conforme aux criteres 2.2.1 et 2.3.2 du referentiel HAS PSDM (juin 2024).`,
+        aide: "Vous pouvez preciser le nombre d'operations tracees ce trimestre."
+      },
+      {
+        id: 's3', titre: "Formation patient", modifiable: true,
+        contenu: `{{raison_sociale}} s'engage a former systematiquement chaque patient et son entourage a l'utilisation du materiel lors de chaque installation.
+
+Cette formation est realisee par : {{sav_maintenance}}
+Elle couvre : le fonctionnement du materiel, les precautions d'utilisation, les contacts en cas de probleme.`,
+        aide: "Adaptez selon votre organisation."
+      },
+      {
+        id: 's4', titre: "Engagement", modifiable: true,
+        contenu: `La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (criteres 2.2.1, 2.3.2 et 2.3.3).`,
+        aide: ""
+      },
+    ]
+  },
+  'ATTEST-MAINTENANCE': {
+    titre: "Attestation de tracabilite des maintenances SAV",
+    description: "Attestation confirmant l utilisation de MediTrack pour tracer toutes les maintenances et interventions SAV.",
+    sections: [
+      {
+        id: 's1', titre: "Identite du signataire", modifiable: true,
+        contenu: `Je soussigne(e), {{responsable_etablissement}}, agissant en qualite de responsable au sein de {{raison_sociale}},`,
+        aide: "Verifiez que le responsable est bien designe."
+      },
+      {
+        id: 's2', titre: "Tracabilite des maintenances", modifiable: true,
+        contenu: `atteste que {{raison_sociale}} utilise MediTrack pour tracer systematiquement l ensemble de ses interventions de maintenance et de SAV.
+
+Chaque maintenance est enregistree avec :
+- Le type d intervention (preventive ou curative)
+- La date prevue et la date de realisation
+- L equipement concerne
+- Le statut de l intervention
+
+Responsable SAV : {{sav_maintenance}}
+
+Cette traçabilite est conforme au critere 2.4.3 du referentiel HAS PSDM (juin 2024).`,
+        aide: "Precisez la frequence de vos maintenances preventives."
+      },
+      {
+        id: 's3', titre: "Continuite du service", modifiable: true,
+        contenu: `En cas de panne ou de defaillance du materiel, {{raison_sociale}} assure :
+- Un diagnostic dans les [EXEMPLE : 24h ouvrables]
+- Un remplacement ou une reparation dans les delais conformes a la LPP
+- Un suivi de l intervention jusqu'a resolution
+
+Contact SAV : {{telephone}}`,
+        aide: "Adaptez les delais a votre organisation."
+      },
+      {
+        id: 's4', titre: "Engagement", modifiable: true,
+        contenu: `La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critere 2.4.3).`,
+        aide: ""
+      },
+    ]
+  },
+  'ATTEST-REPRISES': {
+    titre: "Attestation de tracabilite des reprises materiel",
+    description: "Attestation confirmant que les reprises de materiel en fin de prestation sont tracees dans MediTrack.",
+    sections: [
+      {
+        id: 's1', titre: "Identite du signataire", modifiable: true,
+        contenu: `Je soussigne(e), {{responsable_etablissement}}, agissant en qualite de responsable au sein de {{raison_sociale}},`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Tracabilite des reprises", modifiable: true,
+        contenu: `atteste que {{raison_sociale}} enregistre systematiquement dans MediTrack chaque reprise de materiel en fin de prestation.
+
+La procedure de reprise comprend :
+- La planification de la reprise en lien avec le patient ou son entourage
+- L enregistrement de la date et du motif de reprise dans MediTrack
+- La mise a jour du statut du materiel (retire du service)
+- L arret de la facturation conformement a la reglementation
+
+Responsable des reprises : {{responsable_etablissement}}
+
+Cette tracabilite est conforme au critere 2.5.1 du referentiel HAS PSDM (juin 2024).`,
+        aide: "Precisez vos delais habituels de reprise."
+      },
+      {
+        id: 's3', titre: "Engagement", modifiable: true,
+        contenu: `La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critere 2.5.1).`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",

@@ -29,6 +29,9 @@ const DOC_META: Record<string, { titre: string; chapitre: string; criteres: stri
   'PROC-ACCESSIBILITE': { titre: "Procédure accessibilité et accueil", chapitre: '2', criteres: ['2.1.1'] },
   'INFO-ACTIVITES': { titre: "Information sur les activités", chapitre: '2', criteres: ['2.1.2'] },
   'PROC-HANDICAP': { titre: "Procédure accès personnes handicapées", chapitre: '2', criteres: ['2.1.3'] },
+  'ATTEST-LIVRAISONS': { titre: "Attestation traçabilité livraisons et installations", chapitre: '2', criteres: ['2.2.1', '2.3.2', '2.3.3'] },
+  'ATTEST-MAINTENANCE': { titre: "Attestation traçabilité maintenances SAV", chapitre: '2', criteres: ['2.4.1', '2.4.3'] },
+  'ATTEST-REPRISES': { titre: "Attestation traçabilité reprises matériel", chapitre: '2', criteres: ['2.5.1', '2.5.2'] },
 }
 
 const supabase = createClient()

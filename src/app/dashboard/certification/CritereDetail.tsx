@@ -168,6 +168,156 @@ const CRITERES_CONFIG: Record<string, {
     ],
     registre: null
   },
+  '2.3.2': {
+    inspecteur: "L'inspecteur va vérifier que chaque installation est conforme à la prescription et que le patient a été formé. Il peut demander à voir vos bons de livraison ou votre registre d'installations.",
+    contexte: "Vous devez prouver que chaque matériel installé correspond à une prescription valide et que le patient a été formé à son utilisation.",
+    conseil: "MediTrack est votre registre d'installations — chaque livraison tracée prouve que l'installation a été réalisée. L'attestation de formation patient complète cette preuve.",
+    preuves: [
+      { code: 'ATTEST-LIVRAISONS', label: "⭐ Attestation de traçabilité des installations", description: "PREUVE PRINCIPALE — Atteste que vous utilisez MediTrack pour tracer chaque installation et que vous formez systématiquement le patient.", type: 'generer', mention: 'principal' },
+      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation", description: "Modèle vierge à faire signer par le patient — à conserver dans votre logiciel métier.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Vérifiez-vous que le matériel installé est conforme à la prescription ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Formez-vous systématiquement le patient à l'utilisation du matériel lors de l'installation ?", type: 'oui_non', requis: true, aide: "L'inspecteur peut interroger vos techniciens sur ce point." },
+      { id: 'q3', label: "Utilisez-vous MediTrack pour tracer vos installations ?", type: 'oui_non', requis: true, aide: "Si oui, votre registre MediTrack constitue la preuve principale." },
+    ],
+    registre: null
+  },
+  '2.3.3': {
+    inspecteur: "L'inspecteur va vérifier que vos techniciens forment réellement le patient et son entourage lors de chaque installation.",
+    contexte: "La formation patient est obligatoire — le patient doit savoir utiliser son matériel en toute sécurité.",
+    conseil: "L'attestation de livraison signée par le patient peut inclure une case 'formation dispensée' — c'est la preuve la plus simple.",
+    preuves: [
+      { code: 'ATTEST-LIVRAISONS', label: "Attestation de formation patient systématique", description: "Confirme que vos techniciens forment chaque patient lors de l'installation.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Vos techniciens sont-ils formés pour expliquer le fonctionnement du matériel ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "La formation patient est-elle notée dans votre logiciel métier ou bon de livraison ?", type: 'oui_non', requis: true },
+      { id: 'q3', label: "Formez-vous également les professionnels de santé libéraux si nécessaire ?", type: 'oui_non' },
+    ],
+    registre: null
+  },
+  '2.3.4': {
+    inspecteur: "L'inspecteur vérifie que vous informez les autres professionnels de santé intervenant au domicile sur l'utilisation du matériel.",
+    contexte: "Les infirmières, kinés et autres intervenants au domicile doivent savoir utiliser ou interagir avec le matériel que vous avez installé.",
+    conseil: "Une simple note dans le dossier patient confirmant l'information aux intervenants suffit souvent.",
+    preuves: [
+      { code: 'ATTEST-LIVRAISONS', label: "Attestation de formation des professionnels de santé", description: "Confirme que vous informez les autres intervenants au domicile.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Contactez-vous les autres professionnels de santé intervenant au domicile ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Comment transmettez-vous les informations sur le matériel aux autres intervenants ?", type: 'choix', options: ["Par téléphone", "Par courrier/email", "Via le dossier patient partagé", "En direct lors de l'installation", "Pas de procédure formelle"], requis: true },
+    ],
+    registre: null
+  },
+  '2.4.1': {
+    inspecteur: "L'inspecteur va vérifier que vous réalisez des visites de suivi selon les modalités réglementaires pour votre activité.",
+    contexte: "Certaines activités imposent des suivis réguliers — oxygène, nutrition, VNI par exemple. L'inspecteur vérifie que ces suivis sont réalisés et tracés.",
+    conseil: "MediTrack trace vos maintenances et suivis — c'est votre registre de preuve.",
+    preuves: [
+      { code: 'ATTEST-MAINTENANCE', label: "Attestation de traçabilité des suivis", description: "Confirme que vos suivis sont tracés dans MediTrack conformément à la réglementation.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Réalisez-vous des visites de suivi régulières pour vos patients ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Ces suivis sont-ils tracés dans votre logiciel métier ?", type: 'oui_non', requis: true },
+      { id: 'q3', label: "Respectez-vous les délais de suivi imposés par la LPP pour vos activités ?", type: 'oui_non', requis: true },
+    ],
+    registre: null
+  },
+  '2.4.2': {
+    inspecteur: "L'inspecteur va vérifier que vous avez une astreinte 24h/24 — 7j/7 si vos activités le nécessitent (oxygène, VNI, nutrition).",
+    contexte: "Pour certaines activités à risque vital, l'astreinte est obligatoire. L'inspecteur peut appeler votre numéro d'astreinte pour tester.",
+    conseil: "Si vous avez déclaré une astreinte dans votre profil, MediReg l'a automatiquement intégrée dans vos documents.",
+    preuves: [
+      { code: 'PROC-ACCESSIBILITE', label: "Procédure d'accessibilité avec numéro d'astreinte", description: "Inclut votre numéro d'astreinte et vos modalités de prise en charge urgente.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Disposez-vous d'une astreinte téléphonique 24h/24 — 7j/7 ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Ce numéro est-il communiqué à vos patients dès la première installation ?", type: 'oui_non', requis: true },
+      { id: 'q3', label: "Quel est le délai d'intervention en cas d'urgence ?", type: 'choix', options: ["Moins de 4h", "Moins de 8h", "Sous 24h", "Délai non défini"], requis: true },
+    ],
+    registre: null
+  },
+  '2.4.3': {
+    inspecteur: "L'inspecteur va vérifier que vous assurez la réparation ou le remplacement du matériel en cas de panne dans les délais conformes à la LPP.",
+    contexte: "Une panne de matériel médical peut mettre en danger le patient. L'inspecteur vérifie que vous avez une procédure SAV rapide et efficace.",
+    conseil: "MediTrack est votre preuve SAV — chaque maintenance curative tracée prouve que vous gérez les pannes. L'attestation complète cette preuve.",
+    preuves: [
+      { code: 'ATTEST-MAINTENANCE', label: "⭐ Attestation de traçabilité des maintenances SAV", description: "PREUVE PRINCIPALE — Atteste que vous utilisez MediTrack pour tracer chaque maintenance et dépannage.", type: 'generer', mention: 'principal' },
+    ],
+    questions: [
+      { id: 'q1', label: "Disposez-vous d'un stock de matériel de remplacement pour les pannes urgentes ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Dans quel délai remplacez-vous un matériel en panne ?", type: 'choix', options: ["Sous 4h", "Sous 24h", "Sous 48h", "Délai variable selon l'urgence"], requis: true },
+      { id: 'q3', label: "Utilisez-vous MediTrack pour tracer vos interventions SAV ?", type: 'oui_non', requis: true },
+    ],
+    registre: null
+  },
+  '2.4.4': {
+    inspecteur: "L'inspecteur vérifie que vous pouvez assurer la continuité du service si vous ne pouvez pas intervenir vous-même sur une zone.",
+    contexte: "Si un patient déménage ou si vous ne couvrez pas une zone, vous devez pouvoir l'orienter vers un prestataire partenaire.",
+    conseil: "Un accord de partenariat avec un autre PSDM sur votre territoire suffit pour valider ce critère.",
+    preuves: [
+      { label: "Accord de partenariat avec un prestataire partenaire", description: "Convention signée avec un autre PSDM pour assurer la continuité en cas de besoin.", type: 'upload' },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous des accords avec d'autres prestataires pour la continuité territoriale ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Quelle est votre zone d'intervention principale ?", type: 'texte', requis: true },
+    ],
+    registre: null
+  },
+  '2.4.5': {
+    inspecteur: "L'inspecteur vérifie que vous transmettez les informations pertinentes au prescripteur et aux autres professionnels de santé si nécessaire.",
+    contexte: "La coordination entre le PSDM et les professionnels de santé est essentielle pour la qualité des soins.",
+    conseil: "Un simple email au médecin pour signaler un problème avec le matériel ou un changement de situation suffit comme preuve.",
+    preuves: [
+      { label: "Exemples de retours d'information aux prescripteurs (anonymisés)", description: "Courriers, emails ou notes documentant vos échanges avec les prescripteurs.", type: 'upload' },
+    ],
+    questions: [
+      { id: 'q1', label: "Contactez-vous le prescripteur en cas de problème avec le matériel ou le patient ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Tracez-vous ces échanges dans votre logiciel métier ?", type: 'oui_non', requis: true },
+    ],
+    registre: null
+  },
+  '2.4.6': {
+    inspecteur: "L'inspecteur vérifie que vous participez à la coordination des soins — plan personnalisé de santé, réunions pluridisciplinaires si applicable.",
+    contexte: "Pour les patients complexes, vous devez participer aux réunions de coordination avec les autres professionnels de santé.",
+    conseil: "Ce critère ne s'applique pas à tous les PSDM — vérifiez si vos activités l'imposent.",
+    preuves: [
+      { label: "Attestation de participation aux coordinations de soins", description: "Compte-rendu de réunion ou courrier confirmant votre participation.", type: 'upload' },
+    ],
+    questions: [
+      { id: 'q1', label: "Participez-vous à des réunions de coordination pluridisciplinaires ?", type: 'oui_non' },
+      { id: 'q2', label: "Ce critère s'applique-t-il à vos activités ?", type: 'oui_non', requis: true },
+    ],
+    registre: null
+  },
+  '2.5.1': {
+    inspecteur: "L'inspecteur va vérifier que vous reprenez le matériel en location en fin de prestation dans des conditions adaptées — délais, état du matériel, traçabilité.",
+    contexte: "Une reprise de matériel non tracée peut créer des problèmes de facturation et de sécurité. L'inspecteur vérifie que vous avez une procédure claire.",
+    conseil: "MediTrack trace chaque reprise — c'est votre registre de preuve. L'attestation formalise votre engagement.",
+    preuves: [
+      { code: 'ATTEST-REPRISES', label: "⭐ Attestation de traçabilité des reprises", description: "PREUVE PRINCIPALE — Atteste que vous utilisez MediTrack pour tracer chaque reprise de matériel.", type: 'generer', mention: 'principal' },
+    ],
+    questions: [
+      { id: 'q1', label: "Tracez-vous chaque reprise de matériel dans votre logiciel ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Dans quel délai reprenez-vous le matériel après la fin de la prestation ?", type: 'choix', options: ["Sous 48h", "Dans la semaine", "Dans le mois", "Selon les cas"], requis: true },
+      { id: 'q3', label: "Vérifiez-vous l'état du matériel lors de la reprise ?", type: 'oui_non', requis: true },
+    ],
+    registre: null
+  },
+  '2.5.2': {
+    inspecteur: "L'inspecteur va vérifier que vous avez une procédure pour arrêter la facturation dès la fin de la prestation.",
+    contexte: "Facturer après la fin d'une prestation est une fraude. L'inspecteur vérifie que vous avez une procédure pour éviter ça.",
+    conseil: "La mise à jour du statut dans MediTrack (matériel 'retiré') déclenche l'arrêt de facturation dans votre logiciel métier.",
+    preuves: [
+      { code: 'ATTEST-REPRISES', label: "Attestation de traçabilité des fins de prestation", description: "La reprise tracée dans MediTrack déclenche l'arrêt de facturation.", type: 'generer' },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous une procédure formelle pour arrêter la facturation en fin de prestation ?", type: 'oui_non', requis: true },
+      { id: 'q2', label: "Comment déclenchez-vous l'arrêt de facturation ?", type: 'choix', options: ["Mise à jour logiciel métier à la reprise", "Notification manuelle à la facturation", "Automatiquement via le logiciel", "Pas de procédure formelle"], requis: true },
+    ],
+    registre: null
+  },
   '2.2.1': {
     inspecteur: "L'inspecteur va vérifier que vous étudiez chaque prescription avant de vous engager et que vous contactez le prescripteur si elle est incomplète. Il cherche des traces écrites de ces échanges.",
     contexte: "Vous ne pouvez pas livrer du matériel sur une prescription incomplète ou inadaptée. Si vous le faites, vous engagez votre responsabilité et celle du patient.",
