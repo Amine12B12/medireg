@@ -334,6 +334,73 @@ const CRITERES_CONFIG: Record<string, {
     ],
     registre: null
   },
+  '3.1.1': {
+    inspecteur: "L'inspecteur va demander l'organigramme et les fiches de poste.",
+    contexte: "Un PSDM sans organigramme clair est un signal d'alarme. Il cherche une organisation formalisee avec des responsabilites definies.",
+    conseil: "Le module RH de MediReg vous permet de definir les postes et competences de chaque collaborateur.",
+    preuves: [
+      { label: "Organigramme de l'entreprise", description: "Schema montrant la hierarchie et les liens entre les postes.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un organigramme a jour ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Chaque collaborateur a-t-il une fiche de poste ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.1.2': {
+    inspecteur: "L'inspecteur va verifier que vos collaborateurs ont les competences requises pour leurs missions.",
+    contexte: "Un technicien qui installe du materiel medical sans formation adaptee est un risque pour le patient.",
+    conseil: "Renseignez les competences de chaque collaborateur dans le module RH.",
+    preuves: [
+      { label: "Copies des diplomes et certifications", description: "Diplomes et habilitations des collaborateurs.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Verifiez-vous les competences de vos collaborateurs a l'embauche ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Les competences sont-elles adaptees a vos activites ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.1.3': {
+    inspecteur: "L'inspecteur va demander votre plan de formation et les attestations des formations realisees.",
+    contexte: "La formation continue est obligatoire pour les professionnels de sante.",
+    conseil: "Le journal des formations dans le module RH est votre preuve principale.",
+    preuves: [
+      { label: "Attestations de formations realisees", description: "Certificats et attestations de participation.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous un plan de formation annuel ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Vos professionnels de sante realisent-ils des DPC ?", type: 'oui_non' as const },
+      { id: 'q3', label: "Gardez-vous les attestations des formations realisees ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.1.4': {
+    inspecteur: "L'inspecteur verifie que vous avez le personnel qualifie pour garantir le respect des bonnes pratiques.",
+    contexte: "Vous devez avoir au moins une personne responsable du respect des regles professionnelles.",
+    conseil: "Le Garant PSDM designe dans votre profil repond a cette exigence.",
+    preuves: [
+      { label: "Designation du Garant PSDM", description: "Document officialisant la designation du Garant PSDM.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous designe un Garant PSDM ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Le Garant PSDM est-il qualifie pour vos activites ?", type: 'oui_non' as const, requis: true },
+    ],
+    registre: null
+  },
+  '3.1.5': {
+    inspecteur: "L'inspecteur verifie que vous avez le personnel garant selon vos activites — pharmacien, infirmier, technicien.",
+    contexte: "Certaines activites imposent la presence d'un professionnel de sante qualifie.",
+    conseil: "Verifiez que votre pharmacien est bien renseigne dans votre profil et dans le module RH.",
+    preuves: [
+      { label: "Justificatifs du personnel garant", description: "Diplomes et inscriptions ordinales du personnel garant.", type: 'upload' as const },
+    ],
+    questions: [
+      { id: 'q1', label: "Avez-vous les professionnels de sante requis pour vos activites ?", type: 'oui_non' as const, requis: true },
+      { id: 'q2', label: "Ces professionnels sont-ils inscrits a leur ordre professionnel ?", type: 'oui_non' as const },
+    ],
+    registre: null
+  },
+
 }
 
 const STATUTS = [
