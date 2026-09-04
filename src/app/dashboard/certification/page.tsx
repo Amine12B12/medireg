@@ -230,7 +230,7 @@ export default function CertificationPage() {
       if (userRole === 'client') {
         const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
         for (const consultant of consultants || []) {
-          await supabase.from('notifications').insert([{
+          const { error: notifErr } = await supabase.from('notifications').insert([{
             consultant_id: consultant.id, client_id: societe.client_id,
             type: 'document_uploade',
             message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
@@ -319,7 +319,23 @@ export default function CertificationPage() {
             onUpdateStatut={(statut) => updateStatut(selectedCritere.id, statut)}
             onGenererDoc={genererDoc}
             onUploadPreuve={uploadPreuve}
-            onReloadDocs={reloadDocs}
+            onReloadDocs={async () => {
+              await reloadDocs()
+              // Notifier le consultant quand un document est signé
+              if (userRole === 'client' && societe?.client_id) {
+                const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
+                for (const consultant of consultants || []) {
+                  await supabase.from('notifications').insert([{
+                    consultant_id: consultant.id,
+                    client_id: societe.client_id,
+                    type: 'document_signe',
+                    message: `Document signé sur le critère ${selectedCritere?.code || ''} — en attente de validation`,
+                    critere_code: selectedCritere?.code,
+                    lu: false,
+                  }])
+                }
+              }
+            }}
             generatingDoc={generatingDoc}
             saving={savingId === selectedCritere.id}
             userRole={userRole}
