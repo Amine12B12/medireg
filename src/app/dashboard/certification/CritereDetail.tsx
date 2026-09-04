@@ -1283,7 +1283,11 @@ export default function CritereDetail({
               <span style={{ fontSize: '13px', fontWeight: '600', color: st.color }}>{st.label}</span>
             </div>
             {statut === 'non_analyse' || statut === 'preuve_manquante' || statut === 'information_manquante' ? (
-              <span style={{ fontSize: '12px', color: '#9CA3AF' }}>En attente de validation par votre consultant</span>
+              <button onClick={() => onUpdateStatut('procedure_a_valider')}
+                style={{ padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-send" style={{ fontSize: '13px' }} />
+                Soumettre pour validation
+              </button>
             ) : statut === 'procedure_a_valider' ? (
               <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: '500' }}>⏳ Votre consultant va valider ce critère</span>
             ) : statut === 'action_corrective' ? (
