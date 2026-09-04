@@ -75,6 +75,16 @@ export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  async function fetchVille(cp: string): Promise<string> {
+    if (cp.length !== 5) return ''
+    try {
+      const res = await fetch(`https://geo.api.gouv.fr/communes?codePostal=${cp}&fields=nom&format=json&geometry=centre`)
+      const data = await res.json()
+      if (data && data.length > 0) return data[0].nom
+    } catch {}
+    return ''
+  }
+
   const [societe, setSociete] = useState({
     raison_sociale: '', nom_commercial: '', forme_juridique: 'SARL',
     siren: '', code_ape: '', adresse_siege: '', code_postal: '', ville: '',
@@ -551,7 +561,7 @@ export default function OnboardingPage() {
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Adresse</label><input value={societe.adresse_siege} onChange={e => setSociete(p => ({ ...p, adresse_siege: e.target.value }))} style={inputStyle} /></div>
-                <div><label style={labelStyle}>Code postal</label><input value={societe.code_postal} onChange={e => setSociete(p => ({ ...p, code_postal: e.target.value }))} style={inputStyle} /></div>
+                <div><label style={labelStyle}>Code postal</label><input value={societe.code_postal} onChange={async e => { const cp = e.target.value; setSociete(p => ({ ...p, code_postal: cp })); if (cp.length === 5) { const ville = await fetchVille(cp); if (ville) setSociete(p => ({ ...p, ville })) } }} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Ville</label><input value={societe.ville} onChange={e => setSociete(p => ({ ...p, ville: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Téléphone</label><input value={societe.telephone} onChange={e => setSociete(p => ({ ...p, telephone: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Email</label><input type='email' value={societe.email} onChange={e => setSociete(p => ({ ...p, email: e.target.value }))} style={inputStyle} /></div>
@@ -585,7 +595,7 @@ export default function OnboardingPage() {
                   <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom *</label><input value={etab.nom} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, nom: e.target.value } : et))} style={inputStyle} /></div>
                   <div><label style={labelStyle}>SIRET</label><input value={etab.siret} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, siret: e.target.value } : et))} style={inputStyle} /></div>
                   <div><label style={labelStyle}>Adresse</label><input value={etab.adresse} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, adresse: e.target.value } : et))} style={inputStyle} /></div>
-                  <div><label style={labelStyle}>Code postal</label><input value={etab.code_postal} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, code_postal: e.target.value } : et))} style={inputStyle} /></div>
+                  <div><label style={labelStyle}>Code postal</label><input value={etab.code_postal} onChange={async e => { const cp = e.target.value; setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, code_postal: cp } : et)); if (cp.length === 5) { const ville = await fetchVille(cp); if (ville) setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, ville } : et)) } }} style={inputStyle} /></div>
                   <div><label style={labelStyle}>Ville</label><input value={etab.ville} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, ville: e.target.value } : et))} style={inputStyle} /></div>
                   <div><label style={labelStyle}>Téléphone</label><input value={etab.telephone} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, telephone: e.target.value } : et))} style={inputStyle} /></div>
                   <div><label style={labelStyle}>Email</label><input value={etab.email} onChange={e => setEtablissements(prev => prev.map((et, idx) => idx === i ? { ...et, email: e.target.value } : et))} style={inputStyle} /></div>
