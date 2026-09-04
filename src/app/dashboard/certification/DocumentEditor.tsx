@@ -1251,8 +1251,15 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                   Votre nom complet
                 </label>
+                <select value={signePar} onChange={e => setSignePar(e.target.value)}
+                  style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const, background: '#fff', marginBottom: '8px' }}>
+                  <option value="">-- Sélectionner un signataire --</option>
+                  {Object.entries(responsables).map(([resp, nom]) => (
+                    <option key={resp} value={nom}>{nom} ({resp.replace(/_/g, ' ')})</option>
+                  ))}
+                </select>
                 <input value={signePar} onChange={e => setSignePar(e.target.value)}
-                  placeholder="Prénom Nom"
+                  placeholder="Ou saisir un nom manuellement"
                   style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const }}
                   onFocus={e => e.target.style.borderColor = '#7C3AED'}
                   onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
