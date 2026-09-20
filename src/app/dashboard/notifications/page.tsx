@@ -22,9 +22,13 @@ export default function NotificationsPage() {
 
   async function loadNotifs() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    
     let query = supabase
       .from('notifications')
       .select('*, clients(nom, forfait)')
+      .eq('consultant_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50)
 
