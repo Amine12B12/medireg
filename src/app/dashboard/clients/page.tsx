@@ -14,14 +14,14 @@ const CHAPITRES = ['1', '2', '3', '4']
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([])
+  const [reseaux, setReseaux] = useState<any[]>([])
   const [kpis, setKpis] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
-  const [selectedClient, setSelectedClient] = useState<any>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showForfaitModal, setShowForfaitModal] = useState<any>(null)
   const [search, setSearch] = useState('')
   const [filterForfait, setFilterForfait] = useState('tous')
-  const [form, setForm] = useState({ nom: '', email: '', forfait: 'starter' })
+  const [form, setForm] = useState({ nom: '', email: '', forfait: 'starter', reseau_id: '' })
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
   const router = useRouter()
@@ -31,44 +31,43 @@ export default function ClientsPage() {
   async function loadClients() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: prof } = await supabase.from('profiles').select('id, role').eq('id', user!.id).single()
-    
+    if (!user) return
+    const { data: prof } = await supabase.from('profiles').select('id, role').eq('id', user.id).single()
+
     let query = supabase.from('clients').select('*').order('created_at', { ascending: false })
-    // Un consultant ne voit que ses propres clients
     if (prof?.role === 'consultant') {
       query = query.eq('consultant_id', prof.id)
     }
     const { data: cls } = await query
     setClients(cls || [])
 
-    // Charger KPI certification pour chaque client
+    // Charger les réseaux du consultant
+    if (prof?.role === 'consultant') {
+      const { data: rs } = await supabase.from('reseaux').select('*').eq('consultant_id', user.id).order('nom')
+      setReseaux(rs || [])
+    }
+
+    // KPIs
     const kpiMap: Record<string, any> = {}
     for (const client of cls || []) {
       const { data: soc } = await supabase.from('societes').select('id').eq('client_id', client.id).single()
       if (!soc) { kpiMap[client.id] = { score: 0, chapitres: {}, docs: 0, lastActivity: null }; continue }
-
       const { data: etabs } = await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id)
       const etabId = etabs?.[0]?.id
       if (!etabId) { kpiMap[client.id] = { score: 0, chapitres: {}, docs: 0, lastActivity: null }; continue }
-
       const { data: crits } = await supabase.from('criteres_psdm').select('id, chapitre').order('code')
       const { data: reps } = await supabase.from('reponses_criteres').select('*').eq('etablissement_id', etabId)
       const { count: docsCount } = await supabase.from('documents_qualite').select('*', { count: 'exact', head: true }).eq('etablissement_id', etabId)
-
       const total = crits?.length || 0
-      const conformes = reps?.filter(r => r.statut === 'conforme').length || 0
+      const conformes = reps?.filter(r => r.statut === 'pret_audit').length || 0
       const score = total > 0 ? Math.round((conformes / total) * 100) : 0
-
-      // Score par chapitre
-      const chapScores: Record<string, { score: number; conformes: number; total: number }> = {}
+      const chapScores: Record<string, any> = {}
       for (const chap of CHAPITRES) {
         const critChap = crits?.filter(c => c.chapitre === chap) || []
-        const confChap = reps?.filter(r => critChap.find(c => c.id === r.critere_id) && r.statut === 'conforme').length || 0
+        const confChap = reps?.filter(r => critChap.find(c => c.id === r.critere_id) && r.statut === 'pret_audit').length || 0
         chapScores[chap] = { score: critChap.length > 0 ? Math.round((confChap / critChap.length) * 100) : 0, conformes: confChap, total: critChap.length }
       }
-
       const lastRep = reps?.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())[0]
-
       kpiMap[client.id] = { score, chapitres: chapScores, docs: docsCount || 0, lastActivity: lastRep?.updated_at || lastRep?.created_at || null }
     }
     setKpis(kpiMap)
@@ -79,15 +78,22 @@ export default function ClientsPage() {
     if (!form.nom || !form.email) return
     setSaving(true)
     try {
+      const { data: { user } } = await supabase.auth.getUser()
       const res = await fetch('/api/create-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom: form.nom, email: form.email, forfait: form.forfait, consultant_id: (await supabase.auth.getUser()).data.user?.id })
+        body: JSON.stringify({
+          nom: form.nom,
+          email: form.email,
+          forfait: form.forfait,
+          consultant_id: user?.id,
+          reseau_id: form.reseau_id || null
+        })
       })
       const data = await res.json()
       if (!res.ok) { alert('Erreur : ' + data.error); return }
       setShowAddModal(false)
-      setForm({ nom: '', email: '', forfait: 'starter' })
+      setForm({ nom: '', email: '', forfait: 'starter', reseau_id: '' })
       loadClients()
     } catch (e: any) {
       alert('Erreur : ' + e.message)
@@ -101,11 +107,18 @@ export default function ClientsPage() {
     loadClients()
   }
 
+  async function assignReseau(clientId: string, reseauId: string) {
+    await supabase.from('clients').update({ reseau_id: reseauId || null }).eq('id', clientId)
+    loadClients()
+  }
+
   const filtered = clients
     .filter(c => filterForfait === 'tous' || c.forfait === filterForfait)
-    .filter(c => !search || c.nom?.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase()))
+    .filter(c => !search || c.nom?.toLowerCase().includes(search.toLowerCase()) || c.contact_email?.toLowerCase().includes(search.toLowerCase()))
 
   const scoreColor = (s: number) => s >= 75 ? '#10B981' : s >= 50 ? '#F59E0B' : s >= 25 ? '#F97316' : '#EF4444'
+
+  const inp = { width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const }
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
@@ -123,7 +136,7 @@ export default function ClientsPage() {
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{clients.length} client{clients.length > 1 ? 's' : ''} · {clients.filter(c => c.forfait_actif).length} actifs</div>
         </div>
         <button onClick={() => setShowAddModal(true)}
-          style={{ padding: '9px 18px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px', boxShadow: '0 1px 4px rgba(26,86,219,0.25)' }}>
+          style={{ padding: '9px 18px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px' }}>
           <i className="ti ti-user-plus" style={{ fontSize: '15px' }} />
           Ajouter un client
         </button>
@@ -162,7 +175,7 @@ export default function ClientsPage() {
         ))}
       </div>
 
-      {/* Table clients */}
+      {/* Liste clients */}
       {filtered.length === 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '64px', textAlign: 'center' }}>
           <i className="ti ti-users" style={{ fontSize: '32px', color: 'var(--text-tertiary)', display: 'block', marginBottom: '12px', opacity: 0.3 }} />
@@ -179,6 +192,7 @@ export default function ClientsPage() {
             const kpi = kpis[client.id] || { score: 0, chapitres: {}, docs: 0, lastActivity: null }
             const forfait = FORFAITS[client.forfait as keyof typeof FORFAITS] || FORFAITS.starter
             const isActif = client.forfait_actif !== false
+            const reseau = reseaux.find(r => r.id === client.reseau_id)
 
             return (
               <div key={client.id}
@@ -195,25 +209,24 @@ export default function ClientsPage() {
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.nom}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.contact_email}</div>
+                      {reseau && <div style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 6px', borderRadius: '20px', display: 'inline-block', marginTop: '2px' }}>{reseau.nom}</div>}
                     </div>
                   </div>
 
-                  {/* Forfait badge */}
+                  {/* Forfait */}
                   <div style={{ flex: '0 0 100px' }}>
                     <span style={{ fontSize: '11px', fontWeight: '700', color: forfait.color, background: forfait.bg, padding: '3px 10px', borderRadius: '20px' }}>
                       {isActif ? forfait.label : '⏸ Suspendu'}
                     </span>
                   </div>
 
-                  {/* Score global */}
+                  {/* Score */}
                   <div style={{ flex: '0 0 80px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
                       <svg width="36" height="36" viewBox="0 0 36 36">
                         <circle cx="18" cy="18" r="14" fill="none" stroke="#F3F4F6" strokeWidth="4" />
-                        <circle cx="18" cy="18" r="14" fill="none"
-                          stroke={scoreColor(kpi.score)}
-                          strokeWidth="4"
+                        <circle cx="18" cy="18" r="14" fill="none" stroke={scoreColor(kpi.score)} strokeWidth="4"
                           strokeDasharray={`${2 * Math.PI * 14}`}
                           strokeDashoffset={`${2 * Math.PI * 14 * (1 - kpi.score / 100)}`}
                           strokeLinecap="round" transform="rotate(-90 18 18)" />
@@ -225,7 +238,7 @@ export default function ClientsPage() {
                     <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Score</div>
                   </div>
 
-                  {/* KPI chapitres */}
+                  {/* Chapitres */}
                   <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {CHAPITRES.map(chap => {
                       const chapData = kpi.chapitres?.[chap] || { score: 0, conformes: 0, total: 0 }
@@ -243,18 +256,16 @@ export default function ClientsPage() {
                     })}
                   </div>
 
-                  {/* Docs + activite */}
+                  {/* Docs */}
                   <div style={{ flex: '0 0 80px', textAlign: 'center' }}>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: '#1A56DB' }}>{kpi.docs}</div>
                     <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>docs</div>
                   </div>
 
-                  {/* Derniere activite */}
+                  {/* Activité */}
                   <div style={{ flex: '0 0 100px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                      {kpi.lastActivity
-                        ? new Date(kpi.lastActivity).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
-                        : 'Aucune activité'}
+                      {kpi.lastActivity ? new Date(kpi.lastActivity).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : 'Aucune activité'}
                     </div>
                   </div>
 
@@ -292,24 +303,28 @@ export default function ClientsPage() {
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>Nom de l'entreprise *</label>
-                <input value={form.nom} onChange={e => setForm(p => ({ ...p, nom: e.target.value }))}
-                  placeholder="SARL Medical Services"
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }} />
+                <input value={form.nom} onChange={e => setForm(p => ({ ...p, nom: e.target.value }))} placeholder="SARL Medical Services" style={inp} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>Email de connexion *</label>
-                <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                  placeholder="contact@medical-services.fr" type="email"
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#111827', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' }} />
+                <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="contact@medical-services.fr" type="email" style={inp} />
               </div>
+              {reseaux.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>Réseau (optionnel)</label>
+                  <select value={form.reseau_id} onChange={e => setForm(p => ({ ...p, reseau_id: e.target.value }))} style={inp}>
+                    <option value="">Aucun réseau</option>
+                    {reseaux.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                  </select>
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Forfait</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {Object.entries(FORFAITS).map(([key, f]) => (
                     <button key={key} onClick={() => setForm(p => ({ ...p, forfait: key }))}
-                      style={{ flex: 1, padding: '10px 8px', border: `2px solid ${form.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: form.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', transition: 'all 0.1s' }}>
+                      style={{ flex: 1, padding: '10px 8px', border: `2px solid ${form.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: form.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                       <div style={{ fontSize: '12px', fontWeight: '700', color: form.forfait === key ? f.color : '#6B7280' }}>{f.label}</div>
-
                     </button>
                   ))}
                 </div>
@@ -333,14 +348,14 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {/* Modal gestion forfait */}
+      {/* Modal gestion forfait + réseau */}
       {showForfaitModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShowForfaitModal(null) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '440px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gérer le forfait</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gérer le client</div>
                 <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>{showForfaitModal.nom}</div>
               </div>
               <button onClick={() => setShowForfaitModal(null)}
@@ -352,19 +367,31 @@ export default function ClientsPage() {
               <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Changer de forfait</div>
               {Object.entries(FORFAITS).map(([key, f]) => (
                 <button key={key} onClick={() => updateForfait(showForfaitModal.id, key, true)}
-                  style={{ padding: '12px 16px', border: `2px solid ${showForfaitModal.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: showForfaitModal.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.1s' }}>
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: showForfaitModal.forfait === key ? f.color : '#374151' }}>{f.label}</div>
-
-                  </div>
+                  style={{ padding: '12px 16px', border: `2px solid ${showForfaitModal.forfait === key ? f.color : '#E5E7EB'}`, borderRadius: '10px', background: showForfaitModal.forfait === key ? f.bg : '#fff', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: showForfaitModal.forfait === key ? f.color : '#374151' }}>{f.label}</div>
                   {showForfaitModal.forfait === key && <i className="ti ti-check" style={{ fontSize: '16px', color: f.color }} />}
                 </button>
               ))}
+
+              {reseaux.length > 0 && (
+                <>
+                  <div style={{ height: '1px', background: '#F3F4F6', margin: '4px 0' }} />
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Assigner à un réseau</div>
+                  <select
+                    defaultValue={showForfaitModal.reseau_id || ''}
+                    onChange={e => assignReseau(showForfaitModal.id, e.target.value)}
+                    style={{ ...inp, padding: '10px 12px' }}>
+                    <option value="">Aucun réseau</option>
+                    {reseaux.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                  </select>
+                </>
+              )}
+
               <div style={{ height: '1px', background: '#F3F4F6', margin: '4px 0' }} />
               <button onClick={() => updateForfait(showForfaitModal.id, showForfaitModal.forfait, !showForfaitModal.forfait_actif)}
                 style={{ padding: '10px 16px', border: `1px solid ${showForfaitModal.forfait_actif ? '#FEE2E2' : '#D1FAE5'}`, borderRadius: '9px', background: showForfaitModal.forfait_actif ? '#FEF2F2' : '#ECFDF5', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '13px', fontWeight: '600', color: showForfaitModal.forfait_actif ? '#DC2626' : '#059669', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                 <i className={`ti ${showForfaitModal.forfait_actif ? 'ti-player-pause' : 'ti-player-play'}`} style={{ fontSize: '14px' }} />
-                {showForfaitModal.forfait_actif ? 'Suspendre l\'accès' : 'Réactiver l\'accès'}
+                {showForfaitModal.forfait_actif ? "Suspendre l'accès" : "Réactiver l'accès"}
               </button>
             </div>
           </div>
