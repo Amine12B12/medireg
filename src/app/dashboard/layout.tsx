@@ -220,7 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         {notifCount > 0 && (
                           <button onClick={async () => {
-                            await supabase.from('notifications').update({ lu: true }).eq('lu', false)
+                            const { data: { user: u2 } } = await supabase.auth.getUser(); await supabase.from('notifications').update({ lu: true }).eq('lu', false).eq('consultant_id', u2?.id)
                             setNotifCount(0)
                             setNotifs([])
                           }} style={{ fontSize: '11px', color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
