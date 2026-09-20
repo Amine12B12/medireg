@@ -75,6 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           .from('notifications')
           .select('*, clients(nom)')
           .eq('lu', false)
+          .eq('consultant_id', user.id)
           .order('created_at', { ascending: false })
           .limit(20)
         setNotifs(notifData || [])
