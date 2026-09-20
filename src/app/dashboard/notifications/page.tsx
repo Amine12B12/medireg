@@ -45,7 +45,8 @@ export default function NotificationsPage() {
   }
 
   async function toutMarquerLu() {
-    await supabase.from('notifications').update({ lu: true }).eq('lu', false)
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('notifications').update({ lu: true }).eq('lu', false).eq('consultant_id', user?.id)
     setNotifs(prev => prev.map(n => ({ ...n, lu: true })))
   }
 
