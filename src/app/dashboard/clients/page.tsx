@@ -30,7 +30,15 @@ export default function ClientsPage() {
 
   async function loadClients() {
     setLoading(true)
-    const { data: cls } = await supabase.from('clients').select('*').order('created_at', { ascending: false })
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: prof } = await supabase.from('profiles').select('id, role').eq('id', user!.id).single()
+    
+    let query = supabase.from('clients').select('*').order('created_at', { ascending: false })
+    // Un consultant ne voit que ses propres clients
+    if (prof?.role === 'consultant') {
+      query = query.eq('consultant_id', prof.id)
+    }
+    const { data: cls } = await query
     setClients(cls || [])
 
     // Charger KPI certification pour chaque client
@@ -74,7 +82,7 @@ export default function ClientsPage() {
       const res = await fetch('/api/create-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom: form.nom, email: form.email, forfait: form.forfait })
+        body: JSON.stringify({ nom: form.nom, email: form.email, forfait: form.forfait, consultant_id: (await supabase.auth.getUser()).data.user?.id })
       })
       const data = await res.json()
       if (!res.ok) { alert('Erreur : ' + data.error); return }

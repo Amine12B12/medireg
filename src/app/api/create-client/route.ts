@@ -89,7 +89,7 @@ async function sendInvitationEmail(email: string, nom: string, password: string)
 
 export async function POST(req: NextRequest) {
   try {
-    const { nom, email, forfait, ville, adresse } = await req.json()
+    const { nom, email, forfait, ville, adresse, consultant_id } = await req.json()
     if (!nom || !email) return NextResponse.json({ error: 'Nom et email requis' }, { status: 400 })
 
     const tempPassword = generatePassword()
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     // 1. Créer le client MediReg
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .insert([{ nom, contact_email: email, forfait: forfait || 'starter', forfait_actif: true, statut: 'actif' }])
+      .insert([{ nom, contact_email: email, forfait: forfait || 'starter', forfait_actif: true, statut: 'actif', consultant_id: consultant_id || null }])
       .select()
       .single()
 
