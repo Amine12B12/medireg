@@ -12,6 +12,7 @@ const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard/onboarding': { title: 'Configuration', sub: 'Mise en place de votre profil' },
   '/dashboard/profil': { title: 'Mon profil', sub: 'Informations etablissement' },
   '/dashboard/rh': { title: 'Ressources Humaines', sub: 'Compétences et formations' },
+  
 }
 
 const navConsultant = [
@@ -25,6 +26,7 @@ const navClient = [
   { path: '/dashboard/documents', icon: 'ti-files', label: 'Documents' },
   { path: '/dashboard/rh', icon: 'ti-users', label: 'Ressources Humaines' },
   { path: '/dashboard/profil', icon: 'ti-building', label: 'Mon profil' },
+  { path: '/dashboard/reseau', icon: 'ti-building-community', label: 'Réseaux' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
