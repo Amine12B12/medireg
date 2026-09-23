@@ -330,7 +330,7 @@ const CRITERES_CONFIG: Record<string, {
     ],
     questions: [
       { id: 'q1', label: "Comment vérifiez-vous qu'une prescription est complète à la réception ?", type: 'choix', options: ["Checklist papier", "Vérification dans le logiciel métier", "Vérification manuelle par le responsable", "Pas de vérification formelle"], requis: true },
-      { id: 'q2', label: "Que faites-vous si une prescription est incomplète ou illisible ?", type: 'choix', options: ["On contacte le médecin et on note l'échange", "On contacte le médecin sans noter", "On demande au patient de contacter son médecin", "On livre quand même"], requis: true, aide: "Contacter le médecin ET noter la trace est la bonne pratique." },
+      { id: 'q2', label: "Que faites-vous si une prescription est incomplète ou illisible ?", type: 'multiple', options: ["On contacte le médecin et on note l'échange", "On contacte le médecin sans noter", "On demande au patient de contacter son médecin", "On livre quand même"], requis: true, aide: "Contacter le médecin ET noter la trace est la bonne pratique." },
       { id: 'q3', label: "Vérifiez-vous la disponibilité du matériel avant de confirmer la prise en charge ?", type: 'oui_non', requis: true },
     ],
     registre: null
