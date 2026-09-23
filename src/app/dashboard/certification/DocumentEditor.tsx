@@ -933,7 +933,7 @@ Elle est conforme au critere 3.3.2 du referentiel HAS PSDM (juin 2024).`,
     description: "Document remis au patient lors de chaque installation — atteste la reception du materiel, des consignes et de la charte qualite.",
     sections: [
       {
-        id: 's1', titre: "En-tete", modifiable: false,
+        id: 's1', titre: "En-tete", modifiable: true,
         contenu: `{{raison_sociale}}
 {{adresse_siege}}
 {{code_postal}} {{ville}}
@@ -947,23 +947,26 @@ Email : {{email}}`,
 
 Nous avons le plaisir de vous mettre a disposition le materiel et/ou les produits dont vous avez souhaite la livraison.
 
-Dans cette pochette vous trouverez :
-- Les recommandations d'utilisation du materiel
-- Les conditions d'utilisation et consignes de securite
-- La charte qualite de {{raison_sociale}}
-- Les conditions de respect du secret professionnel
-- Les conditions de libre choix de l'usager
-- Les conditions RGPD pour l'archivage de vos donnees personnelles
+Dans le cadre de cette prestation, les documents suivants vous ont ete remis et sont egalement disponibles dans votre espace en ligne :
 
-Nous restons a votre disposition pour tout renseignement, et esperons que nos prestations vous donneront toute satisfaction.
+- La notice d'information sur le libre choix du prestataire (critere HAS 1.2.1)
+- Les recommandations d'utilisation et consignes de securite du materiel
+- La charte ethique de {{raison_sociale}} (critere HAS 1.2.3)
+- La politique de confidentialite et conditions RGPD (critere HAS 1.2.5)
+- Le formulaire de consentement signe
+
+Ces documents sont generes et archives par {{raison_sociale}} via sa plateforme qualite certifiee HAS.
+
+Nous restons a votre disposition pour tout renseignement au {{telephone}} ou par email a {{email}}.
 
 Croyez, Madame, Monsieur, en nos pensees devouees.
 
-L'equipe {{raison_sociale}}`,
+{{responsable_etablissement}}
+Pour {{raison_sociale}}`,
         aide: "Vous pouvez modifier la liste des documents inclus dans la pochette."
       },
       {
-        id: 's3', titre: "Attestation de reception", modifiable: false,
+        id: 's3', titre: "Attestation de reception", modifiable: true,
         contenu: `Je soussigne(e) ____________________________
 
 Atteste avoir recu les documents ci-dessus, comprenant les recommandations, les conditions d'utilisation, les consignes de securite, correspondant aux materiels livres.
