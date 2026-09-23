@@ -325,12 +325,14 @@ const CRITERES_CONFIG: Record<string, {
     conseil: "Gardez une trace de chaque prescription reçue dans votre logiciel. Si vous contactez un médecin pour une précision, notez-le avec la date — c'est cette trace que l'inspecteur cherche.",
     preuves: [
       { code: 'PROC-PRESCRIPTION-01', label: "Procédure de réception et contrôle des prescriptions", description: "Générée automatiquement à partir de votre organisation.", type: 'generer' },
-      { label: "Trace des échanges avec les prescripteurs", description: "Email, courrier ou note dans votre logiciel prouvant le contact en cas de prescription incomplète.", type: 'upload' },
-      { label: "Preuve de disponibilité matériel", description: "Capture logiciel ou bon de stock montrant que vous vérifiez la disponibilité avant engagement.", type: 'upload' },
+      { code: 'TRACE-PRESCRIPTEURS', label: "Trace d'echange avec le prescripteur", description: "Document tracant le contact avec le medecin en cas de prescription incomplete ou illisible.", type: 'generer' as const },
+      { label: "Trace des échanges avec les prescripteurs (upload)", description: "Email, courrier ou note dans votre logiciel prouvant le contact.", type: 'upload' as const },
+      { code: 'PREUVE-DISPO-MATERIEL', label: "Attestation de verification de disponibilite materiel", description: "Document attestant que la disponibilite du materiel a ete verifiee avant confirmation.", type: 'generer' as const },
+      { label: "Preuve de disponibilité matériel (upload)", description: "Capture logiciel ou bon de stock.", type: 'upload' as const },
     ],
     questions: [
       { id: 'q1', label: "Comment vérifiez-vous qu'une prescription est complète à la réception ?", type: 'choix', options: ["Checklist papier", "Vérification dans le logiciel métier", "Vérification manuelle par le responsable", "Pas de vérification formelle"], requis: true },
-      { id: 'q2', label: "Que faites-vous si une prescription est incomplète ou illisible ?", type: 'multiple', options: ["On contacte le médecin et on note l'échange", "On contacte le médecin sans noter", "On demande au patient de contacter son médecin", "On livre quand même"], requis: true, aide: "Contacter le médecin ET noter la trace est la bonne pratique." },
+      { id: 'q2', label: "Que faites-vous si une prescription est incomplète ou illisible ?", type: 'choix', options: ["On contacte le médecin et on note l'échange", "On contacte le médecin sans noter", "On demande au patient de contacter son médecin", "On livre quand même"], requis: true, aide: "Contacter le médecin ET noter la trace est la bonne pratique." },
       { id: 'q3', label: "Vérifiez-vous la disponibilité du matériel avant de confirmer la prise en charge ?", type: 'oui_non', requis: true },
     ],
     registre: null

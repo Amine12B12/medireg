@@ -985,6 +985,134 @@ Installateur : {{responsable_etablissement}}`,
       },
     ]
   },
+  'TRACE-PRESCRIPTEURS': {
+    titre: "Trace d'echange avec le prescripteur",
+    description: "Document tracant le contact avec le medecin prescripteur en cas de prescription incomplete ou illisible.",
+    sections: [
+      {
+        id: 's1', titre: "Identification", modifiable: true,
+        contenu: `{{raison_sociale}}
+{{adresse_siege}} — {{code_postal}} {{ville}}
+Tel : {{telephone}} — Email : {{email}}
+
+TRACE D'ECHANGE AVEC UN PRESCRIPTEUR
+Date : ____________________________
+Reference dossier : ____________________________`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Motif du contact", modifiable: true,
+        contenu: `MOTIF DU CONTACT
+
+Prescription recue le : ____________________________
+Prescripteur : Dr ____________________________
+Etablissement / Cabinet : ____________________________
+
+Motif du contact :
+☐ Prescription incomplete (champs manquants)
+☐ Prescription illisible
+☐ Prescription inadaptee au materiel demande
+☐ Doute sur la posologie / specifications
+☐ Autre : ____________________________`,
+        aide: "Cochez le ou les motifs correspondants."
+      },
+      {
+        id: 's3', titre: "Deroulement de l'echange", modifiable: true,
+        contenu: `DEROULEMENT DE L'ECHANGE
+
+Mode de contact :
+☐ Telephone  ☐ Email  ☐ Courrier  ☐ En personne
+
+Heure du contact : ____________________________
+Interlocuteur : ____________________________
+
+Resume de l'echange :
+_______________________________________________________________
+_______________________________________________________________
+_______________________________________________________________
+
+Decision prise suite a l'echange :
+☐ Prescription completee / corrigee
+☐ En attente de nouvelle prescription
+☐ Accord verbal du prescripteur — en attente de confirmation ecrite
+☐ Livraison autorisee
+☐ Livraison reportee
+
+Accord du patient obtenu : ☐ Oui  ☐ Non  ☐ Sans objet`,
+        aide: "Notez precisement ce qui a ete dit et decide."
+      },
+      {
+        id: 's4', titre: "Signature", modifiable: true,
+        contenu: `SIGNATURE
+
+Redige par : {{responsable_etablissement}}
+Fonction : ____________________________
+Date : ____________________________
+
+Signature : ____________________________`,
+        aide: ""
+      },
+    ]
+  },
+  'PREUVE-DISPO-MATERIEL': {
+    titre: "Attestation de verification de disponibilite materiel",
+    description: "Document attestant que la disponibilite du materiel a ete verifiee avant confirmation de la prise en charge.",
+    sections: [
+      {
+        id: 's1', titre: "En-tete", modifiable: true,
+        contenu: `{{raison_sociale}}
+{{adresse_siege}} — {{code_postal}} {{ville}}
+Tel : {{telephone}} — Email : {{email}}
+
+ATTESTATION DE VERIFICATION DE DISPONIBILITE MATERIEL
+Date : ____________________________`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Materiel concerne", modifiable: true,
+        contenu: `MATERIEL CONCERNE
+
+Reference dossier patient : ____________________________
+Type de materiel demande : ____________________________
+Reference / Modele : ____________________________
+Quantite : ____________________________
+Mode de mise a disposition : ☐ Vente  ☐ Location  ☐ MAD`,
+        aide: "Utilisez une reference anonymisee pour le patient."
+      },
+      {
+        id: 's3', titre: "Verification de disponibilite", modifiable: true,
+        contenu: `VERIFICATION DE DISPONIBILITE
+
+Verifiee le : ____________________________
+Par : ____________________________
+
+Source de verification :
+☐ Logiciel de gestion de stock ({{dossier_usager}})
+☐ Verification physique en entrepot
+☐ Consultation fournisseur
+☐ Autre : ____________________________
+
+Resultat de la verification :
+☐ Materiel disponible en stock — livraison possible sous ______ jours
+☐ Materiel commande — livraison prevue le ____________________________
+☐ Materiel indisponible — solution alternative proposee : ____________________________
+
+Confirmation de prise en charge envoyee le : ____________________________`,
+        aide: "La verification doit etre faite AVANT la confirmation au patient."
+      },
+      {
+        id: 's4', titre: "Signature", modifiable: true,
+        contenu: `SIGNATURE
+
+Atteste par : {{responsable_etablissement}}
+Fonction : ____________________________
+Date : ____________________________
+
+Signature : ____________________________`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",
