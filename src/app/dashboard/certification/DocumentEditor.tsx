@@ -928,6 +928,60 @@ Elle est conforme au critere 3.3.2 du referentiel HAS PSDM (juin 2024).`,
       },
     ]
   },
+  'ATTEST-INSTALLATION': {
+    titre: "Attestation d'installation",
+    description: "Document remis au patient lors de chaque installation — atteste la reception du materiel, des consignes et de la charte qualite.",
+    sections: [
+      {
+        id: 's1', titre: "En-tete", modifiable: false,
+        contenu: `{{raison_sociale}}
+{{adresse_siege}}
+{{code_postal}} {{ville}}
+Tel : {{telephone}}
+Email : {{email}}`,
+        aide: ""
+      },
+      {
+        id: 's2', titre: "Corps de l'attestation", modifiable: true,
+        contenu: `Madame, Monsieur,
+
+Nous avons le plaisir de vous mettre a disposition le materiel et/ou les produits dont vous avez souhaite la livraison.
+
+Dans cette pochette vous trouverez :
+- Les recommandations d'utilisation du materiel
+- Les conditions d'utilisation et consignes de securite
+- La charte qualite de {{raison_sociale}}
+- Les conditions de respect du secret professionnel
+- Les conditions de libre choix de l'usager
+- Les conditions RGPD pour l'archivage de vos donnees personnelles
+
+Nous restons a votre disposition pour tout renseignement, et esperons que nos prestations vous donneront toute satisfaction.
+
+Croyez, Madame, Monsieur, en nos pensees devouees.
+
+L'equipe {{raison_sociale}}`,
+        aide: "Vous pouvez modifier la liste des documents inclus dans la pochette."
+      },
+      {
+        id: 's3', titre: "Attestation de reception", modifiable: false,
+        contenu: `Je soussigne(e) ____________________________
+
+Atteste avoir recu les documents ci-dessus, comprenant les recommandations, les conditions d'utilisation, les consignes de securite, correspondant aux materiels livres.
+
+J'ai bien receptionne egalement la charte qualite precisaant les conditions de respect du secret professionnel, du libre choix de l'usager, et du respect des conditions RGPD pour l'archivage de donnees personnelles.
+
+Date de reception : ____________________________
+
+Signature du beneficiaire :                    Signature de l'installateur :
+
+
+___________________________                    ___________________________
+
+Installateur : {{responsable_etablissement}}`,
+        aide: ""
+      },
+    ]
+  },
   'PROC-PRESCRIPTION-01': {
     titre: 'Procédure de gestion des prescriptions',
     description: "Procédure interne décrivant le processus de réception, vérification et traitement des prescriptions médicales.",

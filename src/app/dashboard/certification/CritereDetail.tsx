@@ -70,7 +70,8 @@ const CRITERES_CONFIG: Record<string, {
     conseil: "Le bon de livraison signé couvre souvent ce critère. L'attestation d'installation que vous générez ici sert de modèle — le patient signe la version papier que vous conservez dans votre logiciel métier.",
     preuves: [
       { label: "⭐ Attestation de recueil systématique du consentement", description: "PREUVE PRINCIPALE — Confirmez que vous faites systématiquement signer vos bons de livraison. Les originaux restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
-      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation", description: "Modèle VIERGE à imprimer et faire signer par le patient lors de chaque installation. Le document signé avec le nom du patient reste dans votre logiciel métier — ne jamais l'uploader dans MediReg.", type: 'generer' },
+      { code: 'ATTEST-INSTALLATION', label: "Attestation d'installation", description: "PREUVE PRINCIPALE — Document remis au patient lors de chaque installation. Base sur un vrai document PSDM. Atteste la reception du materiel et de la charte qualite.", type: 'generer' as const },
+      { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation (generique)", description: "Modèle VIERGE à imprimer et faire signer par le patient lors de chaque installation.", type: 'generer' as const },
     ],
     questions: [
       { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?", type: 'oui_non', requis: true, aide: "C'est la preuve de consentement la plus simple et la plus acceptée par les inspecteurs." },

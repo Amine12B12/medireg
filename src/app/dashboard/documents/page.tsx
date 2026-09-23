@@ -33,6 +33,7 @@ const DOC_META: Record<string, { titre: string; chapitre: string; criteres: stri
   'ATTEST-MAINTENANCE': { titre: "Attestation traçabilité maintenances SAV", chapitre: '2', criteres: ['2.4.1', '2.4.3'] },
   'ATTEST-REPRISES': { titre: "Attestation traçabilité reprises matériel", chapitre: '2', criteres: ['2.5.1', '2.5.2'] },
   'PROC-DESINFECTION': { titre: "Procédure nettoyage et désinfection DM", chapitre: '3', criteres: ['3.2.1', '3.3.2'] },
+  'ATTEST-INSTALLATION': { titre: "Attestation d'installation", chapitre: '1', criteres: ['1.2.4'] },
 }
 
 const supabase = createClient()
