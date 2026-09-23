@@ -973,6 +973,7 @@ function RegistreRemises({ etabId }: { etabId: string }) {
   const [showForm, setShowForm] = useState(entries.length === 0)
   const [form, setForm] = useState({ date_remise: new Date().toISOString().split('T')[0], type_document: 'libre_choix', reference_patient: '', remis_par: '' })
   const [saving, setSaving] = useState(false)
+  const [uploadingPj, setUploadingPj] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => { load() }, [])
@@ -990,6 +991,18 @@ function RegistreRemises({ etabId }: { etabId: string }) {
     setShowForm(false)
     await load()
     setSaving(false)
+  }
+
+  async function uploadPj(entryId: string, file: File) {
+    setUploadingPj(entryId)
+    const path = `registre_remises/${etabId}/${entryId}_${Date.now()}_${file.name}`
+    const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
+      await supabase.from('registre_remises').update({ pj_url: urlData.publicUrl }).eq('id', entryId)
+      await load()
+    }
+    setUploadingPj(null)
   }
 
   return (
@@ -1233,8 +1246,7 @@ export default function CritereDetail({
     .flatMap(([, docs]) => docs)
 
   return (
-    <div style={{ fontFamily: 'var(--font)', display: isConsultant ? 'grid' : 'block', gridTemplateColumns: isConsultant ? '1fr 340px' : 'none', gap: isConsultant ? '20px' : '0', alignItems: 'start' }}>
-    <div>
+    <div style={{ fontFamily: 'var(--font)' }}>
 
       {/* Ce que l'inspecteur cherche */}
       {config && (
@@ -1547,7 +1559,7 @@ export default function CritereDetail({
         />
       )}
 
-      {/* Chat inline pour client */}
+      {/* Chat inline */}
       {!isConsultant && (
         <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'client'} />
       )}
@@ -1562,21 +1574,67 @@ export default function CritereDetail({
           onSaved={() => { setEditorCode(null); onReloadDocs(); setReloadKey(k => k + 1) }}
         />
       )}
-    </div>
 
-    {/* Chat en sidebar fixe pour consultant */}
-    {isConsultant && (
-      <div style={{ position: 'sticky', top: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <i className="ti ti-message-circle" style={{ fontSize: '15px', color: '#1A56DB' }} />
-          Discussion avec le client
-        </div>
-        <div style={{ flex: 1, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }}>
-          <ChatCritere critereId={critere.id} etabId={selectedEtabId || ''} userRole={userRole || 'consultant'} fullHeight />
-        </div>
-      </div>
-    )}
+      {/* Bouton flottant chat consultant */}
+      {isConsultant && (
+        <ChatFlottant critereId={critere.id} etabId={selectedEtabId || ''} />
+      )}
     </div>
+  )
+}
+
+// ─── Chat flottant consultant ─────────────────────────────────
+function ChatFlottant({ critereId, etabId }: { critereId: string; etabId: string }) {
+  const [open, setOpen] = useState(false)
+  const [nonLus, setNonLus] = useState(0)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function countNonLus() {
+      const { count } = await supabase.from('messages_critere')
+        .select('id', { count: 'exact', head: true })
+        .eq('critere_id', critereId)
+        .eq('etablissement_id', etabId)
+        .eq('lu_consultant', false)
+      setNonLus(count || 0)
+    }
+    countNonLus()
+  }, [critereId, etabId])
+
+  return (
+    <>
+      {/* Bouton flottant */}
+      <button onClick={() => { setOpen(true); setNonLus(0) }}
+        style={{ position: 'fixed', bottom: '28px', right: '28px', width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(26,86,219,0.4)', zIndex: 500, transition: 'transform 0.15s' }}
+        onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)'}
+        onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'}>
+        <i className="ti ti-message-circle" style={{ fontSize: '24px', color: '#fff' }} />
+        {nonLus > 0 && (
+          <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '20px', height: '20px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+            <span style={{ fontSize: '10px', fontWeight: '700', color: '#fff' }}>{nonLus}</span>
+          </div>
+        )}
+      </button>
+
+      {/* Popup chat pleine hauteur */}
+      {open && (
+        <div style={{ position: 'fixed', bottom: '100px', right: '28px', width: '420px', height: '560px', background: '#fff', borderRadius: '16px', boxShadow: '0 16px 48px rgba(0,0,0,0.18)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border)' }}>
+          <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="ti ti-message-circle" style={{ fontSize: '18px', color: '#fff' }} />
+              <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>Discussion avec le client</span>
+            </div>
+            <button onClick={() => setOpen(false)}
+              style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <i className="ti ti-x" style={{ fontSize: '14px' }} />
+            </button>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <ChatCritere critereId={critereId} etabId={etabId} userRole="consultant" fullHeight />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
