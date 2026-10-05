@@ -24,8 +24,8 @@ export default function DashboardPage() {
     setProfile(prof)
 
     if (prof?.role === 'client') {
-      // Client → redirect vers certification
-      router.push('/dashboard/certification')
+      // Client → afficher le dashboard client
+      setLoading(false)
       return
     }
 
