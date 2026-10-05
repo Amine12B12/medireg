@@ -6,10 +6,10 @@ import MeditrackWidget from './MeditrackWidget'
 import { createClient } from '@/lib/supabase'
 
 // ─────────────────────────────────────────────────────────────
-// CONFIG CRITÈRES — Ce que l'inspecteur cherche + preuves + questions
+// CONFIG CRITÈRES — Ce que l'auditeur cherche + preuves + questions
 // ─────────────────────────────────────────────────────────────
 const CRITERES_CONFIG: Record<string, {
-  inspecteur: string
+  auditeur: string
   contexte: string
   conseil?: string
   preuves: { code?: string; label: string; description: string; type: 'generer' | 'upload' | 'registre' | 'attester'; mention?: string }[]
@@ -17,8 +17,8 @@ const CRITERES_CONFIG: Record<string, {
   registre?: 'remises' | 'reclamations' | 'evenements_indesirables' | null
 }> = {
   '1.2.1': {
-    inspecteur: "L'inspecteur va vérifier que le patient a bien eu le choix de son prestataire et qu'il n'a pas été orienté de façon imposée. Il cherche une preuve écrite que le libre choix a été respecté et expliqué.",
-    contexte: "Un patient doit pouvoir choisir librement son prestataire PSDM. L'inspecteur vérifie que vous ne captez pas les patients via des accords commerciaux cachés avec des hôpitaux ou médecins.",
+    auditeur: "L'auditeur va vérifier que le patient a bien eu le choix de son prestataire et qu'il n'a pas été orienté de façon imposée. Il cherche une preuve écrite que le libre choix a été respecté et expliqué.",
+    contexte: "Un patient doit pouvoir choisir librement son prestataire PSDM. L'auditeur vérifie que vous ne captez pas les patients via des accords commerciaux cachés avec des hôpitaux ou médecins.",
     conseil: "Le point le plus souvent raté : la notice existe mais il n'y a pas de preuve que le patient l'a reçue. Un registre signé ou une case cochée sur le bon de livraison suffit.",
     preuves: [
       { code: 'USA-INFO-01', label: "Notice d'information sur le libre choix", description: "Document remis à chaque nouveau patient expliquant son droit à choisir librement son prestataire.", type: 'generer' },
@@ -28,15 +28,15 @@ const CRITERES_CONFIG: Record<string, {
     ],
     questions: [
       { id: 'q1', label: "À quel moment remettez-vous la notice de libre choix au patient ?", type: 'choix', options: ["Dès la première prise de contact", "Lors de la livraison/installation", "Les deux"], requis: true, aide: "L'idéal est dès le premier contact pour prouver que le choix est fait avant toute prestation." },
-      { id: 'q2', label: "Comment prouvez-vous que le patient a bien reçu la notice ?", type: 'choix', options: ["Signature manuscrite sur bon de livraison", "Signature sur document dédié", "Email de confirmation", "Pas de preuve formelle actuellement"], requis: true, aide: "Une signature du patient est la meilleure preuve pour l'inspecteur." },
+      { id: 'q2', label: "Comment prouvez-vous que le patient a bien reçu la notice ?", type: 'choix', options: ["Signature manuscrite sur bon de livraison", "Signature sur document dédié", "Email de confirmation", "Pas de preuve formelle actuellement"], requis: true, aide: "Une signature du patient est la meilleure preuve pour l'auditeur." },
       { id: 'q3', label: "Avez-vous des accords commerciaux avec des établissements de santé pour l'orientation des patients ?", type: 'oui_non', requis: true, aide: "Si oui, ces accords doivent être transparents et ne pas conditionner le choix du patient." },
     ],
     registre: 'remises'
   },
   '1.2.2': {
-    inspecteur: "L'inspecteur va vérifier que le patient comprend ce qu'il reçoit — le matériel, son fonctionnement, son prix, ce qui est remboursé. Il peut interroger directement un patient pour tester sa compréhension.",
+    auditeur: "L'auditeur va vérifier que le patient comprend ce qu'il reçoit — le matériel, son fonctionnement, son prix, ce qui est remboursé. Il peut interroger directement un patient pour tester sa compréhension.",
     contexte: "Un patient ne doit pas découvrir une facture surprise. Il doit être informé avant la livraison du coût, du ticket modérateur, et des alternatives disponibles.",
-    conseil: "⭐ LA PREUVE CLÉ : le devis signé par le patient. Sans devis signé, ce critère ne peut pas être validé même si vous avez tous les autres documents. Conservez-les dans votre logiciel métier — l'inspecteur peut en demander un à la minute.",
+    conseil: "⭐ LA PREUVE CLÉ : le devis signé par le patient. Sans devis signé, ce critère ne peut pas être validé même si vous avez tous les autres documents. Conservez-les dans votre logiciel métier — l'auditeur peut en demander un à la minute.",
     preuves: [
       { label: "⭐ Attestation de remise systématique des devis", description: "PREUVE PRINCIPALE — Confirmez que vous remettez systématiquement un devis signé avant chaque livraison. Les devis réels restent dans votre logiciel métier (confidentialité patient).", type: 'attester', mention: 'principal' },
       { code: 'USA-DOC-01', label: "Charte éthique et information usager", description: "Complément documentaire — présente les tarifs, remboursements et droits du patient.", type: 'generer' },
@@ -45,13 +45,13 @@ const CRITERES_CONFIG: Record<string, {
     questions: [
       { id: 'q1', label: "Remettez-vous systématiquement un devis avant la livraison ?", type: 'oui_non', requis: true, aide: "Le devis signé est la preuve principale pour ce critère." },
       { id: 'q2', label: "Comment informez-vous le patient du reste à charge ?", type: 'choix', options: ["Sur le devis", "À l'oral lors de la livraison", "Par courrier/email", "Pas de procédure formelle"], requis: true },
-      { id: 'q3', label: "Vos livreurs/techniciens sont-ils formés pour expliquer le fonctionnement du matériel ?", type: 'oui_non', requis: true, aide: "L'inspecteur peut interroger votre personnel sur ce point." },
+      { id: 'q3', label: "Vos livreurs/techniciens sont-ils formés pour expliquer le fonctionnement du matériel ?", type: 'oui_non', requis: true, aide: "L'auditeur peut interroger votre personnel sur ce point." },
     ],
     registre: 'remises'
   },
   '1.2.3': {
-    inspecteur: "L'inspecteur va chercher à comprendre comment vous formez votre personnel à la bientraitance. Il peut demander à voir le programme de formation et s'entretenir avec vos salariés directement.",
-    contexte: "Vos techniciens interviennent au domicile de personnes vulnérables. L'inspecteur s'assure qu'ils respectent l'intimité, ne font pas de commentaires déplacés, et agissent avec bienveillance.",
+    auditeur: "L'auditeur va chercher à comprendre comment vous formez votre personnel à la bientraitance. Il peut demander à voir le programme de formation et s'entretenir avec vos salariés directement.",
+    contexte: "Vos techniciens interviennent au domicile de personnes vulnérables. L'auditeur s'assure qu'ils respectent l'intimité, ne font pas de commentaires déplacés, et agissent avec bienveillance.",
     conseil: "Beaucoup de PSDM ont des pratiques correctes mais rien d'écrit. La procédure bientraitance et l'attestation de sensibilisation sont les deux documents clés pour valider ce critère.",
     preuves: [
       { code: 'PROC-BIENTRAITANCE', label: "⭐ Procédure bientraitance et dignité", description: "PREUVE PRINCIPALE — Procédure interne définissant les comportements attendus de vos collaborateurs au domicile des patients.", type: 'generer', mention: 'principal' },
@@ -65,7 +65,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '1.2.4': {
-    inspecteur: "L'inspecteur va vérifier que le patient signe ou valide explicitement chaque étape de la prestation — livraison, installation, modification du matériel. Un bon de livraison signé est la preuve minimale.",
+    auditeur: "L'auditeur va vérifier que le patient signe ou valide explicitement chaque étape de la prestation — livraison, installation, modification du matériel. Un bon de livraison signé est la preuve minimale.",
     contexte: "Vous ne pouvez pas modifier le matériel d'un patient, faire une livraison supplémentaire ou changer une prestation sans son accord explicite.",
     conseil: "Le bon de livraison signé couvre souvent ce critère. L'attestation d'installation que vous générez ici sert de modèle — le patient signe la version papier que vous conservez dans votre logiciel métier.",
     preuves: [
@@ -74,16 +74,16 @@ const CRITERES_CONFIG: Record<string, {
       { code: 'PRESTA-DOC-01', label: "Modèle d'attestation d'installation (generique)", description: "Modèle VIERGE à imprimer et faire signer par le patient lors de chaque installation.", type: 'generer' as const },
     ],
     questions: [
-      { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?", type: 'oui_non', requis: true, aide: "C'est la preuve de consentement la plus simple et la plus acceptée par les inspecteurs." },
+      { id: 'q1', label: "Faites-vous signer vos bons de livraison par le patient ?", type: 'oui_non', requis: true, aide: "C'est la preuve de consentement la plus simple et la plus acceptée par les auditeurs." },
       { id: 'q2', label: "Comment gérez-vous les cas où le patient ne peut pas signer ?", type: 'texte', aide: "Un représentant légal peut signer à sa place. Documentez cette procédure." },
       { id: 'q3', label: "Avez-vous une procédure pour les modifications ou avenants de prestation ?", type: 'oui_non', requis: true, aide: "Tout changement de matériel ou de prestation doit être consenti." },
     ],
     registre: 'remises'
   },
   '1.2.5': {
-    inspecteur: "L'inspecteur va vérifier que vous avez un registre des traitements RGPD, une politique de confidentialité écrite, et que votre personnel a été sensibilisé. Il peut demander à voir ces documents et interroger vos collaborateurs.",
-    contexte: "Vous traitez des données médicales sensibles. Le RGPD impose un registre des traitements, une politique de confidentialité, et des mesures de sécurité. L'inspecteur HAS vérifie que vous êtes conformes.",
-    conseil: "Le registre des traitements RGPD effraie beaucoup de PSDM mais MediReg vous en génère un prérempli. L'attestation de sensibilisation est souvent oubliée — c'est pourtant ce que l'inspecteur demande en premier.",
+    auditeur: "L'auditeur va vérifier que vous avez un registre des traitements RGPD, une politique de confidentialité écrite, et que votre personnel a été sensibilisé. Il peut demander à voir ces documents et interroger vos collaborateurs.",
+    contexte: "Vous traitez des données médicales sensibles. Le RGPD impose un registre des traitements, une politique de confidentialité, et des mesures de sécurité. L'auditeur HAS vérifie que vous êtes conformes.",
+    conseil: "Le registre des traitements RGPD effraie beaucoup de PSDM mais MediReg vous en génère un prérempli. L'attestation de sensibilisation est souvent oubliée — c'est pourtant ce que l'auditeur demande en premier.",
     preuves: [
       { code: 'POLITIQUE-CONFIDENTIALITE', label: "⭐ Politique de confidentialité et RGPD", description: "PREUVE PRINCIPALE — Document officiel décrivant comment vous protégez les données de vos patients.", type: 'generer', mention: 'principal' },
       { code: 'REGISTRE-TRAITEMENTS', label: "Registre des activités de traitement", description: "Document obligatoire RGPD — liste tous vos traitements de données avec les bases légales et durées de conservation.", type: 'generer' },
@@ -98,12 +98,12 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '1.3.1': {
-    inspecteur: "L'inspecteur va demander à voir vos enquêtes de satisfaction — pas juste le formulaire vide, mais les résultats et ce que vous en avez fait. Il cherche une démarche d'amélioration continue. Il peut demander les résultats des 12 derniers mois.",
+    auditeur: "L'auditeur va demander à voir vos enquêtes de satisfaction — pas juste le formulaire vide, mais les résultats et ce que vous en avez fait. Il cherche une démarche d'amélioration continue. Il peut demander les résultats des 12 derniers mois.",
     contexte: "Ce critère oblige à écouter vraiment vos patients et à améliorer vos pratiques. Sans résultats compilés et sans actions d'amélioration documentées, ce critère ne peut pas être validé.",
-    conseil: "Le piège classique : avoir le questionnaire mais pas les résultats compilés. Le rapport annuel de satisfaction est ce que l'inspecteur demande — MediReg vous en génère un modèle à compléter.",
+    conseil: "Le piège classique : avoir le questionnaire mais pas les résultats compilés. Le rapport annuel de satisfaction est ce que l'auditeur demande — MediReg vous en génère un modèle à compléter.",
     preuves: [
       { code: 'QR-DOC-01', label: "⭐ Questionnaire de satisfaction usager", description: "PREUVE 1 — Formulaire de satisfaction adapté à l'activité PSDM. À remettre régulièrement à vos patients.", type: 'generer', mention: 'principal' },
-      { code: 'RAPPORT-SATISFACTION', label: "⭐ Rapport annuel de satisfaction", description: "PREUVE 2 — Synthèse des résultats et actions d'amélioration. C'est ce que l'inspecteur demande à voir.", type: 'generer', mention: 'principal' },
+      { code: 'RAPPORT-SATISFACTION', label: "⭐ Rapport annuel de satisfaction", description: "PREUVE 2 — Synthèse des résultats et actions d'amélioration. C'est ce que l'auditeur demande à voir.", type: 'generer', mention: 'principal' },
     ],
     questions: [
       { id: 'q1', label: "À quelle fréquence réalisez-vous des enquêtes de satisfaction ?", type: 'choix', options: ["Après chaque prestation", "Trimestrielle", "Semestrielle", "Annuelle", "Pas encore en place"], requis: true, aide: "Une fois par an minimum est requis." },
@@ -113,8 +113,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '1.3.2': {
-    inspecteur: "L'inspecteur va demander à voir votre registre des réclamations. Il compte les réclamations, vérifie que chacune a eu une réponse dans un délai raisonnable, et que vous avez analysé les causes pour éviter les récidives.",
-    contexte: "Une réclamation non traitée est le signal d'alarme le plus fort pour un inspecteur. Si vous n'avez aucune réclamation depuis 2 ans, il sera suspicieux — toute entreprise reçoit des réclamations.",
+    auditeur: "L'auditeur va demander à voir votre registre des réclamations. Il compte les réclamations, vérifie que chacune a eu une réponse dans un délai raisonnable, et que vous avez analysé les causes pour éviter les récidives.",
+    contexte: "Une réclamation non traitée est le signal d'alarme le plus fort pour un auditeur. Si vous n'avez aucune réclamation depuis 2 ans, il sera suspicieux — toute entreprise reçoit des réclamations.",
     conseil: "Commencez à remplir le registre dès maintenant. Un registre vide avec une date de mise en place récente vaut mieux qu'un registre inexistant.",
     preuves: [
       { code: 'PROC-RECLAMATIONS', label: "⭐ Procédure de gestion des réclamations", description: "PREUVE PRINCIPALE — Document officiel décrivant comment vous recevez, traitez et répondez aux réclamations.", type: 'generer', mention: 'principal' },
@@ -128,8 +128,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: 'reclamations'
   },
   '2.1.1': {
-    inspecteur: "L'inspecteur va verifier que vos patients peuvent facilement vous joindre — par telephone, email, en agence. Il peut tester lui-meme en appelant votre numero.",
-    contexte: "Un patient qui ne peut pas vous joindre rapidement en cas de probleme est un risque. L'inspecteur verifie que vous avez des horaires clairs et des canaux accessibles.",
+    auditeur: "L'auditeur va verifier que vos patients peuvent facilement vous joindre — par telephone, email, en agence. Il peut tester lui-meme en appelant votre numero.",
+    contexte: "Un patient qui ne peut pas vous joindre rapidement en cas de probleme est un risque. L'auditeur verifie que vous avez des horaires clairs et des canaux accessibles.",
     conseil: "Affichez clairement vos horaires sur tous vos supports. Si vous avez un repondeur hors horaires, assurez-vous de rappeler dans les 24h.",
     preuves: [
       { code: 'PROC-ACCESSIBILITE', label: "Procedure d'accessibilite et d'accueil", description: "Document officiel decrivant vos horaires, canaux de contact et delais de reponse.", type: 'generer' as const, mention: 'principal' },
@@ -142,7 +142,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.1.2': {
-    inspecteur: "L'inspecteur va verifier que le patient peut facilement s'informer sur vos activites — site web, plaquette, affichage en agence.",
+    auditeur: "L'auditeur va verifier que le patient peut facilement s'informer sur vos activites — site web, plaquette, affichage en agence.",
     contexte: "Le patient doit pouvoir connaitre vos prestations, vos tarifs et vos zones d'intervention avant meme de vous contacter.",
     conseil: "Une simple plaquette ou une page web claire suffit. L'essentiel est que l'information soit accessible et a jour.",
     preuves: [
@@ -156,8 +156,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.1.3': {
-    inspecteur: "L'inspecteur va verifier que vous avez pense aux patients handicapes ou en situation de vulnerabilite — acces en fauteuil, livraison a domicile, interlocuteur dedie.",
-    contexte: "Vos patients sont souvent des personnes agees ou handicapees. L'inspecteur verifie que vous ne creez pas de barriere a l'acces a vos services.",
+    auditeur: "L'auditeur va verifier que vous avez pense aux patients handicapes ou en situation de vulnerabilite — acces en fauteuil, livraison a domicile, interlocuteur dedie.",
+    contexte: "Vos patients sont souvent des personnes agees ou handicapees. L'auditeur verifie que vous ne creez pas de barriere a l'acces a vos services.",
     conseil: "Si vos locaux ne sont pas accessibles, ce n'est pas un probleme a condition d'avoir des alternatives comme le rendez-vous a domicile.",
     preuves: [
       { code: 'PROC-HANDICAP', label: "Procedure d'acces pour personnes handicapees", description: "Document decrivant vos dispositions pour faciliter l'acces aux personnes en situation de handicap.", type: 'generer' as const, mention: 'principal' },
@@ -170,7 +170,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.3.2': {
-    inspecteur: "L'inspecteur va vérifier que chaque installation est conforme à la prescription et que le patient a été formé. Il peut demander à voir vos bons de livraison ou votre registre d'installations.",
+    auditeur: "L'auditeur va vérifier que chaque installation est conforme à la prescription et que le patient a été formé. Il peut demander à voir vos bons de livraison ou votre registre d'installations.",
     contexte: "Vous devez prouver que chaque matériel installé correspond à une prescription valide et que le patient a été formé à son utilisation.",
     conseil: "MediTrack est votre registre d'installations — chaque livraison tracée prouve que l'installation a été réalisée. L'attestation de formation patient complète cette preuve.",
     preuves: [
@@ -179,13 +179,13 @@ const CRITERES_CONFIG: Record<string, {
     ],
     questions: [
       { id: 'q1', label: "Vérifiez-vous que le matériel installé est conforme à la prescription ?", type: 'oui_non', requis: true },
-      { id: 'q2', label: "Formez-vous systématiquement le patient à l'utilisation du matériel lors de l'installation ?", type: 'oui_non', requis: true, aide: "L'inspecteur peut interroger vos techniciens sur ce point." },
+      { id: 'q2', label: "Formez-vous systématiquement le patient à l'utilisation du matériel lors de l'installation ?", type: 'oui_non', requis: true, aide: "L'auditeur peut interroger vos techniciens sur ce point." },
       { id: 'q3', label: "Utilisez-vous MediTrack pour tracer vos installations ?", type: 'oui_non', requis: true, aide: "Si oui, votre registre MediTrack constitue la preuve principale." },
     ],
     registre: null
   },
   '2.3.3': {
-    inspecteur: "L'inspecteur va vérifier que vos techniciens forment réellement le patient et son entourage lors de chaque installation.",
+    auditeur: "L'auditeur va vérifier que vos techniciens forment réellement le patient et son entourage lors de chaque installation.",
     contexte: "La formation patient est obligatoire — le patient doit savoir utiliser son matériel en toute sécurité.",
     conseil: "L'attestation de livraison signée par le patient peut inclure une case 'formation dispensée' — c'est la preuve la plus simple.",
     preuves: [
@@ -199,7 +199,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.3.4': {
-    inspecteur: "L'inspecteur vérifie que vous informez les autres professionnels de santé intervenant au domicile sur l'utilisation du matériel.",
+    auditeur: "L'auditeur vérifie que vous informez les autres professionnels de santé intervenant au domicile sur l'utilisation du matériel.",
     contexte: "Les infirmières, kinés et autres intervenants au domicile doivent savoir utiliser ou interagir avec le matériel que vous avez installé.",
     conseil: "Une simple note dans le dossier patient confirmant l'information aux intervenants suffit souvent.",
     preuves: [
@@ -212,8 +212,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.1': {
-    inspecteur: "L'inspecteur va vérifier que vous réalisez des visites de suivi selon les modalités réglementaires pour votre activité.",
-    contexte: "Certaines activités imposent des suivis réguliers — oxygène, nutrition, VNI par exemple. L'inspecteur vérifie que ces suivis sont réalisés et tracés.",
+    auditeur: "L'auditeur va vérifier que vous réalisez des visites de suivi selon les modalités réglementaires pour votre activité.",
+    contexte: "Certaines activités imposent des suivis réguliers — oxygène, nutrition, VNI par exemple. L'auditeur vérifie que ces suivis sont réalisés et tracés.",
     conseil: "MediTrack trace vos maintenances et suivis — c'est votre registre de preuve.",
     preuves: [
       { code: 'ATTEST-MAINTENANCE', label: "Attestation de traçabilité des suivis", description: "Confirme que vos suivis sont tracés dans MediTrack conformément à la réglementation.", type: 'generer' },
@@ -226,8 +226,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.2': {
-    inspecteur: "L'inspecteur va vérifier que vous avez une astreinte 24h/24 — 7j/7 si vos activités le nécessitent (oxygène, VNI, nutrition).",
-    contexte: "Pour certaines activités à risque vital, l'astreinte est obligatoire. L'inspecteur peut appeler votre numéro d'astreinte pour tester.",
+    auditeur: "L'auditeur va vérifier que vous avez une astreinte 24h/24 — 7j/7 si vos activités le nécessitent (oxygène, VNI, nutrition).",
+    contexte: "Pour certaines activités à risque vital, l'astreinte est obligatoire. L'auditeur peut appeler votre numéro d'astreinte pour tester.",
     conseil: "Si vous avez déclaré une astreinte dans votre profil, MediReg l'a automatiquement intégrée dans vos documents.",
     preuves: [
       { code: 'PROC-ACCESSIBILITE', label: "Procédure d'accessibilité avec numéro d'astreinte", description: "Inclut votre numéro d'astreinte et vos modalités de prise en charge urgente.", type: 'generer' },
@@ -240,8 +240,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.3': {
-    inspecteur: "L'inspecteur va vérifier que vous assurez la réparation ou le remplacement du matériel en cas de panne dans les délais conformes à la LPP.",
-    contexte: "Une panne de matériel médical peut mettre en danger le patient. L'inspecteur vérifie que vous avez une procédure SAV rapide et efficace.",
+    auditeur: "L'auditeur va vérifier que vous assurez la réparation ou le remplacement du matériel en cas de panne dans les délais conformes à la LPP.",
+    contexte: "Une panne de matériel médical peut mettre en danger le patient. L'auditeur vérifie que vous avez une procédure SAV rapide et efficace.",
     conseil: "MediTrack est votre preuve SAV — chaque maintenance curative tracée prouve que vous gérez les pannes. L'attestation complète cette preuve.",
     preuves: [
       { code: 'ATTEST-MAINTENANCE', label: "⭐ Attestation de traçabilité des maintenances SAV", description: "PREUVE PRINCIPALE — Atteste que vous utilisez MediTrack pour tracer chaque maintenance et dépannage.", type: 'generer', mention: 'principal' },
@@ -254,7 +254,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.4': {
-    inspecteur: "L'inspecteur vérifie que vous pouvez assurer la continuité du service si vous ne pouvez pas intervenir vous-même sur une zone.",
+    auditeur: "L'auditeur vérifie que vous pouvez assurer la continuité du service si vous ne pouvez pas intervenir vous-même sur une zone.",
     contexte: "Si un patient déménage ou si vous ne couvrez pas une zone, vous devez pouvoir l'orienter vers un prestataire partenaire.",
     conseil: "Un accord de partenariat avec un autre PSDM sur votre territoire suffit pour valider ce critère.",
     preuves: [
@@ -267,7 +267,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.5': {
-    inspecteur: "L'inspecteur vérifie que vous transmettez les informations pertinentes au prescripteur et aux autres professionnels de santé si nécessaire.",
+    auditeur: "L'auditeur vérifie que vous transmettez les informations pertinentes au prescripteur et aux autres professionnels de santé si nécessaire.",
     contexte: "La coordination entre le PSDM et les professionnels de santé est essentielle pour la qualité des soins.",
     conseil: "Un simple email au médecin pour signaler un problème avec le matériel ou un changement de situation suffit comme preuve.",
     preuves: [
@@ -280,7 +280,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.4.6': {
-    inspecteur: "L'inspecteur vérifie que vous participez à la coordination des soins — plan personnalisé de santé, réunions pluridisciplinaires si applicable.",
+    auditeur: "L'auditeur vérifie que vous participez à la coordination des soins — plan personnalisé de santé, réunions pluridisciplinaires si applicable.",
     contexte: "Pour les patients complexes, vous devez participer aux réunions de coordination avec les autres professionnels de santé.",
     conseil: "Ce critère ne s'applique pas à tous les PSDM — vérifiez si vos activités l'imposent.",
     preuves: [
@@ -293,8 +293,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.5.1': {
-    inspecteur: "L'inspecteur va vérifier que vous reprenez le matériel en location en fin de prestation dans des conditions adaptées — délais, état du matériel, traçabilité.",
-    contexte: "Une reprise de matériel non tracée peut créer des problèmes de facturation et de sécurité. L'inspecteur vérifie que vous avez une procédure claire.",
+    auditeur: "L'auditeur va vérifier que vous reprenez le matériel en location en fin de prestation dans des conditions adaptées — délais, état du matériel, traçabilité.",
+    contexte: "Une reprise de matériel non tracée peut créer des problèmes de facturation et de sécurité. L'auditeur vérifie que vous avez une procédure claire.",
     conseil: "MediTrack trace chaque reprise — c'est votre registre de preuve. L'attestation formalise votre engagement.",
     preuves: [
       { code: 'ATTEST-REPRISES', label: "⭐ Attestation de traçabilité des reprises", description: "PREUVE PRINCIPALE — Atteste que vous utilisez MediTrack pour tracer chaque reprise de matériel.", type: 'generer', mention: 'principal' },
@@ -307,8 +307,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.5.2': {
-    inspecteur: "L'inspecteur va vérifier que vous avez une procédure pour arrêter la facturation dès la fin de la prestation.",
-    contexte: "Facturer après la fin d'une prestation est une fraude. L'inspecteur vérifie que vous avez une procédure pour éviter ça.",
+    auditeur: "L'auditeur va vérifier que vous avez une procédure pour arrêter la facturation dès la fin de la prestation.",
+    contexte: "Facturer après la fin d'une prestation est une fraude. L'auditeur vérifie que vous avez une procédure pour éviter ça.",
     conseil: "La mise à jour du statut dans MediTrack (matériel 'retiré') déclenche l'arrêt de facturation dans votre logiciel métier.",
     preuves: [
       { code: 'ATTEST-REPRISES', label: "Attestation de traçabilité des fins de prestation", description: "La reprise tracée dans MediTrack déclenche l'arrêt de facturation.", type: 'generer' },
@@ -320,9 +320,9 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '2.2.1': {
-    inspecteur: "L'inspecteur va vérifier que vous étudiez chaque prescription avant de vous engager et que vous contactez le prescripteur si elle est incomplète. Il cherche des traces écrites de ces échanges.",
+    auditeur: "L'auditeur va vérifier que vous étudiez chaque prescription avant de vous engager et que vous contactez le prescripteur si elle est incomplète. Il cherche des traces écrites de ces échanges.",
     contexte: "Vous ne pouvez pas livrer du matériel sur une prescription incomplète ou inadaptée. Si vous le faites, vous engagez votre responsabilité et celle du patient.",
-    conseil: "Gardez une trace de chaque prescription reçue dans votre logiciel. Si vous contactez un médecin pour une précision, notez-le avec la date — c'est cette trace que l'inspecteur cherche.",
+    conseil: "Gardez une trace de chaque prescription reçue dans votre logiciel. Si vous contactez un médecin pour une précision, notez-le avec la date — c'est cette trace que l'auditeur cherche.",
     preuves: [
       { code: 'PROC-PRESCRIPTION-01', label: "Procédure de réception et contrôle des prescriptions", description: "Générée automatiquement à partir de votre organisation.", type: 'generer' },
       { code: 'TRACE-PRESCRIPTEURS', label: "Trace d'echange avec le prescripteur", description: "Document tracant le contact avec le medecin en cas de prescription incomplete ou illisible.", type: 'generer' as const },
@@ -338,7 +338,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.1.1': {
-    inspecteur: "L'inspecteur va demander l'organigramme et les fiches de poste.",
+    auditeur: "L'auditeur va demander l'organigramme et les fiches de poste.",
     contexte: "Un PSDM sans organigramme clair est un signal d'alarme. Il cherche une organisation formalisee avec des responsabilites definies.",
     conseil: "Le module RH de MediReg vous permet de definir les postes et competences de chaque collaborateur.",
     preuves: [
@@ -351,7 +351,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.1.2': {
-    inspecteur: "L'inspecteur va verifier que vos collaborateurs ont les competences requises pour leurs missions.",
+    auditeur: "L'auditeur va verifier que vos collaborateurs ont les competences requises pour leurs missions.",
     contexte: "Un technicien qui installe du materiel medical sans formation adaptee est un risque pour le patient.",
     conseil: "Renseignez les competences de chaque collaborateur dans le module RH.",
     preuves: [
@@ -364,7 +364,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.1.3': {
-    inspecteur: "L'inspecteur va demander votre plan de formation et les attestations des formations realisees.",
+    auditeur: "L'auditeur va demander votre plan de formation et les attestations des formations realisees.",
     contexte: "La formation continue est obligatoire pour les professionnels de sante.",
     conseil: "Le journal des formations dans le module RH est votre preuve principale.",
     preuves: [
@@ -378,7 +378,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.1.4': {
-    inspecteur: "L'inspecteur verifie que vous avez le personnel qualifie pour garantir le respect des bonnes pratiques.",
+    auditeur: "L'auditeur verifie que vous avez le personnel qualifie pour garantir le respect des bonnes pratiques.",
     contexte: "Vous devez avoir au moins une personne responsable du respect des regles professionnelles.",
     conseil: "Le Garant PSDM designe dans votre profil repond a cette exigence.",
     preuves: [
@@ -391,7 +391,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.1.5': {
-    inspecteur: "L'inspecteur verifie que vous avez le personnel garant selon vos activites — pharmacien, infirmier, technicien.",
+    auditeur: "L'auditeur verifie que vous avez le personnel garant selon vos activites — pharmacien, infirmier, technicien.",
     contexte: "Certaines activites imposent la presence d'un professionnel de sante qualifie.",
     conseil: "Verifiez que votre pharmacien est bien renseigne dans votre profil et dans le module RH.",
     preuves: [
@@ -405,7 +405,7 @@ const CRITERES_CONFIG: Record<string, {
   },
 
   '3.2.1': {
-    inspecteur: "L'inspecteur va visiter vos locaux et verifier la separation des circuits propre et sale.",
+    auditeur: "L'auditeur va visiter vos locaux et verifier la separation des circuits propre et sale.",
     contexte: "Un materiel propre qui cotoie un materiel sale est une faute grave.",
     conseil: "La procedure de desinfection generee pour le 3.3.2 inclut le schema de marche en avant — utilisez-la pour ce critere aussi.",
     preuves: [
@@ -420,7 +420,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.2.2': {
-    inspecteur: "L'inspecteur va verifier que vos locaux permettent d'accueillir les patients dans des conditions adaptees.",
+    auditeur: "L'auditeur va verifier que vos locaux permettent d'accueillir les patients dans des conditions adaptees.",
     contexte: "Vos locaux doivent etre accessibles et offrir un espace d'accueil correct.",
     conseil: "Si vos locaux ne sont pas parfaitement accessibles, documentez les alternatives.",
     preuves: [
@@ -433,7 +433,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.2.3': {
-    inspecteur: "L'inspecteur va verifier que vous avez un espace pour realiser des essais de materiel si necessaire.",
+    auditeur: "L'auditeur va verifier que vous avez un espace pour realiser des essais de materiel si necessaire.",
     contexte: "Pour certains materiels (fauteuils roulants, lits medicalises), des essais sont necessaires.",
     conseil: "Documentez comment vous gerez les essais chez le patient si c'est votre pratique.",
     preuves: [
@@ -446,7 +446,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.3.1': {
-    inspecteur: "L'inspecteur va verifier l'hygiene generale de vos locaux.",
+    auditeur: "L'auditeur va verifier l'hygiene generale de vos locaux.",
     contexte: "Des locaux sales ou desorganises sont un signal d'alarme immediat.",
     conseil: "Un planning de nettoyage affiche et renseigne suffit.",
     preuves: [
@@ -460,9 +460,9 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.3.2': {
-    inspecteur: "L'inspecteur va demander votre procedure de desinfection du materiel et le registre de tracabilite.",
+    auditeur: "L'auditeur va demander votre procedure de desinfection du materiel et le registre de tracabilite.",
     contexte: "La desinfection du materiel entre deux patients est une obligation absolue.",
-    conseil: "MediReg genere une procedure complete de desinfection en 8 etapes conforme HAS — c'est exactement ce que l'inspecteur cherche.",
+    conseil: "MediReg genere une procedure complete de desinfection en 8 etapes conforme HAS — c'est exactement ce que l'auditeur cherche.",
     preuves: [
       { code: 'PROC-DESINFECTION', label: "Procedure de nettoyage et desinfection des DM", description: "PREUVE PRINCIPALE — Procedure complete en 8 etapes : reception, nettoyage, desinfection, sechage, controle, tracabilite. Conforme HAS 3.3.2.", type: 'generer' as const, mention: 'principal' },
       { label: "Registre de tracabilite des desinfections", description: "Registre des desinfections realisees.", type: 'upload' as const },
@@ -475,7 +475,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.3.3': {
-    inspecteur: "L'inspecteur va verifier que vous avez une procedure d'hygiene pour vos vehicules.",
+    auditeur: "L'auditeur va verifier que vous avez une procedure d'hygiene pour vos vehicules.",
     contexte: "Un vehicule qui transporte du materiel propre et du materiel sale est une source de contamination.",
     conseil: "Une simple procedure decrivant le nettoyage de vos vehicules suffit.",
     preuves: [
@@ -489,7 +489,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.1': {
-    inspecteur: "L'inspecteur va verifier que vous avez un systeme de gestion des dispositifs medicaux permettant de tracer leur circuit complet.",
+    auditeur: "L'auditeur va verifier que vous avez un systeme de gestion des dispositifs medicaux permettant de tracer leur circuit complet.",
     contexte: "Vous devez pouvoir retracer l'historique de chaque dispositif medical.",
     conseil: "MediTrack est votre systeme de gestion des dispositifs medicaux.",
     preuves: [
@@ -503,7 +503,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.2': {
-    inspecteur: "L'inspecteur va verifier que vous respectez les exigences reglementaires — marquage CE, LPP.",
+    auditeur: "L'auditeur va verifier que vous respectez les exigences reglementaires — marquage CE, LPP.",
     contexte: "Vous ne pouvez pas distribuer un dispositif medical sans marquage CE conforme.",
     conseil: "Conservez les fiches techniques et declarations de conformite de chaque type de materiel.",
     preuves: [
@@ -516,7 +516,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.3': {
-    inspecteur: "L'inspecteur va verifier que vous avez une procedure d'achats organisee.",
+    auditeur: "L'auditeur va verifier que vous avez une procedure d'achats organisee.",
     contexte: "Acheter n'importe quoi a n'importe qui est un risque qualite.",
     conseil: "Une liste de fournisseurs references avec les criteres de selection suffit.",
     preuves: [
@@ -530,7 +530,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.4': {
-    inspecteur: "L'inspecteur va verifier que vous avez les informations techniques sur l'utilisation de chaque dispositif.",
+    auditeur: "L'auditeur va verifier que vous avez les informations techniques sur l'utilisation de chaque dispositif.",
     contexte: "Vous devez avoir les notices d'utilisation et les guides d'entretien de chaque materiel.",
     conseil: "Conservez les manuels d'utilisation de vos fabricants.",
     preuves: [
@@ -544,7 +544,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.5': {
-    inspecteur: "L'inspecteur va verifier que vous gerez vos consommables correctement — stock, tracabilite, dates de peremption.",
+    auditeur: "L'auditeur va verifier que vous gerez vos consommables correctement — stock, tracabilite, dates de peremption.",
     contexte: "Un consommable perime livre a un patient est une faute grave.",
     conseil: "Un systeme FIFO et un controle des dates de peremption a la reception suffisent.",
     preuves: [
@@ -558,7 +558,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.6': {
-    inspecteur: "L'inspecteur va verifier que vos maintenances preventives et curatives sont assurees et tracees.",
+    auditeur: "L'auditeur va verifier que vos maintenances preventives et curatives sont assurees et tracees.",
     contexte: "La maintenance est obligatoire pour garantir la securite des patients.",
     conseil: "MediTrack trace toutes vos maintenances — c'est votre preuve principale.",
     preuves: [
@@ -572,7 +572,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.7': {
-    inspecteur: "L'inspecteur va verifier que vos equipements de mesure sont verifies periodiquement.",
+    auditeur: "L'auditeur va verifier que vos equipements de mesure sont verifies periodiquement.",
     contexte: "Les equipements de mesure doivent etre etalon regulierement.",
     conseil: "Si vous n'avez pas d'equipements de mesure, indiquez-le clairement.",
     preuves: [
@@ -586,7 +586,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.8': {
-    inspecteur: "L'inspecteur va verifier que vous controlez techniquement le materiel en location entre deux patients.",
+    auditeur: "L'auditeur va verifier que vous controlez techniquement le materiel en location entre deux patients.",
     contexte: "Un materiel en location doit etre verifie et desinfecte entre chaque patient.",
     conseil: "MediTrack trace la reprise et la remise en service.",
     preuves: [
@@ -600,7 +600,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.4.9': {
-    inspecteur: "L'inspecteur va verifier que vous communiquez avec les fabricants en cas de probleme (materiovigilance).",
+    auditeur: "L'auditeur va verifier que vous communiquez avec les fabricants en cas de probleme (materiovigilance).",
     contexte: "Vous avez une obligation de signalement en cas d'incident avec un dispositif medical.",
     conseil: "Designez un correspondant materiovigilance et documentez vos echanges.",
     preuves: [
@@ -613,7 +613,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.5.1': {
-    inspecteur: "L'inspecteur va verifier que vous gerez vos dechets de maniere adaptee — DASRI, DEEE.",
+    auditeur: "L'auditeur va verifier que vous gerez vos dechets de maniere adaptee — DASRI, DEEE.",
     contexte: "Certains dechets issus de vos activites sont dangereux et necessitent une filiere specifique.",
     conseil: "Identifiez les types de dechets produits et documentez vos filieres d'elimination.",
     preuves: [
@@ -628,7 +628,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.6.1': {
-    inspecteur: "L'inspecteur va verifier que vos dossiers patients sont complets, a jour et accessibles.",
+    auditeur: "L'auditeur va verifier que vos dossiers patients sont complets, a jour et accessibles.",
     contexte: "Un dossier patient incomplet est une non-conformite majeure.",
     conseil: "Documentez votre logiciel metier et montrez qu'il permet une gestion fiable.",
     preuves: [
@@ -642,7 +642,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.6.2': {
-    inspecteur: "L'inspecteur va verifier que vous protegez les donnees personnelles de vos patients (RGPD).",
+    auditeur: "L'auditeur va verifier que vous protegez les donnees personnelles de vos patients (RGPD).",
     contexte: "Ce critere rejoint le 1.2.5 — il s'applique ici aux donnees operationnelles.",
     conseil: "Votre politique de confidentialite et registre des traitements generes pour le 1.2.5 couvrent ce critere.",
     preuves: [
@@ -656,7 +656,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '3.7.1': {
-    inspecteur: "L'inspecteur va verifier que vous avez des contrats de sous-traitance et que vous controlez la qualite.",
+    auditeur: "L'auditeur va verifier que vous avez des contrats de sous-traitance et que vous controlez la qualite.",
     contexte: "Si vous sous-traitez des prestations, vous restez responsable de la qualite.",
     conseil: "Pour chaque sous-traitant, ayez un contrat mentionnant les exigences qualite.",
     preuves: [
@@ -670,7 +670,7 @@ const CRITERES_CONFIG: Record<string, {
     ],
     registre: null
   },  '4.1.1': {
-    inspecteur: "L'inspecteur va verifier que vous faites une veille active sur la reglementation — LPP, HAS, ANSM.",
+    auditeur: "L'auditeur va verifier que vous faites une veille active sur la reglementation — LPP, HAS, ANSM.",
     contexte: "La reglementation PSDM evolue frequemment. Ne pas etre a jour peut invalider vos pratiques.",
     conseil: "Abonnez-vous aux newsletters de l'ANSM, de la HAS et de votre syndicat professionnel. Notez les mises a jour dans un registre de veille.",
     preuves: [
@@ -685,7 +685,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.1.2': {
-    inspecteur: "L'inspecteur va verifier que vos pratiques sont conformes aux exigences LPP actuelles et aux recommandations des fabricants.",
+    auditeur: "L'auditeur va verifier que vos pratiques sont conformes aux exigences LPP actuelles et aux recommandations des fabricants.",
     contexte: "La LPP evolue regulierement — des materiels remboursables peuvent changer de conditions ou de tarifs.",
     conseil: "Documentez que vous verifiez la conformite LPP de chaque materiel avant de le proposer et que vous appliquez les recommandations fabricants.",
     preuves: [
@@ -699,7 +699,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.2.1': {
-    inspecteur: "L'inspecteur va verifier que vous avez l'autorisation prefectorale pour exercer l'activite oxygene.",
+    auditeur: "L'auditeur va verifier que vous avez l'autorisation prefectorale pour exercer l'activite oxygene.",
     contexte: "La distribution d'oxygene medicinal est reglementee et necessite une autorisation specifique.",
     conseil: "Ce critere ne s'applique qu'aux PSDM qui distribuent de l'oxygene. Si ce n'est pas votre cas, indiquez 'Non applicable'.",
     preuves: [
@@ -713,7 +713,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.3.1': {
-    inspecteur: "L'inspecteur va verifier que votre systeme de materiovigilance est operationnel — correspondant designe, procedure, signalements.",
+    auditeur: "L'auditeur va verifier que votre systeme de materiovigilance est operationnel — correspondant designe, procedure, signalements.",
     contexte: "La materiovigilance est obligatoire. Tout incident grave avec un dispositif medical doit etre signale a l'ANSM.",
     conseil: "MediTrack trace vos pannes et incidents — utilisez ces donnees comme base de votre materiovigilance.",
     preuves: [
@@ -728,7 +728,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.3.2': {
-    inspecteur: "L'inspecteur va verifier que votre systeme de pharmacovigilance est operationnel.",
+    auditeur: "L'auditeur va verifier que votre systeme de pharmacovigilance est operationnel.",
     contexte: "La pharmacovigilance concerne les medicaments — applicable si vous distribuez des medicaments ou des dispositifs contenant des substances medicamenteuses.",
     conseil: "Ce critere s'applique principalement aux PSDM distribuant de l'oxygene ou des medicaments. Verifiez si votre activite est concernee.",
     preuves: [
@@ -742,8 +742,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.4.1': {
-    inspecteur: "L'inspecteur va verifier que vous avez identifie vos processus a risque et mis en place des actions de prevention.",
-    contexte: "Une cartographie des risques montre a l'inspecteur que vous avez une demarche qualite proactive.",
+    auditeur: "L'auditeur va verifier que vous avez identifie vos processus a risque et mis en place des actions de prevention.",
+    contexte: "Une cartographie des risques montre a l'auditeur que vous avez une demarche qualite proactive.",
     conseil: "Listez vos 5 risques principaux (livraison, maintenance, hygiene, donnees patients, ressources humaines) et documentez vos actions preventives.",
     preuves: [
       { label: "Cartographie des risques", description: "Document identifiant vos principaux risques avec niveau de gravite et actions preventives.", type: 'upload' as const },
@@ -757,7 +757,7 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.4.2': {
-    inspecteur: "L'inspecteur va verifier que vous avez un plan de continuite d'activite en cas de crise.",
+    auditeur: "L'auditeur va verifier que vous avez un plan de continuite d'activite en cas de crise.",
     contexte: "Un sinistre, une pandemie ou une defaillance informatique peut paralyser votre activite et mettre vos patients en danger.",
     conseil: "Un plan simple decrivant comment vous continuez a servir vos patients en cas de probleme majeur suffit.",
     preuves: [
@@ -771,8 +771,8 @@ const CRITERES_CONFIG: Record<string, {
     registre: null
   },
   '4.4.3': {
-    inspecteur: "L'inspecteur va demander a voir votre registre des evenements indesirables et verifier que vous analysez vos incidents.",
-    contexte: "Tout PSDM qui dit n'avoir aucun evenement indesirable est suspect. L'inspecteur cherche une culture de signalement et d'amelioration.",
+    auditeur: "L'auditeur va demander a voir votre registre des evenements indesirables et verifier que vous analysez vos incidents.",
+    contexte: "Tout PSDM qui dit n'avoir aucun evenement indesirable est suspect. L'auditeur cherche une culture de signalement et d'amelioration.",
     conseil: "Le registre des evenements indesirables dans MediReg vous permet de tracer chaque incident et les actions correctives — c'est votre preuve principale.",
     preuves: [
       { label: "Registre des evenements indesirables MediReg", description: "Le registre ci-dessous trace chaque incident avec son analyse et les actions correctives.", type: 'registre' as const },
@@ -1251,14 +1251,14 @@ export default function CritereDetail({
   return (
     <div style={{ fontFamily: 'var(--font)' }}>
 
-      {/* Ce que l'inspecteur cherche */}
+      {/* Ce que l'auditeur cherche */}
       {config && (
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '12px', padding: '16px 18px', marginBottom: '20px' }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className="ti ti-eye" style={{ fontSize: '13px' }} />
-            Ce que l'inspecteur va vérifier
+            Ce que l'auditeur va vérifier
           </div>
-          <div style={{ fontSize: '13px', color: '#78350F', lineHeight: '1.6' }}>{config.inspecteur}</div>
+          <div style={{ fontSize: '13px', color: '#78350F', lineHeight: '1.6' }}>{config.auditeur}</div>
           {config.contexte && (
             <div style={{ fontSize: '12px', color: '#92400E', marginTop: '8px', padding: '8px 12px', background: 'rgba(251,191,36,0.1)', borderRadius: '6px', lineHeight: '1.5' }}>
               <strong>Contexte :</strong> {config.contexte}
