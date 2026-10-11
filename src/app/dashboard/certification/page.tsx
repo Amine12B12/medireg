@@ -52,15 +52,23 @@ export default function CertificationPage() {
   const [messagesNonLus, setMessagesNonLus] = useState<Record<string, number>>({})
   const [userRole, setUserRole] = useState<string>('client')
   const [meditrackEtabId, setMeditrackEtabId] = useState<string | null>(null)
+  const [consultantId, setConsultantId] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
+
+  // Notifie uniquement le consultant rattaché à ce client (jamais les consultants des autres clients)
+  async function notifierConsultant(notif: { type: string; message: string; critere_code?: string }) {
+    if (!consultantId || !societe?.client_id) return
+    await supabase.from('notifications').insert([{ ...notif, consultant_id: consultantId, client_id: societe.client_id, lu: false }])
+  }
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data: prof } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
-      setUserRole(prof?.role || 'client')
+      const role = prof?.role || 'client'
+      setUserRole(role)
       let cId = prof?.client_id
       if (prof?.role === 'consultant') {
         const params = new URLSearchParams(window.location.search)
@@ -72,14 +80,15 @@ export default function CertificationPage() {
       setSociete(soc)
 
       // Charger meditrack_etablissement_id depuis clients
-      const { data: clientData } = await supabase.from('clients').select('meditrack_etablissement_id').eq('id', cId).single()
+      const { data: clientData } = await supabase.from('clients').select('meditrack_etablissement_id, consultant_id').eq('id', cId).single()
       if (clientData?.meditrack_etablissement_id) setMeditrackEtabId(clientData.meditrack_etablissement_id)
+      setConsultantId(clientData?.consultant_id ?? null)
 
       const { data: etabs } = await supabase.from('etablissements_psdm').select('*').eq('societe_id', soc.id).order('created_at')
       setEtablissements(etabs || [])
       if (etabs && etabs.length > 0) {
         setSelectedEtabId(etabs[0].id)
-        await loadEtabData(etabs[0].id)
+        await loadEtabData(etabs[0].id, role)
       }
       const { data: crits } = await supabase.from('criteres_psdm').select('*').order('code')
       setCriteres(crits || [])
@@ -88,7 +97,8 @@ export default function CertificationPage() {
     load()
   }, [])
 
-  async function loadEtabData(etabId: string) {
+  // role est passé explicitement : au premier chargement, l'état userRole n'est pas encore à jour
+  async function loadEtabData(etabId: string, role: string = userRole) {
     const { data: docs } = await supabase.from('documents_qualite').select('*').eq('etablissement_id', etabId).order('created_at', { ascending: false })
     const docsMap: Record<string, any[]> = {}
     for (const d of docs || []) {
@@ -109,7 +119,7 @@ export default function CertificationPage() {
     const repMap: Record<string, any> = {}
     for (const r of reps || []) repMap[r.critere_id] = r
     setReponses(repMap)
-    const champLu = userRole === 'consultant' ? 'lu_consultant' : 'lu_client'
+    const champLu = role === 'consultant' ? 'lu_consultant' : 'lu_client'
     const { data: msgs } = await supabase.from('messages_critere').select('critere_id').eq('etablissement_id', etabId).eq(champLu, false)
     const nonLusMap: Record<string, number> = {}
     for (const m of msgs || []) nonLusMap[m.critere_id] = (nonLusMap[m.critere_id] || 0) + 1
@@ -136,19 +146,12 @@ export default function CertificationPage() {
 
     // Notifier le consultant quand le client valide un critère
     if (userRole === 'client' && statut === 'procedure_a_valider') {
-      const { data: { user } } = await supabase.auth.getUser()
       const critere = criteres.find(c => c.id === critereId)
-      const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
-      for (const consultant of consultants || []) {
-        await supabase.from('notifications').insert([{
-          consultant_id: consultant.id,
-          client_id: societe?.client_id,
-          type: 'critere_a_valider',
-          message: `Critère ${critere?.code} — ${critere?.titre?.substring(0, 50)} — En attente de validation`,
-          critere_code: critere?.code,
-          lu: false,
-        }])
-      }
+      await notifierConsultant({
+        type: 'critere_a_valider',
+        message: `Critère ${critere?.code} — ${critere?.titre?.substring(0, 50)} — En attente de validation`,
+        critere_code: critere?.code,
+      })
     }
 
     if (userRole === 'consultant') {
@@ -228,25 +231,17 @@ export default function CertificationPage() {
       }])
       await reloadDocs()
       if (userRole === 'client') {
-        const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
-        for (const consultant of consultants || []) {
-          const { error: notifErr } = await supabase.from('notifications').insert([{
-            consultant_id: consultant.id, client_id: societe.client_id,
-            type: 'document_uploade',
-            message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
-            critere_code: selectedCritere.code,
-          }])
-        }
+        await notifierConsultant({
+          type: 'document_uploade',
+          message: 'Document ajouté sur le critère ' + selectedCritere.code + ' — ' + label,
+          critere_code: selectedCritere.code,
+        })
       }
     }
   }
 
-  const criteresFiltres = criteres.filter(c => {
-    if (filterChap !== 'tous' && c.chapitre !== filterChap) return false
-    if (filterStatut !== 'tous') {
-      const statut = reponses[c.id]?.statut || 'non_analyse'
-      if (statut !== filterStatut) return false
-    }
+  // Critères qui s'appliquent à l'établissement (selon ses activités), indépendamment des filtres d'affichage
+  const criteresApplicables = criteres.filter(c => {
     if (c.champ_application) {
       const champs = c.champ_application.toLowerCase()
       if (champs.includes('oxygene') && !activites.some(a => a.toLowerCase().includes('oxygene'))) return false
@@ -255,12 +250,23 @@ export default function CertificationPage() {
     return true
   })
 
-  const total = criteresFiltres.length
-  const prets = criteresFiltres.filter(c => reponses[c.id]?.statut === 'pret_audit').length
-  const aValider = criteresFiltres.filter(c => reponses[c.id]?.statut === 'procedure_a_valider').length
-  const actionsCorrectifs = criteresFiltres.filter(c => reponses[c.id]?.statut === 'action_corrective').length
-  const nonAnalyses = criteresFiltres.filter(c => !reponses[c.id] || reponses[c.id]?.statut === 'non_analyse').length
+  const criteresFiltres = criteresApplicables.filter(c => {
+    if (filterChap !== 'tous' && c.chapitre !== filterChap) return false
+    if (filterStatut !== 'tous') {
+      const statut = reponses[c.id]?.statut || 'non_analyse'
+      if (statut !== filterStatut) return false
+    }
+    return true
+  })
+
+  // La progression vers l'audit porte toujours sur tous les critères applicables, pas sur le filtre en cours
+  const total = criteresApplicables.length
+  const prets = criteresApplicables.filter(c => reponses[c.id]?.statut === 'pret_audit').length
+  const aValider = criteresApplicables.filter(c => reponses[c.id]?.statut === 'procedure_a_valider').length
+  const actionsCorrectifs = criteresApplicables.filter(c => reponses[c.id]?.statut === 'action_corrective').length
+  const nonAnalyses = criteresApplicables.filter(c => !reponses[c.id] || reponses[c.id]?.statut === 'non_analyse').length
   const score = total > 0 ? Math.round((prets / total) * 100) : 0
+  const part = (n: number) => (total > 0 ? (n / total) * 100 : 0)
 
   const getStatut = (critereId: string) => reponses[critereId]?.statut || 'non_analyse'
   const getStatutStyle = (statut: string) => STATUTS.find(s => s.key === statut) || STATUTS[0]
@@ -322,18 +328,12 @@ export default function CertificationPage() {
             onReloadDocs={async () => {
               await reloadDocs()
               // Notifier le consultant quand un document est signé
-              if (userRole === 'client' && societe?.client_id) {
-                const { data: consultants } = await supabase.from('profiles').select('id').eq('role', 'consultant')
-                for (const consultant of consultants || []) {
-                  await supabase.from('notifications').insert([{
-                    consultant_id: consultant.id,
-                    client_id: societe.client_id,
-                    type: 'document_signe',
-                    message: `Document signé sur le critère ${selectedCritere?.code || ''} — en attente de validation`,
-                    critere_code: selectedCritere?.code,
-                    lu: false,
-                  }])
-                }
+              if (userRole === 'client') {
+                await notifierConsultant({
+                  type: 'document_signe',
+                  message: `Document signé sur le critère ${selectedCritere?.code || ''} — en attente de validation`,
+                  critere_code: selectedCritere?.code,
+                })
               }
             }}
             generatingDoc={generatingDoc}
@@ -419,9 +419,9 @@ export default function CertificationPage() {
           </div>
           <div style={{ width: '180px', flexShrink: 0 }}>
             <div style={{ display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-              <div style={{ width: `${(prets / total) * 100}%`, background: '#10B981' }} />
-              <div style={{ width: `${(aValider / total) * 100}%`, background: '#3B82F6' }} />
-              <div style={{ width: `${(actionsCorrectifs / total) * 100}%`, background: '#EF4444' }} />
+              <div style={{ width: `${part(prets)}%`, background: '#10B981' }} />
+              <div style={{ width: `${part(aValider)}%`, background: '#3B82F6' }} />
+              <div style={{ width: `${part(actionsCorrectifs)}%`, background: '#EF4444' }} />
               <div style={{ flex: 1, background: '#E5E7EB' }} />
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '6px', textAlign: 'center' }}>{prets} / {total} prêts pour audit</div>
