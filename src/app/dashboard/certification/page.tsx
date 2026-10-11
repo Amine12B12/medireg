@@ -6,13 +6,18 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import CritereDetail from './CritereDetail'
 import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './AccueilChapitres'
 import ListeChapitre from './ListeChapitre'
+import { CONTENU_CHAPITRES } from '@/lib/chapitres-contenu'
 
-const CHAPITRES: Record<string, ChapitreInfo> = {
-  '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart', description: "Le respect des droits du patient : libre choix du prestataire, information, consentement, confidentialité, et l'écoute de sa satisfaction et de ses réclamations." },
-  '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery', description: 'Le cœur de la prestation : de la prescription à la livraison, puis l\'installation, le suivi, la maintenance et la reprise du matériel.' },
-  '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings', description: "L'organisation qui rend la prestation possible : personnel compétent et formé, locaux, véhicules, matériel et système d'information." },
-  '4': { label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check', description: 'La démarche qualité : gestion des risques, événements indésirables, matériovigilance et amélioration continue.' },
+// Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
+const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
+  '1': { color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
+  '2': { color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
+  '3': { color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings' },
+  '4': { color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check' },
 }
+const CHAPITRES: Record<string, ChapitreInfo> = Object.fromEntries(
+  Object.entries(STYLES_CHAPITRES).map(([k, st]) => [k, { ...st, ...CONTENU_CHAPITRES[k] }])
+)
 
 const STATUTS = [
   { key: 'non_analyse', label: 'Non analysé', color: '#6B7280', bg: '#F9FAFB', dot: '#D1D5DB' },

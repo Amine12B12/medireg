@@ -1,6 +1,6 @@
 'use client'
 
-export type ChapitreInfo = { label: string; color: string; bg: string; border: string; icon: string; description: string }
+export type ChapitreInfo = { label: string; color: string; bg: string; border: string; icon: string; description: string; auditeur?: string[] }
 
 export type StatsChapitre = {
   code: string
@@ -62,7 +62,7 @@ export default function AccueilChapitres({ chapitres, stats, dernierCritere, onO
                 </div>
               </div>
 
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.55' }}>{ch.description}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.55', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ch.description}</div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>

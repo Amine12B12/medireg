@@ -11,7 +11,7 @@ test('le chapitre a un bandeau de présentation et ses critères groupés par th
 
   const bandeau = page.getByTestId('bandeau-chapitre')
   await expect(bandeau).toContainText('Chapitre 1')
-  await expect(bandeau).toContainText('libre choix du prestataire')
+  await expect(bandeau).toContainText('choisit librement son prestataire')
   await expect(bandeau).toContainText('2 critères · 1 prêt pour l’audit · 50%')
 
   await expect(page.getByTestId('theme-1.1').getByTestId('critere-1.1.1')).toContainText('Prêt pour audit')
@@ -24,15 +24,15 @@ test('le bandeau se replie et reste replié au rechargement', async ({ page }) =
   await installerFauxSupabase(page, donneesDeBase(), CLIENT)
   await page.goto('/dashboard/certification?chapitre=1')
   const bandeau = page.getByTestId('bandeau-chapitre')
-  await expect(bandeau).toContainText('libre choix du prestataire')
+  await expect(bandeau).toContainText('choisit librement son prestataire')
 
   await bandeau.getByRole('button', { name: 'Replier' }).click()
-  await expect(bandeau).not.toContainText('libre choix du prestataire')
+  await expect(bandeau).not.toContainText('choisit librement son prestataire')
   await page.reload()
-  await expect(page.getByTestId('bandeau-chapitre')).not.toContainText('libre choix du prestataire')
+  await expect(page.getByTestId('bandeau-chapitre')).not.toContainText('choisit librement son prestataire')
 
   await page.getByTestId('bandeau-chapitre').getByRole('button', { name: 'Présentation' }).click()
-  await expect(page.getByTestId('bandeau-chapitre')).toContainText('libre choix du prestataire')
+  await expect(page.getByTestId('bandeau-chapitre')).toContainText('choisit librement son prestataire')
 })
 
 test('les codes sont triés naturellement (1.2 avant 1.10)', async ({ page }) => {

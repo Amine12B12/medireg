@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { ChapitreInfo } from './AccueilChapitres'
+import { nomTheme } from '@/lib/chapitres-contenu'
 
 type Statut = { key: string; label: string; color: string; bg: string; dot: string }
 
@@ -67,6 +68,14 @@ export default function ListeChapitre({ code, chapitre: ch, criteresDuChapitre, 
         {!replie && (
           <div style={{ marginTop: '14px', display: 'grid', gap: '12px' }}>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', maxWidth: '75ch' }}>{ch.description}</p>
+            {ch.auditeur && ch.auditeur.length > 0 && (
+              <div data-testid="auditeur-chapitre">
+                <div style={{ fontSize: '11px', fontWeight: '700', color: ch.color, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Ce que l’auditeur regarde en priorité</div>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'grid', gap: '3px', fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                  {ch.auditeur.map(a => <li key={a}>{a}</li>)}
+                </ul>
+              </div>
+            )}
             <div style={{ height: '6px', background: 'var(--surface)', borderRadius: '3px', overflow: 'hidden', maxWidth: '420px' }}>
               <div style={{ height: '100%', width: `${pct}%`, background: ch.color, borderRadius: '3px' }} />
             </div>
@@ -86,7 +95,7 @@ export default function ListeChapitre({ code, chapitre: ch, criteresDuChapitre, 
           return (
             <section key={g.theme} data-testid={`theme-${g.theme}`}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', padding: '0 4px 8px' }}>
-                <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Thème {g.theme}</h3>
+                <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{nomTheme(g.theme)}</h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{pretsTheme} / {g.criteres.length} prêt{pretsTheme > 1 ? 's' : ''}</span>
               </div>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
