@@ -54,7 +54,7 @@ test('le score global ne change pas quand on filtre', async ({ page }) => {
   await expect(page.getByText('33%', { exact: true })).toBeVisible()
 
   await page.getByTestId('chapitre-2').getByRole('button', { name: /Voir l/ }).click()
-  await page.getByRole('button', { name: 'Prêt pour audit' }).click()
+  await page.getByRole('button', { name: 'Prêt pour audit', exact: true }).click()
   await expect(page.getByText('Traçabilité des livraisons')).toBeVisible()
   await expect(page.getByText('Maintenance du matériel')).toHaveCount(0)
 

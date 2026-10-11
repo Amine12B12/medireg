@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CritereDetail from './CritereDetail'
 import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './AccueilChapitres'
+import ListeChapitre from './ListeChapitre'
 
 const CHAPITRES: Record<string, ChapitreInfo> = {
   '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart', description: "Le respect des droits du patient : libre choix du prestataire, information, consentement, confidentialité, et l'écoute de sa satisfaction et de ses réclamations." },
@@ -39,6 +40,16 @@ const DOCS_PAR_CRITERE: Record<string, { code: string; nom: string }[]> = {
 // Ordre de traitement proposé par « Continuer » : ce qui bloque d'abord, puis ce qui n'est pas commencé
 const PRIORITE_CLIENT = ['action_corrective', 'information_manquante', 'preuve_manquante', 'non_analyse']
 const PRIORITE_CONSULTANT = ['procedure_a_valider', 'action_corrective', 'information_manquante', 'preuve_manquante', 'non_analyse']
+
+// Tri naturel des codes : 1.2.1 < 1.10.1 (le tri texte de la base mettait 1.10 avant 1.2)
+function comparerCodes(a: string, b: string) {
+  const x = a.split('.').map(Number), y = b.split('.').map(Number)
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const d = (x[i] ?? -1) - (y[i] ?? -1)
+    if (d !== 0) return d
+  }
+  return 0
+}
 
 const cleDernierCritere = (etabId: string) => `medireg:dernier-critere:${etabId}`
 
@@ -127,7 +138,7 @@ function Certification() {
         await loadEtabData(etabs[0].id, role)
       }
       const { data: crits } = await supabase.from('criteres_psdm').select('*').order('code')
-      setCriteres(crits || [])
+      setCriteres([...(crits || [])].sort((a, b) => comparerCodes(a.code, b.code)))
       setLoading(false)
     }
     load()
@@ -330,9 +341,12 @@ function Certification() {
   const getStatut = (critereId: string) => reponses[critereId]?.statut || 'non_analyse'
   const getStatutStyle = (statut: string) => STATUTS.find(s => s.key === statut) || STATUTS[0]
 
-  const currentIdx = selectedCritere ? criteresFiltres.findIndex(c => c.id === selectedCritere.id) : -1
-  const prevCritere = currentIdx > 0 ? criteresFiltres[currentIdx - 1] : null
-  const nextCritere = currentIdx < criteresFiltres.length - 1 ? criteresFiltres[currentIdx + 1] : null
+  // Précédent / suivant : dans le chapitre du critère, sans tenir compte du filtre de statut
+  const criteresDuChapitre = criteresApplicables.filter(c => c.chapitre === filterChap)
+  const navCriteres = criteresDuChapitre
+  const currentIdx = selectedCritere ? navCriteres.findIndex(c => c.id === selectedCritere.id) : -1
+  const prevCritere = currentIdx > 0 ? navCriteres[currentIdx - 1] : null
+  const nextCritere = currentIdx >= 0 && currentIdx < navCriteres.length - 1 ? navCriteres[currentIdx + 1] : null
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
@@ -367,7 +381,7 @@ function Certification() {
               style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: prevCritere ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', opacity: prevCritere ? 1 : 0.3 }}>
               <i className="ti ti-chevron-left" style={{ fontSize: '14px' }} />
             </button>
-            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', padding: '0 4px' }}>{currentIdx + 1} / {criteresFiltres.length}</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', padding: '0 4px' }}>{currentIdx + 1} / {navCriteres.length}</span>
             <button onClick={() => nextCritere && setSelectedCritere(nextCritere)} disabled={!nextCritere}
               style={{ width: '30px', height: '30px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', cursor: nextCritere ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', opacity: nextCritere ? 1 : 0.3 }}>
               <i className="ti ti-chevron-right" style={{ fontSize: '14px' }} />
@@ -502,7 +516,7 @@ function Certification() {
         <i className="ti ti-chevron-right" style={{ fontSize: '12px', color: 'var(--text-tertiary)' }} />
         <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>Chapitre {filterChap} — {CHAPITRES[filterChap].label}</span>
       </nav>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chapitre</span>
         {(['tous', '1', '2', '3', '4'] as const).map(ch => (
           <button key={ch} onClick={() => setFilterChap(ch)}
@@ -510,7 +524,9 @@ function Certification() {
             {ch === 'tous' ? 'Vue d\'ensemble' : `Chap. ${ch}`}
           </button>
         ))}
-        <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 4px' }} />
+      </div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Statut</span>
         {STATUTS.map(s => (
           <button key={s.key} onClick={() => setFilterStatut(filterStatut === s.key ? 'tous' : s.key)}
             style={{ padding: '6px 12px', borderRadius: '20px', border: `1px solid ${filterStatut === s.key ? s.dot : 'var(--border)'}`, background: filterStatut === s.key ? s.bg : 'var(--surface)', color: filterStatut === s.key ? s.color : 'var(--text-secondary)', fontSize: '11px', fontWeight: filterStatut === s.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -520,88 +536,21 @@ function Certification() {
         ))}
       </div>
 
-      {['1', '2', '3', '4'].map(chap => {
-        const critChap = criteresFiltres.filter(c => c.chapitre === chap)
-        if (critChap.length === 0) return null
-        const ch = CHAPITRES[chap]
-        const pretsChap = critChap.filter(c => reponses[c.id]?.statut === 'pret_audit').length
-        const progressPct = Math.round((pretsChap / critChap.length) * 100)
-
-        return (
-          <div key={chap} style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', paddingBottom: '12px', borderBottom: `2px solid ${ch.border}` }}>
-              <div style={{ width: '38px', height: '38px', borderRadius: 'var(--radius-md)', background: ch.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${ch.border}` }}>
-                <i className={`ti ${ch.icon}`} style={{ fontSize: '18px', color: ch.color }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: ch.color }}>Chapitre {chap} — {ch.label}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{critChap.length} critères · {pretsChap} prêts pour audit</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '100px', height: '6px', background: ch.border, borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progressPct}%`, background: ch.color, borderRadius: '3px', transition: 'width 0.5s' }} />
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: ch.color, minWidth: '32px' }}>{progressPct}%</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '10px' }}>
-              {critChap.map(critere => {
-                const statut = getStatut(critere.id)
-                const st = getStatutStyle(statut)
-                const docsCritere = DOCS_PAR_CRITERE[critere.code] || []
-                const nbGeneres = docsCritere.filter(d => docsGeneres[d.code]?.length > 0).length
-                const hasDocs = docsCritere.length > 0
-
-                return (
-                  <div key={critere.id} onClick={() => setSelectedCritere(critere)}
-                    style={{ background: 'var(--surface)', border: `1px solid ${statut === 'action_corrective' ? '#FECACA' : 'var(--border)'}`, borderRadius: 'var(--radius-lg)', padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; el.style.borderColor = ch.color }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'none'; el.style.boxShadow = 'none'; el.style.borderColor = statut === 'action_corrective' ? '#FECACA' : 'var(--border)' }}>
-
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: st.dot }} />
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '700', color: ch.color, background: ch.bg, padding: '3px 8px', borderRadius: '4px', border: `1px solid ${ch.border}` }}>{critere.code}</span>
-                      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: st.bg, borderRadius: '20px' }}>
-                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: st.dot }} />
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: st.color }}>{st.label}</span>
-                      </div>
-                    </div>
-
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: '1.5', marginBottom: '12px' }}>
-                      {critere.titre}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      {critere.champ_application && (
-                        <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
-                          {critere.champ_application}
-                        </span>
-                      )}
-                      {messagesNonLus[critere.id] > 0 && (
-                        <span style={{ fontSize: '10px', color: '#DC2626', background: '#FEF2F2', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#EF4444' }} />
-                          {messagesNonLus[critere.id]} message{messagesNonLus[critere.id] > 1 ? 's' : ''}
-                        </span>
-                      )}
-                      {hasDocs && (
-                        <span style={{ fontSize: '10px', color: nbGeneres === docsCritere.length ? '#059669' : 'var(--accent)', background: nbGeneres === docsCritere.length ? '#D1FAE5' : 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <i className={`ti ${nbGeneres === docsCritere.length ? 'ti-check' : 'ti-file-text'}`} style={{ fontSize: '10px' }} />
-                          {nbGeneres}/{docsCritere.length} docs
-                        </span>
-                      )}
-                      <div style={{ marginLeft: 'auto', color: 'var(--text-tertiary)' }}>
-                        <i className="ti ti-chevron-right" style={{ fontSize: '14px' }} />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
+      <ListeChapitre
+        key={filterChap}
+        code={filterChap}
+        chapitre={CHAPITRES[filterChap]}
+        criteresDuChapitre={criteresDuChapitre}
+        criteresAffiches={criteresFiltres}
+        statuts={STATUTS}
+        getStatut={getStatut}
+        messagesNonLus={messagesNonLus}
+        docsAttendus={code => {
+          const attendus = DOCS_PAR_CRITERE[code] || []
+          return { total: attendus.length, generes: attendus.filter(d => docsGeneres[d.code]?.length > 0).length }
+        }}
+        onOuvrir={c => setSelectedCritere(c)}
+      />
       </>)}
     </div>
   )
