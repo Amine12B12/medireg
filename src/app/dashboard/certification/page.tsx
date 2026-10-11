@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import CritereDetail from './CritereDetail'
+import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './AccueilChapitres'
 
-const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
-  '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
-  '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
-  '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings' },
-  '4': { label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check' },
+const CHAPITRES: Record<string, ChapitreInfo> = {
+  '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart', description: "Le respect des droits du patient : libre choix du prestataire, information, consentement, confidentialité, et l'écoute de sa satisfaction et de ses réclamations." },
+  '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery', description: 'Le cœur de la prestation : de la prescription à la livraison, puis l\'installation, le suivi, la maintenance et la reprise du matériel.' },
+  '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings', description: "L'organisation qui rend la prestation possible : personnel compétent et formé, locaux, véhicules, matériel et système d'information." },
+  '4': { label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check', description: 'La démarche qualité : gestion des risques, événements indésirables, matériovigilance et amélioration continue.' },
 }
 
 const STATUTS = [
@@ -35,7 +36,21 @@ const DOCS_PAR_CRITERE: Record<string, { code: string; nom: string }[]> = {
   '1.3.2': [{ code: 'QR-DOC-01', nom: 'Enquete satisfaction — analyse reclamations' }],
 }
 
+// Ordre de traitement proposé par « Continuer » : ce qui bloque d'abord, puis ce qui n'est pas commencé
+const PRIORITE_CLIENT = ['action_corrective', 'information_manquante', 'preuve_manquante', 'non_analyse']
+const PRIORITE_CONSULTANT = ['procedure_a_valider', 'action_corrective', 'information_manquante', 'preuve_manquante', 'non_analyse']
+
+const cleDernierCritere = (etabId: string) => `medireg:dernier-critere:${etabId}`
+
 export default function CertificationPage() {
+  return (
+    <Suspense fallback={null}>
+      <Certification />
+    </Suspense>
+  )
+}
+
+function Certification() {
   const [societe, setSociete] = useState<any>(null)
   const [etablissements, setEtablissements] = useState<any[]>([])
   const [selectedEtabId, setSelectedEtabId] = useState<string>('')
@@ -43,8 +58,6 @@ export default function CertificationPage() {
   const [criteres, setCriteres] = useState<any[]>([])
   const [reponses, setReponses] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
-  const [selectedCritere, setSelectedCritere] = useState<any>(null)
-  const [filterChap, setFilterChap] = useState<string>('tous')
   const [filterStatut, setFilterStatut] = useState<string>('tous')
   const [savingId, setSavingId] = useState<string | null>(null)
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null)
@@ -55,6 +68,29 @@ export default function CertificationPage() {
   const [consultantId, setConsultantId] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // La position (chapitre, critère) vit dans l'URL : bouton retour et rechargement la conservent
+  const critereParam = searchParams.get('critere')
+  const chapitreParam = searchParams.get('chapitre')
+  const selectedCritere = critereParam ? criteres.find(c => c.code === critereParam) ?? null : null
+  const filterChap: string = selectedCritere?.chapitre ?? (chapitreParam && CHAPITRES[chapitreParam] ? chapitreParam : 'tous')
+
+  function naviguer(chapitre: string | null, critere: string | null) {
+    const q = new URLSearchParams(searchParams.toString())
+    if (chapitre) q.set('chapitre', chapitre); else q.delete('chapitre')
+    if (critere) q.set('critere', critere); else q.delete('critere')
+    const qs = q.toString()
+    router.push(`/dashboard/certification${qs ? `?${qs}` : ''}`)
+    window.scrollTo(0, 0)
+  }
+  const setSelectedCritere = (c: any) => {
+    if (!c) return naviguer(filterChap !== 'tous' ? filterChap : null, null)
+    try { if (selectedEtabId) localStorage.setItem(cleDernierCritere(selectedEtabId), c.code) } catch {}
+    naviguer(c.chapitre, c.code)
+  }
+  const setFilterChap = (ch: string) => naviguer(ch === 'tous' ? null : ch, null)
+
 
   // Notifie uniquement le consultant rattaché à ce client (jamais les consultants des autres clients)
   async function notifierConsultant(notif: { type: string; message: string; critere_code?: string }) {
@@ -268,6 +304,29 @@ export default function CertificationPage() {
   const score = total > 0 ? Math.round((prets / total) * 100) : 0
   const part = (n: number) => (total > 0 ? (n / total) * 100 : 0)
 
+  const priorite = userRole === 'consultant' ? PRIORITE_CONSULTANT : PRIORITE_CLIENT
+  const statsChapitres: StatsChapitre[] = Object.keys(CHAPITRES).map(code => {
+    const crits = criteresApplicables.filter(c => c.chapitre === code)
+    const statutDe = (c: any) => reponses[c.id]?.statut || 'non_analyse'
+    let prochain: any = null
+    for (const p of priorite) {
+      prochain = crits.find(c => statutDe(c) === p)
+      if (prochain) break
+    }
+    return {
+      code,
+      total: crits.length,
+      prets: crits.filter(c => statutDe(c) === 'pret_audit').length,
+      aValider: crits.filter(c => statutDe(c) === 'procedure_a_valider').length,
+      actionsCorrectives: crits.filter(c => statutDe(c) === 'action_corrective').length,
+      messagesNonLus: crits.reduce((n, c) => n + (messagesNonLus[c.id] || 0), 0),
+      prochain: prochain ? { code: prochain.code, titre: prochain.titre } : null,
+    }
+  })
+  let dernierCode: string | null = null
+  try { if (selectedEtabId) dernierCode = localStorage.getItem(cleDernierCritere(selectedEtabId)) } catch {}
+  const dernier = dernierCode ? criteresApplicables.find(c => c.code === dernierCode) : null
+
   const getStatut = (critereId: string) => reponses[critereId]?.statut || 'non_analyse'
   const getStatutStyle = (statut: string) => STATUTS.find(s => s.key === statut) || STATUTS[0]
 
@@ -354,7 +413,7 @@ export default function CertificationPage() {
             <button onClick={() => setSelectedCritere(null)}
               style={{ padding: '10px 18px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <i className="ti ti-layout-grid" style={{ fontSize: '14px' }} />
-              Tous les critères
+              Retour au chapitre {selectedCritere.chapitre}
             </button>
             <button onClick={() => nextCritere && setSelectedCritere(nextCritere)} disabled={!nextCritere}
               style={{ padding: '10px 18px', background: nextCritere ? 'var(--accent)' : 'var(--surface)', border: nextCritere ? 'none' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: nextCritere ? '#fff' : 'var(--text-secondary)', fontSize: '13px', fontWeight: nextCritere ? '600' : '400', cursor: nextCritere ? 'pointer' : 'not-allowed', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px', opacity: nextCritere ? 1 : 0.4, boxShadow: nextCritere ? '0 1px 4px rgba(26,86,219,0.3)' : 'none' }}>
@@ -429,12 +488,26 @@ export default function CertificationPage() {
         </div>
       </div>
 
+      {filterChap === 'tous' ? (
+        <AccueilChapitres
+          chapitres={CHAPITRES}
+          stats={statsChapitres}
+          dernierCritere={dernier ? { code: dernier.code, titre: dernier.titre, chapitre: dernier.chapitre } : null}
+          onOuvrirChapitre={ch => setFilterChap(ch)}
+          onOuvrirCritere={code => { const c = criteres.find(x => x.code === code); if (c) setSelectedCritere(c) }}
+        />
+      ) : (<>
+      <nav aria-label="Fil d’Ariane" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', marginBottom: '14px' }}>
+        <button onClick={() => setFilterChap('tous')} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--accent)', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '13px' }}>Certification</button>
+        <i className="ti ti-chevron-right" style={{ fontSize: '12px', color: 'var(--text-tertiary)' }} />
+        <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>Chapitre {filterChap} — {CHAPITRES[filterChap].label}</span>
+      </nav>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Chapitre</span>
         {(['tous', '1', '2', '3', '4'] as const).map(ch => (
           <button key={ch} onClick={() => setFilterChap(ch)}
             style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${filterChap === ch ? (ch === 'tous' ? 'var(--accent)' : CHAPITRES[ch]?.color) : 'var(--border)'}`, background: filterChap === ch ? (ch === 'tous' ? 'var(--accent-light)' : CHAPITRES[ch]?.bg) : 'var(--surface)', color: filterChap === ch ? (ch === 'tous' ? 'var(--accent)' : CHAPITRES[ch]?.color) : 'var(--text-secondary)', fontSize: '12px', fontWeight: filterChap === ch ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
-            {ch === 'tous' ? 'Tous' : `Chap. ${ch}`}
+            {ch === 'tous' ? 'Vue d\'ensemble' : `Chap. ${ch}`}
           </button>
         ))}
         <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 4px' }} />
@@ -529,6 +602,7 @@ export default function CertificationPage() {
           </div>
         )
       })}
+      </>)}
     </div>
   )
 }

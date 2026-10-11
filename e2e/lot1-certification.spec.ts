@@ -7,7 +7,7 @@ test('un client qui soumet un critère ne notifie que son propre consultant', as
   const tables = donneesDeBase()
   const { ecritures } = await installerFauxSupabase(page, tables, { id: 'u-client', email: 'client@test.fr' })
 
-  await page.goto('/dashboard/certification')
+  await page.goto('/dashboard/certification?chapitre=1')
   await page.getByText("Libre choix de l'usager").click()
   await page.getByRole('button', { name: 'Soumettre pour validation' }).click()
   await expect(page.getByText('Votre consultant va valider ce critère')).toBeVisible()
@@ -24,7 +24,7 @@ test("un client sans consultant attribué ne notifie personne", async ({ page })
   tables.clients[0].consultant_id = null
   const { ecritures } = await installerFauxSupabase(page, tables, { id: 'u-client', email: 'client@test.fr' })
 
-  await page.goto('/dashboard/certification')
+  await page.goto('/dashboard/certification?chapitre=1')
   await page.getByText("Libre choix de l'usager").click()
   await page.getByRole('button', { name: 'Soumettre pour validation' }).click()
   await expect(page.getByText('Votre consultant va valider ce critère')).toBeVisible()
@@ -39,7 +39,7 @@ test('le consultant voit ses messages non lus dès le premier chargement', async
   ]
   await installerFauxSupabase(page, tables, { id: 'cons-A', email: 'a@test.fr' })
 
-  await page.goto('/dashboard/certification?client_id=c1')
+  await page.goto('/dashboard/certification?client_id=c1&chapitre=1')
   const carte = page.locator('div', { hasText: "Libre choix de l'usager" }).filter({ hasText: '1.2.1' }).last()
   await expect(carte.getByText('1 message')).toBeVisible()
 })
@@ -53,7 +53,7 @@ test('le score global ne change pas quand on filtre', async ({ page }) => {
   await expect(page.getByText('2 / 6 prêts pour audit')).toBeVisible()
   await expect(page.getByText('33%', { exact: true })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Chap. 2' }).click()
+  await page.getByTestId('chapitre-2').getByRole('button', { name: /Voir l/ }).click()
   await page.getByRole('button', { name: 'Prêt pour audit' }).click()
   await expect(page.getByText('Traçabilité des livraisons')).toBeVisible()
   await expect(page.getByText('Maintenance du matériel')).toHaveCount(0)
