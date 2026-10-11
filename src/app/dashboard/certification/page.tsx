@@ -7,6 +7,7 @@ import CritereDetail from './CritereDetail'
 import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './AccueilChapitres'
 import ListeChapitre from './ListeChapitre'
 import { CONTENU_CHAPITRES } from '@/lib/chapitres-contenu'
+import { critereApplicable } from '@/lib/applicabilite'
 
 // Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
 const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
@@ -82,6 +83,7 @@ function Certification() {
   const [userRole, setUserRole] = useState<string>('client')
   const [meditrackEtabId, setMeditrackEtabId] = useState<string | null>(null)
   const [consultantId, setConsultantId] = useState<string | null>(null)
+  const [erreur, setErreur] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -93,6 +95,7 @@ function Certification() {
   const filterChap: string = selectedCritere?.chapitre ?? (chapitreParam && CHAPITRES[chapitreParam] ? chapitreParam : 'tous')
 
   function naviguer(chapitre: string | null, critere: string | null) {
+    setErreur(null)
     const q = new URLSearchParams(searchParams.toString())
     if (chapitre) q.set('chapitre', chapitre); else q.delete('chapitre')
     if (critere) q.set('critere', critere); else q.delete('critere')
@@ -262,11 +265,11 @@ function Certification() {
         URL.revokeObjectURL(url)
         await reloadDocs()
       } else {
-        const err = await res.json()
-        alert('Erreur : ' + err.error)
+        const err = await res.json().catch(() => ({}))
+        setErreur(`Le document ${codeDoc} n'a pas pu être généré${err.error ? ` : ${err.error}` : '.'} Réessayez, ou contactez votre consultant si le problème continue.`)
       }
-    } catch (e: any) {
-      alert('Erreur : ' + e.message)
+    } catch {
+      setErreur(`Le document ${codeDoc} n'a pas pu être généré : la connexion a échoué. Vérifiez votre réseau et réessayez.`)
     }
     setGeneratingDoc(null)
   }
@@ -275,7 +278,11 @@ function Certification() {
     if (!societe?.id || !selectedEtabId || !selectedCritere) return
     const path = `preuves/${societe.id}/${selectedCritere.code}_${Date.now()}_${file.name}`
     const { error } = await supabase.storage.from('modeles').upload(path, file, { upsert: true })
-    if (!error) {
+    if (error) {
+      setErreur(`Le fichier « ${file.name} » n'a pas pu être envoyé. Vérifiez sa taille et votre connexion, puis réessayez.`)
+      return
+    }
+    {
       await supabase.from('documents_qualite').insert([{
         etablissement_id: selectedEtabId, critere_id: selectedCritere.id,
         code_doc: `PREUVE_${selectedCritere.code}`, nom: label,
@@ -293,14 +300,7 @@ function Certification() {
   }
 
   // Critères qui s'appliquent à l'établissement (selon ses activités), indépendamment des filtres d'affichage
-  const criteresApplicables = criteres.filter(c => {
-    if (c.champ_application) {
-      const champs = c.champ_application.toLowerCase()
-      if (champs.includes('oxygene') && !activites.some(a => a.toLowerCase().includes('oxygene'))) return false
-      if (champs.includes('vph') && !activites.some(a => a.toLowerCase().includes('vph'))) return false
-    }
-    return true
-  })
+  const criteresApplicables = criteres.filter(c => critereApplicable(c.champ_application, activites))
 
   const criteresFiltres = criteresApplicables.filter(c => {
     if (filterChap !== 'tous' && c.chapitre !== filterChap) return false
@@ -394,6 +394,16 @@ function Certification() {
           </div>
         </div>
         <div style={{ padding: '28px', maxWidth: '800px', margin: '0 auto' }}>
+          {erreur && (
+            <div role="alert" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 14px', marginBottom: '16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--radius-md)', color: '#B91C1C', fontSize: '13px', lineHeight: '1.5' }}>
+              <i className="ti ti-alert-circle" style={{ fontSize: '16px', marginTop: '1px' }} />
+              <span style={{ flex: 1 }}>{erreur}</span>
+              <button onClick={() => setErreur(null)} aria-label="Fermer le message"
+                style={{ background: 'none', border: 'none', color: '#B91C1C', cursor: 'pointer', padding: 0 }}>
+                <i className="ti ti-x" style={{ fontSize: '15px' }} />
+              </button>
+            </div>
+          )}
           <CritereDetail
             critere={selectedCritere}
             societe={societe}
