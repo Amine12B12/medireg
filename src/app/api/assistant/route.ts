@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { reponseRefus, utilisateurConnecte, verifierAccesEtablissement, verifierAccesClient, clientDeSociete, estConsultant, RefusAcces } from '@/lib/acces-api'
 
 export async function POST(request: Request) {
+  try {
+    await utilisateurConnecte(request)
+  } catch (e) {
+    return reponseRefus(e)
+  }
   const { messages } = await request.json()
 
   const supabaseAdmin = createClient(
@@ -24,9 +30,9 @@ export async function POST(request: Request) {
         const { data: prof } = await supabaseAdmin.from('profiles').select('role, client_id').eq('id', user.id).single()
 
         if (prof?.role === 'consultant') {
-          const { data: clients } = await supabaseAdmin.from('clients').select('nom, type, ville, pays, statut').order('nom').limit(50)
-          const { data: audits } = await supabaseAdmin.from('audits').select('titre, statut, score, clients(nom), referentiels(nom)').order('created_at', { ascending: false }).limit(20)
-          const { data: ncs } = await supabaseAdmin.from('non_conformites').select('titre, niveau, statut, clients(nom)').eq('statut', 'ouverte').limit(20)
+          const { data: clients } = await supabaseAdmin.from('clients').select('id, nom, type, ville, pays, statut').eq('consultant_id', user.id).order('nom').limit(50)
+          const { data: audits } = await supabaseAdmin.from('audits').select('titre, statut, score, clients(nom), referentiels(nom)').in('client_id', (clients || []).map(c => c.id)).order('created_at', { ascending: false }).limit(20)
+          const { data: ncs } = await supabaseAdmin.from('non_conformites').select('titre, niveau, statut, clients(nom)').in('client_id', (clients || []).map(c => c.id)).eq('statut', 'ouverte').limit(20)
 
           contextData = `
 === DONNEES MEDIREG — CONSULTANT ===

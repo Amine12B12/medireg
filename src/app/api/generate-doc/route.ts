@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
+import { reponseRefus, utilisateurConnecte, verifierAccesEtablissement, verifierAccesClient, clientDeSociete, estConsultant, RefusAcces } from '@/lib/acces-api'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,13 @@ export async function POST(req: NextRequest) {
   try {
     const { societe_id, etablissement_id, code_doc } = await req.json()
     if (!societe_id || !code_doc) return NextResponse.json({ error: 'Parametres manquants' }, { status: 400 })
+
+    const profil = await utilisateurConnecte(req)
+    await verifierAccesClient(profil, await clientDeSociete(societe_id))
+    if (etablissement_id) {
+      const { societeId } = await verifierAccesEtablissement(profil, etablissement_id)
+      if (societeId !== societe_id) throw new RefusAcces(403, "Cet établissement n'appartient pas à cette société.")
+    }
 
     const { data: societe } = await supabase.from('societes').select('*').eq('id', societe_id).single()
     if (!societe) return NextResponse.json({ error: 'Societe non trouvee' }, { status: 404 })
@@ -123,6 +131,7 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error: any) {
+    if (error instanceof RefusAcces) return reponseRefus(error)
     console.error('Generate doc error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -134,6 +143,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const path = searchParams.get('path')
     if (!path) return NextResponse.json({ error: 'Path manquant' }, { status: 400 })
+
+    // Le chemin commence par generes/<societe_id>/ ou preuves/<societe_id>/ : on vérifie l'accès à cette société
+    const m = path.match(/^(generes|preuves)\/([^/]+)\/[^/]+$/)
+    if (!m) throw new RefusAcces(403, 'Chemin de document non autorisé.')
+    const profil = await utilisateurConnecte(req)
+    await verifierAccesClient(profil, await clientDeSociete(m[2]))
 
     const { data: fileData, error } = await supabase.storage.from('modeles').download(path)
     if (error || !fileData) return NextResponse.json({ error: 'Document non trouve' }, { status: 404 })
@@ -149,6 +164,7 @@ export async function GET(req: NextRequest) {
       }
     })
   } catch (error: any) {
+    if (error instanceof RefusAcces) return reponseRefus(error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

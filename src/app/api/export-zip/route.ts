@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import JSZip from 'jszip'
+import { reponseRefus, utilisateurConnecte, verifierAccesEtablissement, verifierAccesClient, clientDeSociete, estConsultant, RefusAcces } from '@/lib/acces-api'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -87,7 +88,14 @@ export async function GET(req: NextRequest) {
 
   if (!etabId || !clientId) return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
 
-  // Vérifier que le client a accès à cet établissement
+  // Vérifier que l'utilisateur connecté a accès à cet établissement, et que l'établissement appartient bien à ce client
+  try {
+    const profil = await utilisateurConnecte(req)
+    const acces = await verifierAccesEtablissement(profil, etabId)
+    if (acces.clientId !== clientId) throw new RefusAcces(403, "Cet établissement n'appartient pas à ce client.")
+  } catch (e) {
+    return reponseRefus(e)
+  }
   const { data: soc } = await supabase.from('societes').select('raison_sociale').eq('client_id', clientId).single()
   if (!soc) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 

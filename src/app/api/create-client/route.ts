@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { reponseRefus, utilisateurConnecte, verifierAccesEtablissement, verifierAccesClient, clientDeSociete, estConsultant, RefusAcces } from '@/lib/acces-api'
 
 const supabase = createClient(
-  'https://bhqsaajduogwebaovxsd.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocXNhYWpkdW9nd2ViYW92eHNkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDI3NDYwNywiZXhwIjoyMDk5ODUwNjA3fQ.TplgTHfJp1GGqgTXtH6y1A4pII-vPGZ1XviP0au-9gg'
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const meditrackSupabase = createClient(
-  'https://nkfivuqomqubhpsvgdfm.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rZml2dXFvbXF1Ymhwc3ZnZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg1Mjc5NCwiZXhwIjoyMDk2NDI4Nzk0fQ.d9MRLh_1p7HDZccijNZzUwMLEaKJ0GBNWI8oX6YWIMk'
+// Créé à la demande : la clé n'existe que sur le serveur (variable MEDITRACK_SERVICE_ROLE_KEY)
+const meditrackClient = () => createClient(
+  process.env.MEDITRACK_SUPABASE_URL || 'https://nkfivuqomqubhpsvgdfm.supabase.co',
+  process.env.MEDITRACK_SERVICE_ROLE_KEY!
 )
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!
@@ -89,7 +91,12 @@ async function sendInvitationEmail(email: string, nom: string, password: string)
 
 export async function POST(req: NextRequest) {
   try {
-    const { nom, email, forfait, ville, adresse, consultant_id } = await req.json()
+    const profil = await utilisateurConnecte(req)
+    if (!estConsultant(profil)) throw new RefusAcces(403, 'Seul un consultant peut créer un client.')
+    const corps = await req.json()
+    const { nom, email, forfait, ville, adresse } = corps
+    // Un consultant crée toujours le client pour lui-même ; seul un admin peut l'attribuer à un autre consultant
+    const consultant_id = profil.role === 'admin' ? (corps.consultant_id ?? null) : profil.id
     if (!nom || !email) return NextResponse.json({ error: 'Nom et email requis' }, { status: 400 })
 
     const tempPassword = generatePassword()
@@ -131,6 +138,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Créer l'établissement MediTrack
     console.log('Creating MediTrack etablissement for:', nom, email)
+    const meditrackSupabase = meditrackClient()
     const { data: meditrackEtab, error: meditrackError } = await meditrackSupabase
       .from('etablissements')
       .insert([{
@@ -181,6 +189,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, client_id: client.id })
 
   } catch (error: any) {
+    if (error instanceof RefusAcces) return reponseRefus(error)
     console.error('Error:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

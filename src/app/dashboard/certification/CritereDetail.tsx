@@ -1555,6 +1555,7 @@ export default function CritereDetail({
       {MEDITRACK_CRITERES.includes(critere.code) && !isConsultant && (
         <MeditrackWidget
           meditrackEtabId={meditrackEtabId ?? null}
+          clientId={societe?.client_id}
           critereCode={critere.code}
           onLink={async (etabId: string) => {
             if (onSaveMeditrackId) await onSaveMeditrackId(etabId)

@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const meditrack = createClient(
-  'https://nkfivuqomqubhpsvgdfm.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rZml2dXFvbXF1Ymhwc3ZnZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDg1Mjc5NCwiZXhwIjoyMDk2NDI4Nzk0fQ.d9MRLh_1p7HDZccijNZzUwMLEaKJ0GBNWI8oX6YWIMk'
-)
+// Les données MediTrack passent par /api/meditrack : aucune clé MediTrack dans le navigateur
+async function ajouter(clientId: string | null | undefined, table: string, donnees: Record<string, unknown>) {
+  const res = await fetch('/api/meditrack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ajouter', clientId, table, donnees }) })
+  return { error: res.ok ? null : ((await res.json().catch(() => ({}))).error || 'Erreur') }
+}
 
 const inp = {
   width: '100%',
@@ -25,6 +24,7 @@ const CATEGORIES = ['Fauteuil roulant', 'Lit medicalisé', 'Oxygénothérapie', 
 
 interface Props {
   meditrackEtabId: string
+  clientId: string | null | undefined
   critereCode: string
   onClose: () => void
   onSaved: () => void
@@ -39,7 +39,7 @@ const TAB_CONFIG: Record<string, { tabs: Tab[]; titre: string; description: stri
   '2.5.1': { tabs: ['equipements', 'livraisons'], titre: 'Traçabilité des reprises', description: 'Enregistrez les reprises de matériel en fin de prestation.' },
 }
 
-export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose, onSaved }: Props) {
+export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode, onClose, onSaved }: Props) {
   const config = TAB_CONFIG[critereCode] || TAB_CONFIG['2.3.2']
   const [activeTab, setActiveTab] = useState<Tab>(config.tabs[0])
   const [equipements, setEquipements] = useState<any[]>([])
@@ -67,28 +67,22 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
   useEffect(() => { loadData() }, [meditrackEtabId])
 
   async function loadData() {
-    const { data: eq } = await meditrack.from('equipements').select('*').eq('etablissement_id', meditrackEtabId).order('created_at', { ascending: false })
-    setEquipements(eq || [])
+    const res = await fetch(`/api/meditrack?action=saisie&clientId=${encodeURIComponent(clientId || '')}`)
+    const json = res.ok ? await res.json() : {}
+    const eq = json.equipements || []
+    setEquipements(eq)
     if (eq && eq.length > 0) {
       setLivrForm(p => ({ ...p, equipement_id: eq[0].id }))
       setMaintForm(p => ({ ...p, equipement_id: eq[0].id }))
     }
-    const { data: lv } = await meditrack.from('livraisons').select('*, equipements(designation)').eq('etablissement_id', meditrackEtabId).order('created_at', { ascending: false })
-    setLivraisons(lv || [])
-    const eqIds = (eq || []).map((e: any) => e.id)
-    if (eqIds.length > 0) {
-      const { data: mn } = await meditrack.from('maintenances').select('*, equipements(designation)').in('equipement_id', eqIds).order('created_at', { ascending: false })
-      setMaintenances(mn || [])
-    }
+    setLivraisons(json.livraisons || [])
+    setMaintenances(json.maintenances || [])
   }
 
   async function saveEquipement() {
     if (!equipForm.designation) return
     setSaving(true)
-    const payload = { ...equipForm, etablissement_id: meditrackEtabId }
-    console.log('saveEquipement payload:', JSON.stringify(payload))
-    const { error } = await meditrack.from('equipements').insert([payload])
-    console.log('saveEquipement error:', error?.message, error?.details)
+    const { error } = await ajouter(clientId, 'equipements', equipForm)
     if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setEquipForm({ designation: '', categorie: '', fabricant: '', modele: '', numero_serie: '', mode_dispo: 'location', statut: 'en_service', date_mes: new Date().toISOString().split('T')[0], commentaires: '' }) }
     setSaving(false)
   }
@@ -96,7 +90,7 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
   async function saveLivraison() {
     if (!livrForm.equipement_id) return
     setSaving(true)
-    const { error } = await meditrack.from('livraisons').insert([{ ...livrForm, etablissement_id: meditrackEtabId }])
+    const { error } = await ajouter(clientId, 'livraisons', livrForm)
     if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setLivrForm(p => ({ ...p, notes: '', statut: 'planifiee' })) }
     setSaving(false)
   }
@@ -104,7 +98,7 @@ export default function MeditrackSaisie({ meditrackEtabId, critereCode, onClose,
   async function saveMaintenance() {
     if (!maintForm.equipement_id) return
     setSaving(true)
-    const { error } = await meditrack.from('maintenances').insert([{ ...maintForm }])
+    const { error } = await ajouter(clientId, 'maintenances', maintForm)
     if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setMaintForm(p => ({ ...p, notes: '', statut: 'planifiee', date_realisee: '' })) }
     setSaving(false)
   }

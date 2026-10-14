@@ -1,16 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import MeditrackSaisie from './MeditrackSaisie'
 
-const MEDITRACK_URL = 'https://nkfivuqomqubhpsvgdfm.supabase.co'
-const MEDITRACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rZml2dXFvbXF1Ymhwc3ZnZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTI3OTQsImV4cCI6MjA5NjQyODc5NH0.KctQtysEc1EkFW7BzoKloJbiIzbsNgSfZDkLFdQpP9I'
-
-const meditrackClient = createClient(MEDITRACK_URL, MEDITRACK_KEY)
+// Les données MediTrack passent par /api/meditrack : aucune clé MediTrack dans le navigateur
 
 interface Props {
   meditrackEtabId: string | null | undefined
+  clientId: string | null | undefined
   critereCode: string
   userEmail?: string
   onLink?: (etabId: string) => void
@@ -55,7 +52,7 @@ const CRITERE_CONFIG: Record<string, {
   },
 }
 
-export default function MeditrackWidget({ meditrackEtabId, critereCode, userEmail, onLink }: Props) {
+export default function MeditrackWidget({ meditrackEtabId, clientId, critereCode, userEmail, onLink }: Props) {
   const [stats, setStats] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
   const [etabs, setEtabs] = useState<any[]>([])
@@ -74,21 +71,19 @@ export default function MeditrackWidget({ meditrackEtabId, critereCode, userEmai
   async function loadStats(etabId: string) {
     setLoading(true)
     const newStats: Record<string, number> = {}
-    for (const t of config.tables) {
-      let query = meditrackClient.from(t.table).select('id', { count: 'exact', head: true }).eq('etablissement_id', etabId)
-      if (t.statut_field && t.statut_value) {
-        query = (query as any).eq(t.statut_field, t.statut_value)
-      }
-      const { count } = await query
-      newStats[t.table + (t.statut_value || '')] = count || 0
-    }
+    const cle = (t: { table: string; statut_value?: string }) => t.table + (t.statut_value ? `:${t.statut_value}` : '')
+    const q = config.tables.map(cle).join(',')
+    const res = await fetch(`/api/meditrack?action=stats&clientId=${encodeURIComponent(clientId || '')}&q=${encodeURIComponent(q)}`)
+    const json = res.ok ? await res.json() : {}
+    for (const t of config.tables) newStats[t.table + (t.statut_value || '')] = json.stats?.[cle(t)] || 0
     setStats(newStats)
     setLoading(false)
   }
 
   async function loadEtabs() {
-    const { data } = await meditrackClient.from('etablissements').select('id, nom, ville').order('nom')
-    setEtabs(data || [])
+    const res = await fetch(`/api/meditrack?action=etablissements&clientId=${encodeURIComponent(clientId || '')}`)
+    const json = res.ok ? await res.json() : {}
+    setEtabs(json.etablissements || [])
     setShowLink(true)
   }
 
@@ -118,7 +113,11 @@ export default function MeditrackWidget({ meditrackEtabId, critereCode, userEmai
               <option value="">Sélectionnez votre établissement...</option>
               {etabs.map(e => <option key={e.id} value={e.id}>{e.nom} — {e.ville}</option>)}
             </select>
-            <button onClick={() => selectedEtab && onLink?.(selectedEtab)} disabled={!selectedEtab}
+            <button onClick={async () => {
+              if (!selectedEtab) return
+              const res = await fetch('/api/meditrack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'lier', clientId, etablissementId: selectedEtab }) })
+              if (res.ok) onLink?.(selectedEtab)
+            }} disabled={!selectedEtab}
               style={{ padding: '9px 18px', background: selectedEtab ? '#1A56DB' : 'rgba(26,86,219,0.3)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: selectedEtab ? 'pointer' : 'not-allowed', fontFamily: 'var(--font)' }}>
               Lier
             </button>
@@ -192,6 +191,7 @@ export default function MeditrackWidget({ meditrackEtabId, critereCode, userEmai
       {showSaisie && (
         <MeditrackSaisie
           meditrackEtabId={meditrackEtabId}
+          clientId={clientId}
           critereCode={critereCode}
           onClose={() => setShowSaisie(false)}
           onSaved={() => { if (meditrackEtabId) loadStats(meditrackEtabId as string); setShowSaisie(false) }}

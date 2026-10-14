@@ -429,8 +429,8 @@ function Certification() {
             userRole={userRole}
             meditrackEtabId={meditrackEtabId}
             onSaveMeditrackId={async (id: string) => {
+              // déjà enregistré côté serveur par /api/meditrack (action « lier »)
               setMeditrackEtabId(id)
-              await supabase.from('clients').update({ meditrack_etablissement_id: id }).eq('id', societe?.client_id)
             }}
           />
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginTop: '24px' }}>

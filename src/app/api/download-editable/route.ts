@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { reponseRefus, utilisateurConnecte, verifierAccesEtablissement, verifierAccesClient, clientDeSociete, estConsultant, RefusAcces } from '@/lib/acces-api'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,13 @@ export async function GET(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
+  let profil
+  try {
+    profil = await utilisateurConnecte(req)
+  } catch (e) {
+    return reponseRefus(e)
+  }
+
   const { data: doc, error } = await supabase
     .from('documents_editables')
     .select('*')
@@ -19,6 +27,12 @@ export async function GET(req: NextRequest) {
     .single()
 
   if (error || !doc) return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 })
+
+  try {
+    await verifierAccesEtablissement(profil, doc.etablissement_id)
+  } catch (e) {
+    return reponseRefus(e)
+  }
 
   const sections = doc.contenu as any[]
 
