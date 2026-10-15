@@ -175,7 +175,7 @@ export default function DocumentsPage() {
             {exporting ? 'Export...' : 'Exporter la liste'}
           </button>
           <button onClick={() => router.push('/dashboard/certification')}
-            style={{ padding: '9px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            style={{ padding: '9px 16px', background: 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className="ti ti-plus" style={{ fontSize: '14px' }} />
             Créer un document
           </button>
@@ -187,7 +187,7 @@ export default function DocumentsPage() {
         {[
           { label: 'Documents signés', value: docsEditables.length, icon: 'ti-signature', color: '#059669', bg: '#ECFDF5' },
           { label: 'Preuves uploadées', value: docsQualite.filter(d => d.code_doc?.startsWith('PREUVE_')).length, icon: 'ti-paperclip', color: '#7C3AED', bg: '#F5F3FF' },
-          { label: 'Chapitres couverts', value: Object.keys(docsParChapitre).filter(k => k !== '?').length, icon: 'ti-book', color: '#1A56DB', bg: '#EBF2FF' },
+          { label: 'Chapitres couverts', value: Object.keys(docsParChapitre).filter(k => k !== '?').length, icon: 'ti-book', color: 'var(--accent)', bg: 'var(--accent-light)' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -204,7 +204,7 @@ export default function DocumentsPage() {
       {/* Filtres chapitres */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <button onClick={() => setChapitreFilter('tous')}
-          style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${chapitreFilter === 'tous' ? '#1A56DB' : 'var(--border)'}`, background: chapitreFilter === 'tous' ? '#EBF2FF' : 'var(--surface)', color: chapitreFilter === 'tous' ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: chapitreFilter === 'tous' ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+          style={{ padding: '6px 14px', borderRadius: '20px', border: `1px solid ${chapitreFilter === 'tous' ? 'var(--accent)' : 'var(--border)'}`, background: chapitreFilter === 'tous' ? 'var(--accent-light)' : 'var(--surface)', color: chapitreFilter === 'tous' ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: chapitreFilter === 'tous' ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
           Tous ({allDocs.length})
         </button>
         {['1', '2', '3', '4'].map(chap => {
@@ -226,7 +226,7 @@ export default function DocumentsPage() {
           <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun document pour le moment</div>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Créez vos premiers documents depuis la page Certification</div>
           <button onClick={() => router.push('/dashboard/certification')}
-            style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             Aller à la certification
           </button>
         </div>
@@ -282,9 +282,9 @@ function DocItem({ doc, router }: { doc: any; router: any }) {
     <div style={{ background: 'var(--surface)', border: `1px solid ${isEditable ? '#A7F3D0' : 'var(--border)'}`, borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
 
       {/* Icone */}
-      <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: isEditable ? '#ECFDF5' : isPreuve ? '#F5F3FF' : '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: isEditable ? '#ECFDF5' : isPreuve ? '#F5F3FF' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <i className={`ti ${isEditable ? 'ti-signature' : isPreuve ? 'ti-paperclip' : 'ti-file-text'}`}
-          style={{ fontSize: '18px', color: isEditable ? '#059669' : isPreuve ? '#7C3AED' : '#1A56DB' }} />
+          style={{ fontSize: '18px', color: isEditable ? '#059669' : isPreuve ? '#7C3AED' : 'var(--accent)' }} />
       </div>
 
       {/* Infos */}
@@ -317,7 +317,7 @@ function DocItem({ doc, router }: { doc: any; router: any }) {
         )}
         {!isEditable && doc.url && (
           <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
-            style={{ height: '34px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
+            style={{ height: '34px', padding: '0 14px', background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}>
             <i className="ti ti-download" style={{ fontSize: '13px' }} />
             Télécharger
           </a>

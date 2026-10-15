@@ -98,7 +98,7 @@ export default function ReseauDashboard() {
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>Vue globale de l'avancement de certification de vos établissements</div>
         </div>
         <button onClick={() => setShowCreateReseau(true)}
-          style={{ padding: '9px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ padding: '9px 16px', background: 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <i className="ti ti-plus" style={{ fontSize: '14px' }} />
           Créer un réseau
         </button>
@@ -114,7 +114,7 @@ export default function ReseauDashboard() {
               onKeyDown={e => e.key === 'Enter' && createReseau()} />
             <button onClick={() => setShowCreateReseau(false)} style={{ padding: '10px 16px', background: '#F3F4F6', border: 'none', borderRadius: '9px', color: '#6B7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
             <button onClick={createReseau} disabled={!nomReseau.trim() || saving}
-              style={{ padding: '10px 16px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              style={{ padding: '10px 16px', background: 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
               {saving ? 'Création...' : 'Créer'}
             </button>
           </div>
@@ -127,7 +127,7 @@ export default function ReseauDashboard() {
           <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun réseau</div>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Créez un réseau pour regrouper vos établissements</div>
           <button onClick={() => setShowCreateReseau(true)}
-            style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             Créer mon premier réseau
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function ReseauDashboard() {
             <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
               {reseaux.map(r => (
                 <button key={r.id} onClick={() => loadReseau(r)}
-                  style={{ padding: '8px 16px', border: `1px solid ${selectedReseau?.id === r.id ? '#1A56DB' : 'var(--border)'}`, borderRadius: '20px', background: selectedReseau?.id === r.id ? '#EBF2FF' : 'var(--surface)', color: selectedReseau?.id === r.id ? '#1A56DB' : 'var(--text-secondary)', fontSize: '13px', fontWeight: selectedReseau?.id === r.id ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                  style={{ padding: '8px 16px', border: `1px solid ${selectedReseau?.id === r.id ? 'var(--accent)' : 'var(--border)'}`, borderRadius: '20px', background: selectedReseau?.id === r.id ? 'var(--accent-light)' : 'var(--surface)', color: selectedReseau?.id === r.id ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: selectedReseau?.id === r.id ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   {r.nom}
                 </button>
               ))}
@@ -148,10 +148,10 @@ export default function ReseauDashboard() {
           {/* KPIs réseau */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
             {[
-              { label: 'Établissements', value: clients.length, icon: 'ti-building', color: '#1A56DB', bg: '#EBF2FF' },
+              { label: 'Établissements', value: clients.length, icon: 'ti-building', color: 'var(--accent)', bg: 'var(--accent-light)' },
               { label: 'Score moyen', value: `${scoreGlobal}%`, icon: 'ti-chart-bar', color: scoreGlobal >= 75 ? '#059669' : '#D97706', bg: scoreGlobal >= 75 ? '#ECFDF5' : '#FFFBEB' },
               { label: 'Certifiés prêts', value: prets100, icon: 'ti-circle-check', color: '#059669', bg: '#ECFDF5' },
-              { label: 'En cours', value: enCours, icon: 'ti-loader', color: '#1A56DB', bg: '#EBF2FF' },
+              { label: 'En cours', value: enCours, icon: 'ti-loader', color: 'var(--accent)', bg: 'var(--accent-light)' },
               { label: 'Non démarrés', value: nonDemarres, icon: 'ti-clock', color: '#9CA3AF', bg: '#F3F4F6' },
             ].map(s => (
               <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -177,7 +177,7 @@ export default function ReseauDashboard() {
             </div>
             <div style={{ display: 'flex', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '11px', color: '#059669' }}>● {prets100} établissement{prets100 > 1 ? 's' : ''} prêt{prets100 > 1 ? 's' : ''}</span>
-              <span style={{ fontSize: '11px', color: '#1A56DB' }}>● {enCours} en cours</span>
+              <span style={{ fontSize: '11px', color: 'var(--accent)' }}>● {enCours} en cours</span>
               <span style={{ fontSize: '11px', color: '#9CA3AF' }}>● {nonDemarres} non démarré{nonDemarres > 1 ? 's' : ''}</span>
               {totalAValider > 0 && <span style={{ fontSize: '11px', color: '#D97706' }}>● {totalAValider} critère{totalAValider > 1 ? 's' : ''} en attente de validation</span>}
             </div>
@@ -188,7 +188,7 @@ export default function ReseauDashboard() {
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '40px', textAlign: 'center' }}>
               <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '16px' }}>Aucun établissement dans ce réseau</div>
               <button onClick={() => router.push('/dashboard/clients')}
-                style={{ padding: '9px 18px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                style={{ padding: '9px 18px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 Ajouter des établissements
               </button>
             </div>
@@ -198,13 +198,13 @@ export default function ReseauDashboard() {
                 <div key={client.id}
                   onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                   style={{ background: 'var(--surface)', border: `1px solid ${aValider > 0 ? '#FDE68A' : 'var(--border)'}`, borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = '#1A56DB'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'var(--accent)'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = aValider > 0 ? '#FDE68A' : 'var(--border)'; el.style.boxShadow = 'none' }}>
 
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: score >= 75 ? '#10B981' : score >= 40 ? '#F59E0B' : '#E5E7EB' }} />
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                       {client.nom?.[0]}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>

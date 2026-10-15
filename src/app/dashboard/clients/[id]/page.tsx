@@ -385,7 +385,7 @@ export default function ClientDetailPage() {
         <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
           {(['tous', '1', '2', '3', '4'] as const).map(ch => (
             <button key={ch} onClick={() => setFilterChap(ch)}
-              style={{ padding: '5px 12px', borderRadius: '20px', border: `1px solid ${filterChap === ch ? (ch === 'tous' ? '#1A56DB' : CHAPITRES[ch]?.color) : 'var(--border)'}`, background: filterChap === ch ? (ch === 'tous' ? '#EBF2FF' : CHAPITRES[ch]?.bg) : 'var(--surface)', color: filterChap === ch ? (ch === 'tous' ? '#1A56DB' : CHAPITRES[ch]?.color) : 'var(--text-secondary)', fontSize: '11px', fontWeight: filterChap === ch ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              style={{ padding: '5px 12px', borderRadius: '20px', border: `1px solid ${filterChap === ch ? (ch === 'tous' ? 'var(--accent)' : CHAPITRES[ch]?.color) : 'var(--border)'}`, background: filterChap === ch ? (ch === 'tous' ? 'var(--accent-light)' : CHAPITRES[ch]?.bg) : 'var(--surface)', color: filterChap === ch ? (ch === 'tous' ? 'var(--accent)' : CHAPITRES[ch]?.color) : 'var(--text-secondary)', fontSize: '11px', fontWeight: filterChap === ch ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
               {ch === 'tous' ? 'Tous' : `Ch.${ch}`}
             </button>
           ))}
@@ -510,13 +510,13 @@ export default function ClientDetailPage() {
                   const isGenere = !isPreuve && !isEditable
                   return (
                     <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#fff', borderRadius: '8px', border: `1px solid ${isEditable ? '#A7F3D0' : isGenere ? '#BFDBFE' : '#FDE68A'}` }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: isEditable ? '#ECFDF5' : isGenere ? '#EBF2FF' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <i className={`ti ${isEditable ? 'ti-signature' : isGenere ? 'ti-sparkles' : 'ti-upload'}`} style={{ fontSize: '13px', color: isEditable ? '#059669' : isGenere ? '#1A56DB' : '#D97706' }} />
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: isEditable ? '#ECFDF5' : isGenere ? 'var(--accent-light)' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`ti ${isEditable ? 'ti-signature' : isGenere ? 'ti-sparkles' : 'ti-upload'}`} style={{ fontSize: '13px', color: isEditable ? '#059669' : isGenere ? 'var(--accent)' : '#D97706' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom || doc.titre || doc.code_doc}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                          <span style={{ fontSize: '10px', fontWeight: '600', color: isEditable ? '#059669' : isGenere ? '#1A56DB' : '#D97706', background: isEditable ? '#ECFDF5' : isGenere ? '#EBF2FF' : '#FEF3C7', padding: '1px 6px', borderRadius: '20px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: '600', color: isEditable ? '#059669' : isGenere ? 'var(--accent)' : '#D97706', background: isEditable ? '#ECFDF5' : isGenere ? 'var(--accent-light)' : '#FEF3C7', padding: '1px 6px', borderRadius: '20px' }}>
                             {isEditable ? `Signé par ${doc.signe_par}` : isGenere ? 'Généré MediReg' : 'Uploadé client'}
                           </span>
                           <span style={{ fontSize: '10px', color: '#9CA3AF' }}>{new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
@@ -529,8 +529,8 @@ export default function ClientDetailPage() {
                         </a>
                       ) : doc.url ? (
                         <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
-                          style={{ width: '26px', height: '26px', background: isGenere ? '#EBF2FF' : '#FEF3C7', border: `1px solid ${isGenere ? '#BFDBFE' : '#FDE68A'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
-                          <i className="ti ti-download" style={{ fontSize: '12px', color: isGenere ? '#1A56DB' : '#D97706' }} />
+                          style={{ width: '26px', height: '26px', background: isGenere ? 'var(--accent-light)' : '#FEF3C7', border: `1px solid ${isGenere ? '#BFDBFE' : '#FDE68A'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
+                          <i className="ti ti-download" style={{ fontSize: '12px', color: isGenere ? 'var(--accent)' : '#D97706' }} />
                         </a>
                       ) : null}
                     </div>
@@ -629,11 +629,11 @@ export default function ClientDetailPage() {
 
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', gap: '6px', alignItems: 'flex-end' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? '#EBF2FF' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`ti ${isMine ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? '#1A56DB' : '#7C3AED' }} />
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className={`ti ${isMine ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#7C3AED' }} />
                   </div>
                   <div style={{ maxWidth: '80%' }}>
-                    <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? '#1A56DB' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>
+                    <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? 'var(--accent)' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>
                       {msg.contenu}
                     </div>
                     <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '2px', textAlign: isMine ? 'right' : 'left' }}>

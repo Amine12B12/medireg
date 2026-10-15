@@ -209,7 +209,7 @@ export default function RHPage() {
             style={{ width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: '9px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
             <i className="ti ti-arrow-left" style={{ fontSize: '16px' }} />
           </button>
-          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
             {selectedPersonne.prenom?.[0]}{selectedPersonne.nom?.[0]}
           </div>
           <div style={{ flex: 1 }}>
@@ -265,10 +265,10 @@ export default function RHPage() {
             { key: 'documents', label: 'Documents', icon: 'ti-paperclip', count: getPersDocuments(selectedPersonne.id).length },
           ] as const).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              style={{ padding: '12px 18px', background: 'transparent', border: 'none', borderBottom: activeTab === tab.key ? '2px solid #1A56DB' : '2px solid transparent', color: activeTab === tab.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '13px', fontWeight: activeTab === tab.key ? '700' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              style={{ padding: '12px 18px', background: 'transparent', border: 'none', borderBottom: activeTab === tab.key ? '2px solid var(--accent)' : '2px solid transparent', color: activeTab === tab.key ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: activeTab === tab.key ? '700' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <i className={`ti ${tab.icon}`} style={{ fontSize: '15px' }} />
               {tab.label}
-              <span style={{ padding: '1px 6px', background: activeTab === tab.key ? '#EBF2FF' : '#F3F4F6', borderRadius: '20px', fontSize: '11px', color: activeTab === tab.key ? '#1A56DB' : '#9CA3AF', fontWeight: '600' }}>{tab.count}</span>
+              <span style={{ padding: '1px 6px', background: activeTab === tab.key ? 'var(--accent-light)' : '#F3F4F6', borderRadius: '20px', fontSize: '11px', color: activeTab === tab.key ? 'var(--accent)' : '#9CA3AF', fontWeight: '600' }}>{tab.count}</span>
             </button>
           ))}
         </div>
@@ -297,7 +297,7 @@ export default function RHPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
               <button onClick={() => setShowForm('formation')}
-                style={{ padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                style={{ padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <i className="ti ti-plus" style={{ fontSize: '13px' }} />Ajouter une formation
               </button>
             </div>
@@ -307,17 +307,17 @@ export default function RHPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Intitulé *</label>
-                    <input value={formationForm.titre} onChange={e => setFormationForm(p => ({ ...p, titre: e.target.value }))} placeholder="ex: Formation bientraitance ANFH" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <input value={formationForm.titre} onChange={e => setFormationForm(p => ({ ...p, titre: e.target.value }))} placeholder="ex: Formation bientraitance ANFH" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                   <div><label style={labelStyle}>Type</label><select value={formationForm.type} onChange={e => setFormationForm(p => ({ ...p, type: e.target.value }))} style={inp}>{TYPES_FORMATION.map(t => <option key={t}>{t}</option>)}</select></div>
                   <div><label style={labelStyle}>Statut</label><select value={formationForm.statut} onChange={e => setFormationForm(p => ({ ...p, statut: e.target.value }))} style={inp}><option value="planifiee">Planifiée</option><option value="realisee">Réalisée</option></select></div>
                   <div><label style={labelStyle}>Date</label><input type="date" value={formationForm.date} onChange={e => setFormationForm(p => ({ ...p, date: e.target.value }))} style={inp} /></div>
-                  <div><label style={labelStyle}>Durée</label><input value={formationForm.duree} onChange={e => setFormationForm(p => ({ ...p, duree: e.target.value }))} placeholder="ex: 7h, 2 jours" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} /></div>
-                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Organisme</label><input value={formationForm.organisme} onChange={e => setFormationForm(p => ({ ...p, organisme: e.target.value }))} placeholder="ex: ANFH, OPCO Santé..." style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} /></div>
+                  <div><label style={labelStyle}>Durée</label><input value={formationForm.duree} onChange={e => setFormationForm(p => ({ ...p, duree: e.target.value }))} placeholder="ex: 7h, 2 jours" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} /></div>
+                  <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Organisme</label><input value={formationForm.organisme} onChange={e => setFormationForm(p => ({ ...p, organisme: e.target.value }))} placeholder="ex: ANFH, OPCO Santé..." style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} /></div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => setShowForm(null)} style={{ padding: '8px 16px', background: '#F3F4F6', border: 'none', borderRadius: '8px', color: '#6B7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
-                  <button onClick={saveFormation} disabled={!formationForm.titre || saving} style={{ padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
+                  <button onClick={saveFormation} disabled={!formationForm.titre || saving} style={{ padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
                 </div>
               </div>
             )}
@@ -329,14 +329,14 @@ export default function RHPage() {
                 {persFormations.map(f => (
                   <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', background: f.statut === 'realisee' ? '#F0FDF4' : '#F8FAFF', borderRadius: '10px', border: `1px solid ${f.statut === 'realisee' ? '#A7F3D0' : '#BFDBFE'}` }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: f.statut === 'realisee' ? '#ECFDF5' : '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={`ti ${f.statut === 'realisee' ? 'ti-certificate' : 'ti-calendar'}`} style={{ fontSize: '18px', color: f.statut === 'realisee' ? '#059669' : '#1A56DB' }} />
+                      <i className={`ti ${f.statut === 'realisee' ? 'ti-certificate' : 'ti-calendar'}`} style={{ fontSize: '18px', color: f.statut === 'realisee' ? '#059669' : 'var(--accent)' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{f.titre}</div>
                       <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>{f.type} · {f.organisme || '—'} · {f.duree || '—'}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                      <span style={{ fontSize: '10px', fontWeight: '600', color: f.statut === 'realisee' ? '#059669' : '#1A56DB', background: f.statut === 'realisee' ? '#D1FAE5' : '#DBEAFE', padding: '3px 10px', borderRadius: '20px' }}>{f.statut === 'realisee' ? '✓ Réalisée' : 'Planifiée'}</span>
+                      <span style={{ fontSize: '10px', fontWeight: '600', color: f.statut === 'realisee' ? '#059669' : 'var(--accent)', background: f.statut === 'realisee' ? '#D1FAE5' : '#DBEAFE', padding: '3px 10px', borderRadius: '20px' }}>{f.statut === 'realisee' ? '✓ Réalisée' : 'Planifiée'}</span>
                       <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{new Date(f.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                       <button onClick={() => deleteItem('rh_formations', f.id)} style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <i className="ti ti-trash" style={{ fontSize: '13px' }} />
@@ -423,7 +423,7 @@ export default function RHPage() {
                         {e.bilan && <div><div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Bilan</div><div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.6' }}>{e.bilan}</div></div>}
                         {e.points_forts && <div><div style={{ fontSize: '11px', fontWeight: '700', color: '#059669', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Points forts</div><div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.6' }}>{e.points_forts}</div></div>}
                         {e.points_amelioration && <div><div style={{ fontSize: '11px', fontWeight: '700', color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Axes d'amélioration</div><div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.6' }}>{e.points_amelioration}</div></div>}
-                        {e.formation_souhaitee && <div><div style={{ fontSize: '11px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Formation souhaitée</div><div style={{ fontSize: '12px', color: '#374151' }}>{e.formation_souhaitee}</div></div>}
+                        {e.formation_souhaitee && <div><div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Formation souhaitée</div><div style={{ fontSize: '12px', color: '#374151' }}>{e.formation_souhaitee}</div></div>}
                         {e.objectifs_annee_suivante?.length > 0 && (
                           <div style={{ gridColumn: '1 / -1' }}>
                             <div style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Objectifs</div>
@@ -510,7 +510,7 @@ export default function RHPage() {
         {activeTab === 'documents' && (
           <div>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 <i className="ti ti-upload" style={{ fontSize: '13px' }} />
                 {uploadingDoc ? 'Upload...' : 'Uploader un document'}
                 <input type="file" style={{ display: 'none' }} onChange={async e => {
@@ -532,8 +532,8 @@ export default function RHPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {getPersDocuments(selectedPersonne.id).map(doc => (
                   <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', background: 'var(--surface)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={`ti ${doc.type === 'PDF' ? 'ti-file-type-pdf' : doc.type === 'Word' ? 'ti-file-word' : 'ti-paperclip'}`} style={{ fontSize: '18px', color: '#1A56DB' }} />
+                    <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={`ti ${doc.type === 'PDF' ? 'ti-file-type-pdf' : doc.type === 'Word' ? 'ti-file-word' : 'ti-paperclip'}`} style={{ fontSize: '18px', color: 'var(--accent)' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.titre}</div>
@@ -541,7 +541,7 @@ export default function RHPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                       <a href={doc.url} target="_blank"
-                        style={{ height: '32px', padding: '0 12px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '7px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        style={{ height: '32px', padding: '0 12px', background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '7px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <i className="ti ti-download" style={{ fontSize: '13px' }} />
                         Télécharger
                       </a>
@@ -578,7 +578,7 @@ export default function RHPage() {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
         {[
-          { label: 'Collaborateurs', value: personnes.length, icon: 'ti-users', color: '#1A56DB', bg: '#EBF2FF' },
+          { label: 'Collaborateurs', value: personnes.length, icon: 'ti-users', color: 'var(--accent)', bg: 'var(--accent-light)' },
           { label: 'Formations réalisées', value: formations.filter(f => f.statut === 'realisee').length, icon: 'ti-certificate', color: '#059669', bg: '#ECFDF5' },
           { label: 'Entretiens réalisés', value: entretiens.filter(e => e.statut === 'realise').length, icon: 'ti-clipboard-check', color: '#7C3AED', bg: '#F5F3FF' },
           { label: 'Alertes habilitations', value: habilsExpired.length + habilsExpiring.length, icon: 'ti-alert-triangle', color: habilsExpired.length > 0 ? '#DC2626' : '#D97706', bg: habilsExpired.length > 0 ? '#FEF2F2' : '#FFFBEB' },
@@ -620,7 +620,7 @@ export default function RHPage() {
       )}
 
       {/* Info sync */}
-      <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '11px 16px', marginBottom: '20px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '11px 16px', marginBottom: '20px', fontSize: '12px', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <i className="ti ti-refresh" style={{ fontSize: '14px', flexShrink: 0 }} />
         Collaborateurs synchronisés depuis votre profil. Cliquez sur un collaborateur pour gérer ses compétences, formations, entretiens et habilitations.
       </div>
@@ -641,14 +641,14 @@ export default function RHPage() {
           return (
             <div key={pers.id} onClick={() => { setSelectedPersonne(pers); setView('detail') }}
               style={{ background: 'var(--surface)', border: `1px solid ${habExpiredCount > 0 ? '#FECACA' : 'var(--border)'}`, borderRadius: '12px', padding: '18px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.09)'; if (!habExpiredCount) el.style.borderColor = '#1A56DB' }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.09)'; if (!habExpiredCount) el.style.borderColor = 'var(--accent)' }}
               onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'none'; el.style.boxShadow = 'none'; el.style.borderColor = habExpiredCount > 0 ? '#FECACA' : 'var(--border)' }}>
 
               {habExpiredCount > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#EF4444' }} />}
               {entretienDu && !habExpiredCount && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#8B5CF6' }} />}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                   {pers.prenom?.[0]}{pers.nom?.[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

@@ -9,7 +9,7 @@ const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '500' as co
 const TYPES_DOC = ['procedure', 'modele', 'formulaire', 'checklist', 'registre', 'preuve', 'certificat']
 
 const typeDocStyle = (t: string) => {
-  if (t === 'procedure') return { color: '#1A56DB', bg: '#EBF2FF', icon: 'ti-file-description' }
+  if (t === 'procedure') return { color: 'var(--accent)', bg: 'var(--accent-light)', icon: 'ti-file-description' }
   if (t === 'modele') return { color: '#7C3AED', bg: '#F5F3FF', icon: 'ti-template' }
   if (t === 'formulaire') return { color: '#0891B2', bg: '#E0F2FE', icon: 'ti-forms' }
   if (t === 'checklist') return { color: '#059669', bg: '#D1FAE5', icon: 'ti-checklist' }

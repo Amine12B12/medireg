@@ -943,11 +943,11 @@ function ChatCritere({ critereId, etabId, userRole, fullHeight }: { critereId: s
           )
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', gap: '6px', alignItems: 'flex-end' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? '#EBF2FF' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className={`ti ${msg.auteur_role === 'consultant' ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? '#1A56DB' : '#7C3AED' }} />
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={`ti ${msg.auteur_role === 'consultant' ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#7C3AED' }} />
               </div>
               <div style={{ maxWidth: '80%' }}>
-                <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? '#1A56DB' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>{msg.contenu}</div>
+                <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? 'var(--accent)' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>{msg.contenu}</div>
                 <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '2px', textAlign: isMine ? 'right' : 'left' }}>{new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
             </div>
@@ -1301,7 +1301,7 @@ export default function CritereDetail({
             </div>
             {statut === 'non_analyse' || statut === 'preuve_manquante' || statut === 'information_manquante' ? (
               <button onClick={() => onUpdateStatut('procedure_a_valider')}
-                style={{ padding: '8px 16px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                style={{ padding: '8px 16px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <i className="ti ti-send" style={{ fontSize: '13px' }} />
                 Soumettre pour validation
               </button>
@@ -1365,7 +1365,7 @@ export default function CritereDetail({
                           const current = reponseQuestions[q.id] || []
                           setReponseQuestions(p => ({ ...p, [q.id]: selected ? current.filter((x: string) => x !== opt) : [...current, opt] }))
                         }}
-                          style={{ padding: '7px 14px', border: `1px solid ${selected ? '#1A56DB' : '#E5E7EB'}`, borderRadius: '20px', background: selected ? '#EBF2FF' : '#fff', color: selected ? '#1A56DB' : '#6B7280', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          style={{ padding: '7px 14px', border: `1px solid ${selected ? 'var(--accent)' : '#E5E7EB'}`, borderRadius: '20px', background: selected ? 'var(--accent-light)' : '#fff', color: selected ? 'var(--accent)' : '#6B7280', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}
                           {opt}
                         </button>
@@ -1394,7 +1394,7 @@ export default function CritereDetail({
       {config?.preuves && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
           <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="ti ti-files" style={{ fontSize: '15px', color: '#1A56DB' }} />
+            <i className="ti ti-files" style={{ fontSize: '15px', color: 'var(--accent)' }} />
             Preuves à fournir
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1406,8 +1406,8 @@ export default function CritereDetail({
               return (
                 <div key={i} style={{ padding: '14px 16px', background: hasDoc ? '#ECFDF5' : '#F9FAFB', border: `1px solid ${hasDoc ? '#A7F3D0' : 'var(--border)'}`, borderRadius: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isGeneree ? '#EBF2FF' : isRegistre ? '#F5F3FF' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={`ti ${isGeneree ? 'ti-sparkles' : isRegistre ? 'ti-clipboard-list' : 'ti-upload'}`} style={{ fontSize: '15px', color: isGeneree ? '#1A56DB' : isRegistre ? '#7C3AED' : '#6B7280' }} />
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isGeneree ? 'var(--accent-light)' : isRegistre ? '#F5F3FF' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={`ti ${isGeneree ? 'ti-sparkles' : isRegistre ? 'ti-clipboard-list' : 'ti-upload'}`} style={{ fontSize: '15px', color: isGeneree ? 'var(--accent)' : isRegistre ? '#7C3AED' : '#6B7280' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '3px' }}>{preuve.label}</div>
@@ -1419,7 +1419,7 @@ export default function CritereDetail({
                           <span style={{ fontSize: '10px', color: '#DC2626', background: '#FEF2F2', padding: '2px 8px', borderRadius: '20px', fontWeight: '700', border: '1px solid #FECACA' }}>⭐ Preuve principale</span>
                         )}
                         {isGeneree && (
-                          <span style={{ fontSize: '10px', color: '#1A56DB', background: '#EBF2FF', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Généré par MediReg</span>
+                          <span style={{ fontSize: '10px', color: 'var(--accent)', background: 'var(--accent-light)', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Généré par MediReg</span>
                         )}
                         {isAttester && (
                           <span style={{ fontSize: '10px', color: '#059669', background: '#ECFDF5', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Attestation</span>
@@ -1437,7 +1437,7 @@ export default function CritereDetail({
                       <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {isGeneree && preuve.code && (
                           <button onClick={() => setEditorCode(preuve.code!)}
-                            style={{ height: '32px', padding: '0 14px', background: hasDoc ? '#EBF2FF' : '#1A56DB', border: hasDoc ? '1px solid #BFDBFE' : 'none', borderRadius: '8px', color: hasDoc ? '#1A56DB' : '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            style={{ height: '32px', padding: '0 14px', background: hasDoc ? 'var(--accent-light)' : 'var(--accent)', border: hasDoc ? '1px solid #BFDBFE' : 'none', borderRadius: '8px', color: hasDoc ? 'var(--accent)' : '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <i className={`ti ${hasDoc ? 'ti-edit' : 'ti-sparkles'}`} style={{ fontSize: '13px' }} />
                             {hasDoc ? 'Modifier' : 'Créer et signer'}
                           </button>
@@ -1609,7 +1609,7 @@ function ChatFlottant({ critereId, etabId }: { critereId: string; etabId: string
     <>
       {/* Bouton flottant */}
       <button onClick={() => { setOpen(true); setNonLus(0) }}
-        style={{ position: 'fixed', bottom: '28px', right: '28px', width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(26,86,219,0.4)', zIndex: 500, transition: 'transform 0.15s' }}
+        style={{ position: 'fixed', bottom: '28px', right: '28px', width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(26,86,219,0.4)', zIndex: 500, transition: 'transform 0.15s' }}
         onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)'}
         onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'}>
         <i className="ti ti-message-circle" style={{ fontSize: '24px', color: '#fff' }} />
@@ -1623,7 +1623,7 @@ function ChatFlottant({ critereId, etabId }: { critereId: string; etabId: string
       {/* Popup chat pleine hauteur */}
       {open && (
         <div style={{ position: 'fixed', bottom: '100px', right: '28px', width: '420px', height: '560px', background: '#fff', borderRadius: '16px', boxShadow: '0 16px 48px rgba(0,0,0,0.18)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="ti ti-message-circle" style={{ fontSize: '18px', color: '#fff' }} />
               <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>Discussion avec le client</span>

@@ -90,7 +90,7 @@ export default function NotificationsPage() {
           { key: 'toutes', label: 'Toutes' },
         ].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key as any)}
-            style={{ padding: '7px 16px', borderRadius: '20px', border: `1px solid ${filter === f.key ? '#1A56DB' : 'var(--border)'}`, background: filter === f.key ? '#EBF2FF' : 'var(--surface)', color: filter === f.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filter === f.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '7px 16px', borderRadius: '20px', border: `1px solid ${filter === f.key ? 'var(--accent)' : 'var(--border)'}`, background: filter === f.key ? 'var(--accent-light)' : 'var(--surface)', color: filter === f.key ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filter === f.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             {f.label}
           </button>
         ))}
@@ -114,8 +114,8 @@ export default function NotificationsPage() {
                 style={{ background: notif.lu ? 'var(--surface)' : '#FAFBFF', border: `1px solid ${notif.lu ? 'var(--border)' : '#BFDBFE'}`, borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: '14px', transition: 'all 0.1s' }}>
 
                 {/* Icone */}
-                <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: notif.lu ? '#F3F4F6' : '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="ti ti-file-upload" style={{ fontSize: '18px', color: notif.lu ? '#9CA3AF' : '#1A56DB' }} />
+                <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: notif.lu ? '#F3F4F6' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-file-upload" style={{ fontSize: '18px', color: notif.lu ? '#9CA3AF' : 'var(--accent)' }} />
                 </div>
 
                 {/* Contenu */}
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <button onClick={() => router.push('/dashboard/clients')}
-                    style={{ height: '32px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    style={{ height: '32px', padding: '0 14px', background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <i className="ti ti-eye" style={{ fontSize: '12px' }} />
                     Voir
                   </button>

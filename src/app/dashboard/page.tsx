@@ -100,7 +100,7 @@ export default function DashboardPage() {
       {/* KPIs globaux */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {[
-          { label: 'Clients actifs', value: totalClients, icon: 'ti-building', color: '#1A56DB', bg: '#EBF2FF' },
+          { label: 'Clients actifs', value: totalClients, icon: 'ti-building', color: 'var(--accent)', bg: 'var(--accent-light)' },
           { label: 'Critères validés', value: totalPrets, icon: 'ti-circle-check', color: '#059669', bg: '#ECFDF5' },
           { label: 'En attente validation', value: totalAValider, icon: 'ti-clock', color: '#D97706', bg: '#FFFBEB' },
           { label: 'Score moyen', value: `${scoreGlobal}%`, icon: 'ti-chart-bar', color: '#7C3AED', bg: '#F5F3FF' },
@@ -124,7 +124,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Mes clients</div>
             <button onClick={() => router.push('/dashboard/clients')}
-              style={{ padding: '7px 14px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              style={{ padding: '7px 14px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <i className="ti ti-plus" style={{ fontSize: '13px' }} />
               Ajouter un client
             </button>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun client</div>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Ajoutez votre premier client pour commencer</div>
               <button onClick={() => router.push('/dashboard/clients')}
-                style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 Ajouter un client
               </button>
             </div>
@@ -146,11 +146,11 @@ export default function DashboardPage() {
                 <div key={client.id}
                   onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = '#1A56DB'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'var(--accent)'; el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'var(--border)'; el.style.boxShadow = 'none' }}>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                       {client.nom?.[0]}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -203,8 +203,8 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {notifications.map(notif => (
                 <div key={notif.id} style={{ background: 'var(--surface)', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '12px 14px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`ti ${notif.type === 'document_signe' ? 'ti-signature' : notif.type === 'critere_a_valider' ? 'ti-clipboard-check' : 'ti-bell'}`} style={{ fontSize: '15px', color: '#1A56DB' }} />
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className={`ti ${notif.type === 'document_signe' ? 'ti-signature' : notif.type === 'critere_a_valider' ? 'ti-clipboard-check' : 'ti-bell'}`} style={{ fontSize: '15px', color: 'var(--accent)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '12px', color: '#111827', lineHeight: '1.5', marginBottom: '6px' }}>{notif.message}</div>

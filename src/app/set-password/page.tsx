@@ -76,7 +76,7 @@ function SetPasswordForm() {
     <div style={{ minHeight: '100vh', background: '#F7F7F5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#1A56DB', letterSpacing: '-0.5px' }}>MediTrack</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--accent)', letterSpacing: '-0.5px' }}>MediTrack</div>
           <div style={{ fontSize: '13px', color: '#999', marginTop: '4px' }}>Plateforme de gestion PSDM</div>
         </div>
 
@@ -130,7 +130,7 @@ function SetPasswordForm() {
                   </div>
                 )}
                 <button onClick={handleSubmit} disabled={loading || !password || !confirm}
-                  style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                  style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'Inter, sans-serif' }}>
                   {loading ? 'Enregistrement...' : 'Créer mon mot de passe →'}
                 </button>
               </>

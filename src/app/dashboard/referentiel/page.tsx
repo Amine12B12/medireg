@@ -35,7 +35,7 @@ const ORGANISMES = ['HAS', 'ANSM', 'Ministere Sante Maroc', 'ISO', 'COFRAC', 'AR
 const PAYS = ['France', 'Maroc', 'International']
 
 const organismeStyle = (o: string) => {
-  if (o === 'HAS') return { color: '#1A56DB', bg: '#EBF2FF' }
+  if (o === 'HAS') return { color: 'var(--accent)', bg: 'var(--accent-light)' }
   if (o === 'ANSM') return { color: '#0891B2', bg: '#E0F2FE' }
   if (o === 'Ministere Sante Maroc') return { color: '#D97706', bg: '#FEF3C7' }
   if (o === 'ISO') return { color: '#7C3AED', bg: '#F5F3FF' }

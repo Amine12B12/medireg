@@ -128,7 +128,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
 
       {/* Header */}
       <div style={{ padding: '14px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <i className="ti ti-sparkles" style={{ fontSize: '18px', color: '#fff' }} />
         </div>
         <div style={{ flex: 1 }}>
@@ -183,7 +183,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
             {/* Intro sans contexte */}
             {!societe && (
               <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                   <i className="ti ti-sparkles" style={{ fontSize: '26px', color: '#fff' }} />
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>Assistant certification HAS PSDM</div>
@@ -201,7 +201,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
               {suggestions.map((s, i) => (
                 <button key={i} onClick={() => sendMessage(s)}
                   style={{ padding: '12px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left', lineHeight: '1.4', transition: 'all 0.1s', display: 'flex', alignItems: 'center', gap: '10px' }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.background = '#F8FAFF'; el.style.borderColor = '#BFDBFE'; el.style.color = '#1A56DB' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.background = '#F8FAFF'; el.style.borderColor = '#BFDBFE'; el.style.color = 'var(--accent)' }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLButtonElement; el.style.background = 'var(--surface)'; el.style.borderColor = 'var(--border)'; el.style.color = 'var(--text-secondary)' }}>
                   <i className="ti ti-arrow-right" style={{ fontSize: '13px', flexShrink: 0, opacity: 0.5 }} />
                   {s}
@@ -213,20 +213,20 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
           <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: 'flex', gap: '12px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: msg.role === 'user' ? '#EBF2FF' : 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: msg.role === 'user' ? 'var(--accent-light)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {msg.role === 'user'
-                    ? <i className="ti ti-user" style={{ fontSize: '15px', color: '#1A56DB' }} />
+                    ? <i className="ti ti-user" style={{ fontSize: '15px', color: 'var(--accent)' }} />
                     : <i className="ti ti-sparkles" style={{ fontSize: '15px', color: '#fff' }} />
                   }
                 </div>
-                <div style={{ maxWidth: '85%', padding: '12px 16px', borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px', background: msg.role === 'user' ? '#1A56DB' : 'var(--surface)', border: msg.role === 'user' ? 'none' : '1px solid var(--border)', color: msg.role === 'user' ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.6', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ maxWidth: '85%', padding: '12px 16px', borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px', background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface)', border: msg.role === 'user' ? 'none' : '1px solid var(--border)', color: msg.role === 'user' ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.6', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                   {msg.role === 'user' ? msg.content : formatMessage(msg.content)}
                 </div>
               </div>
             ))}
             {loading && (
               <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className="ti ti-sparkles" style={{ fontSize: '15px', color: '#fff' }} />
                 </div>
                 <div style={{ padding: '14px 18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px 16px 16px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -256,7 +256,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
             />
           </div>
           <button onClick={() => sendMessage()} disabled={loading || !input.trim()}
-            style={{ width: '44px', height: '44px', background: loading || !input.trim() ? 'rgba(124,58,237,0.2)' : 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', borderRadius: '10px', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.1s' }}>
+            style={{ width: '44px', height: '44px', background: loading || !input.trim() ? 'rgba(124,58,237,0.2)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '10px', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.1s' }}>
             <i className="ti ti-send" style={{ fontSize: '18px', color: '#fff' }} />
           </button>
         </div>

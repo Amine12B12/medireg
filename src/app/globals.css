@@ -4,23 +4,23 @@
 
 html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #F7F7F5 !important;
-  color: #1A1A1A;
+  background: #F4F5F7 !important;
+  color: #0F172A;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
 :root {
-  --bg: #F7F7F5;
+  --bg: #F4F5F7;
   --surface: #FFFFFF;
   --surface-hover: #F5F5F3;
   --border: rgba(0,0,0,0.08);
   --border-strong: rgba(0,0,0,0.14);
-  --text-primary: #1A1A1A;
-  --text-secondary: #6B6B6B;
-  --text-tertiary: #999999;
-  --accent: #1A56DB;
-  --accent-light: #EEF3FF;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
+  --accent: #7C3AED;
+  --accent-light: #F5F3FF;
   --success: #0A7C4E;
   --success-light: #E8F5EE;
   --warning: #9E5E00;
@@ -29,11 +29,21 @@ html, body {
   --danger-light: #FEF0EE;
   --purple: #6E56CF;
   --purple-light: #F0EEFF;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --font: 'Inter', -apple-system, sans-serif;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.04), 0 4px 16px -4px rgba(15,23,42,0.06);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
 }
+
+/* Style commun aux apps Medisphère : cartes très arrondies à ombre douce, boutons pilules (accent violet pour MediReg) */
+main [style*="background: var(--surface)"][style*="border: 1px solid var(--border)"],
+main [style*="background: rgb(255, 255, 255)"][style*="border: 1px solid"] {
+  border-radius: 20px !important;
+  border-color: rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px -4px rgba(15, 23, 42, 0.06);
+}
+main button:not([role="tab"]):not([data-forme="carre"]) { border-radius: 9999px !important; }
+main input:not([type="checkbox"]):not([type="radio"]), main select, main textarea { border-radius: 12px !important; }

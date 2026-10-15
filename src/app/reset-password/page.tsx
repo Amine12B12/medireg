@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
       <div style={{ background: '#fff', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '400px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #7C3AED, #1A56DB)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
             <i className="ti ti-shield-check" style={{ fontSize: '26px', color: '#fff' }} />
           </div>
           <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827', letterSpacing: '-0.3px' }}>MediReg</div>
@@ -134,7 +134,7 @@ export default function ResetPasswordPage() {
             )}
 
             <button onClick={handleSubmit} disabled={loading || !password || !confirm}
-              style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+              style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
               {loading ? 'Enregistrement...' : 'Accéder à mon espace →'}
             </button>
           </div>

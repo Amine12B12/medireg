@@ -110,7 +110,7 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
       <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '820px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)', overflow: 'hidden', marginTop: '20px', marginBottom: '20px' }}>
 
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg, #1E3A8A, #1A56DB)', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'linear-gradient(135deg, #1E3A8A, var(--accent))', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i className="ti ti-database" style={{ fontSize: '20px', color: '#fff' }} />
@@ -143,10 +143,10 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
             const t = labels[tab]
             return (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                style={{ flex: 1, padding: '14px 16px', background: activeTab === tab ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === tab ? '2px solid #1A56DB' : '2px solid transparent', color: activeTab === tab ? '#1A56DB' : '#6B7280', fontSize: '13px', fontWeight: activeTab === tab ? '700' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.15s' }}>
+                style={{ flex: 1, padding: '14px 16px', background: activeTab === tab ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === tab ? '2px solid var(--accent)' : '2px solid transparent', color: activeTab === tab ? 'var(--accent)' : '#6B7280', fontSize: '13px', fontWeight: activeTab === tab ? '700' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.15s' }}>
                 <i className={`ti ${t.icon}`} style={{ fontSize: '15px' }} />
                 {t.label}
-                <span style={{ padding: '1px 7px', background: activeTab === tab ? '#EBF2FF' : '#F3F4F6', borderRadius: '20px', fontSize: '11px', fontWeight: '600', color: activeTab === tab ? '#1A56DB' : '#9CA3AF' }}>{t.count}</span>
+                <span style={{ padding: '1px 7px', background: activeTab === tab ? 'var(--accent-light)' : '#F3F4F6', borderRadius: '20px', fontSize: '11px', fontWeight: '600', color: activeTab === tab ? 'var(--accent)' : '#9CA3AF' }}>{t.count}</span>
               </button>
             )
           })}
@@ -158,14 +158,14 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
           {activeTab === 'equipements' && (
             <div>
               <div style={{ background: '#F8FAFF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1A56DB', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <i className="ti ti-plus" style={{ fontSize: '14px' }} />
                   Ajouter un équipement
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Désignation *</label>
-                    <input value={equipForm.designation} onChange={e => setEquipForm(p => ({ ...p, designation: e.target.value }))} placeholder="ex: Lit médicalisé électrique 2 plans" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <input value={equipForm.designation} onChange={e => setEquipForm(p => ({ ...p, designation: e.target.value }))} placeholder="ex: Lit médicalisé électrique 2 plans" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                   <div>
                     <label style={labelStyle}>Catégorie</label>
@@ -184,15 +184,15 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
                   </div>
                   <div>
                     <label style={labelStyle}>Fabricant</label>
-                    <input value={equipForm.fabricant} onChange={e => setEquipForm(p => ({ ...p, fabricant: e.target.value }))} placeholder="ex: Invacare" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <input value={equipForm.fabricant} onChange={e => setEquipForm(p => ({ ...p, fabricant: e.target.value }))} placeholder="ex: Invacare" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                   <div>
                     <label style={labelStyle}>Modèle</label>
-                    <input value={equipForm.modele} onChange={e => setEquipForm(p => ({ ...p, modele: e.target.value }))} placeholder="ex: Softform Premier" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <input value={equipForm.modele} onChange={e => setEquipForm(p => ({ ...p, modele: e.target.value }))} placeholder="ex: Softform Premier" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                   <div>
                     <label style={labelStyle}>N° de série</label>
-                    <input value={equipForm.numero_serie} onChange={e => setEquipForm(p => ({ ...p, numero_serie: e.target.value }))} placeholder="SN-XXXXXXXX" style={inp} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <input value={equipForm.numero_serie} onChange={e => setEquipForm(p => ({ ...p, numero_serie: e.target.value }))} placeholder="SN-XXXXXXXX" style={inp} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                   <div>
                     <label style={labelStyle}>Date de mise en service</label>
@@ -209,11 +209,11 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Commentaires</label>
-                    <textarea value={equipForm.commentaires} onChange={e => setEquipForm(p => ({ ...p, commentaires: e.target.value }))} placeholder="Informations complémentaires..." rows={2} style={{ ...inp, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    <textarea value={equipForm.commentaires} onChange={e => setEquipForm(p => ({ ...p, commentaires: e.target.value }))} placeholder="Informations complémentaires..." rows={2} style={{ ...inp, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                   </div>
                 </div>
                 <button onClick={saveEquipement} disabled={saving || !equipForm.designation}
-                  style={{ marginTop: '14px', padding: '10px 20px', background: saved ? '#10B981' : saving || !equipForm.designation ? 'rgba(26,86,219,0.3)' : '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving || !equipForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  style={{ marginTop: '14px', padding: '10px 20px', background: saved ? '#10B981' : saving || !equipForm.designation ? 'rgba(26,86,219,0.3)' : 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving || !equipForm.designation ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <i className={`ti ${saved ? 'ti-check' : 'ti-plus'}`} style={{ fontSize: '14px' }} />
                   {saved ? 'Enregistré !' : saving ? 'Enregistrement...' : 'Ajouter l\'équipement'}
                 </button>
@@ -253,7 +253,7 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
           {activeTab === 'livraisons' && (
             <div>
               <div style={{ background: '#F8FAFF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1A56DB', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <i className="ti ti-plus" style={{ fontSize: '14px' }} />
                   {critereCode === '2.5.1' ? 'Enregistrer une reprise' : 'Enregistrer une livraison'}
                 </div>
@@ -284,13 +284,13 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={labelStyle}>Notes (référence anonymisée)</label>
-                      <textarea value={livrForm.notes} onChange={e => setLivrForm(p => ({ ...p, notes: e.target.value }))} placeholder="ex: Dossier 001 — Installation avec formation patient" rows={2} style={{ ...inp, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#1A56DB'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                      <textarea value={livrForm.notes} onChange={e => setLivrForm(p => ({ ...p, notes: e.target.value }))} placeholder="ex: Dossier 001 — Installation avec formation patient" rows={2} style={{ ...inp, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                     </div>
                   </div>
                 )}
                 {equipements.length > 0 && (
                   <button onClick={saveLivraison} disabled={saving || !livrForm.equipement_id}
-                    style={{ marginTop: '14px', padding: '10px 20px', background: saved ? '#10B981' : '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    style={{ marginTop: '14px', padding: '10px 20px', background: saved ? '#10B981' : 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <i className={`ti ${saved ? 'ti-check' : 'ti-truck-delivery'}`} style={{ fontSize: '14px' }} />
                     {saved ? 'Enregistré !' : saving ? 'Enregistrement...' : critereCode === '2.5.1' ? 'Enregistrer la reprise' : 'Enregistrer la livraison'}
                   </button>
@@ -305,15 +305,15 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {livraisons.map((lv: any) => (
                     <div key={lv.id} style={{ padding: '12px 16px', background: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: lv.statut === 'realisee' ? '#ECFDF5' : '#EBF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <i className="ti ti-truck-delivery" style={{ fontSize: '16px', color: lv.statut === 'termine' ? '#059669' : '#1A56DB' }} />
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: lv.statut === 'realisee' ? '#ECFDF5' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className="ti ti-truck-delivery" style={{ fontSize: '16px', color: lv.statut === 'termine' ? '#059669' : 'var(--accent)' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{(lv as any).equipements?.designation || 'Équipement'}</div>
                         <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{lv.notes || '—'}</div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: lv.statut === 'termine' ? '#059669' : '#1A56DB', background: lv.statut === 'termine' ? '#D1FAE5' : '#EBF2FF', padding: '2px 8px', borderRadius: '20px' }}>{lv.statut}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: lv.statut === 'termine' ? '#059669' : 'var(--accent)', background: lv.statut === 'termine' ? '#D1FAE5' : 'var(--accent-light)', padding: '2px 8px', borderRadius: '20px' }}>{lv.statut}</span>
                         <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{new Date(lv.date_prevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                       </div>
                     </div>
@@ -414,7 +414,7 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
             Données synchronisées avec MediTrack — preuve de conformité HAS
           </div>
           <button onClick={() => { onSaved(); onClose() }}
-            style={{ padding: '8px 18px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '8px 18px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             Fermer
           </button>
         </div>

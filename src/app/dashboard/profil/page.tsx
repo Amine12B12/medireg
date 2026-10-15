@@ -102,7 +102,7 @@ export default function ProfilPage() {
   const modeStyle = (mode: string) => {
     if (mode === 'interne') return { color: '#059669', bg: '#D1FAE5', label: 'Interne' }
     if (mode === 'sous_traite') return { color: '#D97706', bg: '#FEF3C7', label: 'Sous-traité' }
-    if (mode === 'mixte') return { color: '#1A56DB', bg: '#EBF2FF', label: 'Mixte' }
+    if (mode === 'mixte') return { color: 'var(--accent)', bg: 'var(--accent-light)', label: 'Mixte' }
     return { color: '#9CA3AF', bg: '#F3F4F6', label: 'Non concerné' }
   }
 
@@ -127,7 +127,7 @@ export default function ProfilPage() {
           </div>
         </div>
         <button onClick={() => router.push('/dashboard/onboarding')}
-          style={{ padding: '8px 16px', background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.2)', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ padding: '8px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <i className="ti ti-edit" style={{ fontSize: '14px' }} />
           Modifier le profil
         </button>
@@ -135,7 +135,7 @@ export default function ProfilPage() {
 
       {/* Société */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <i className="ti ti-building" style={{ fontSize: '14px' }} />
           Identité de la société
         </div>
@@ -158,18 +158,18 @@ export default function ProfilPage() {
 
       {/* Établissements */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-building-hospital" style={{ fontSize: '14px' }} />
             Établissements
           </div>
-          <span style={{ background: '#EBF2FF', color: '#1A56DB', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{etablissements.length}</span>
+          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{etablissements.length}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {etablissements.map((etab, i) => (
             <div key={etab.id} style={{ padding: '14px 16px', background: '#F9FAFB', borderRadius: '9px', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{etab.nom}</div>
                 {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
               </div>
@@ -197,12 +197,12 @@ export default function ProfilPage() {
 
       {/* Personnes */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-users" style={{ fontSize: '14px' }} />
             Personnes et responsabilités
           </div>
-          <span style={{ background: '#EBF2FF', color: '#1A56DB', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{personnes.length}</span>
+          <span style={{ background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px' }}>{personnes.length}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {personnes.map(pers => {
@@ -243,7 +243,7 @@ export default function ProfilPage() {
             <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Mot de passe</span>
           </div>
           <button onClick={() => { setShowPwd(!showPwd); setPwdError(''); setPwdSuccess(false) }}
-            style={{ padding: '7px 14px', background: showPwd ? '#F3F4F6' : '#EBF2FF', border: `1px solid ${showPwd ? '#E5E7EB' : 'rgba(26,86,219,0.2)'}`, borderRadius: '8px', color: showPwd ? '#6B7280' : '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '7px 14px', background: showPwd ? '#F3F4F6' : 'var(--accent-light)', border: `1px solid ${showPwd ? '#E5E7EB' : 'rgba(26,86,219,0.2)'}`, borderRadius: '8px', color: showPwd ? '#6B7280' : 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             {showPwd ? 'Annuler' : 'Changer mon mot de passe'}
           </button>
         </div>
@@ -284,7 +284,7 @@ export default function ProfilPage() {
                   </div>
                 )}
                 <button onClick={handleChangePwd} disabled={pwdLoading || !newPwd || !confirmPwd}
-                  style={{ padding: '11px', background: pwdLoading || !newPwd || !confirmPwd ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, #1A56DB)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: pwdLoading || !newPwd || !confirmPwd ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                  style={{ padding: '11px', background: pwdLoading || !newPwd || !confirmPwd ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: pwdLoading || !newPwd || !confirmPwd ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                   {pwdLoading ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
                 </button>
               </>
@@ -301,7 +301,7 @@ export default function ProfilPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['{{logo}}', '{{raison_sociale}}', '{{siren}}', '{{adresse_siege}}', '{{dirigeant_nom}}', '{{garant_psdm}}', '{{correspondant_materiovigilance}}', '{{responsable_desinfection}}', '{{responsable_sav}}', '{{responsable_reclamations}}', '{{pilote_certification}}', '{{nom_etablissement}}', '{{siret_etablissement}}'].map(v => (
-            <span key={v} style={{ fontSize: '11px', fontFamily: 'monospace', background: '#fff', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '4px', color: '#1A56DB' }}>{v}</span>
+            <span key={v} style={{ fontSize: '11px', fontFamily: 'monospace', background: '#fff', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '4px', color: 'var(--accent)' }}>{v}</span>
           ))}
         </div>
       </div>

@@ -92,13 +92,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const nav = role === 'consultant' ? navConsultant : navClient
   const page = pageTitles[pathname] || { title: 'MediReg', sub: '' }
   const roleLabel = role === 'consultant' ? 'Consultant' : 'Mon espace'
-  const roleColor = role === 'consultant' ? '#7C3AED' : '#1A56DB'
-  const roleBg = role === 'consultant' ? '#F5F3FF' : '#EBF2FF'
+  const roleColor = role === 'consultant' ? '#7C3AED' : 'var(--accent)'
+  const roleBg = role === 'consultant' ? '#F5F3FF' : 'var(--accent-light)'
 
   if (!role) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
         </div>
         <span>Chargement...</span>
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div style={{ padding: '20px 18px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
             </div>
             <div>
@@ -230,7 +230,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           </button>
                         )}
                         <button onClick={() => { router.push('/dashboard/notifications'); setShowNotifs(false) }}
-                          style={{ fontSize: '11px', color: '#1A56DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
+                          style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
                           Tout voir →
                         </button>
                       </div>

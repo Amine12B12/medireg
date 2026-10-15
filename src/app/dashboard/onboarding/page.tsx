@@ -446,7 +446,7 @@ export default function OnboardingPage() {
   if (!initialized) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
         </div>
         Chargement...
@@ -460,7 +460,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
           </div>
           <div>
@@ -483,7 +483,7 @@ export default function OnboardingPage() {
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: (isEditing || step > s.id) ? 'pointer' : 'default' }}
                 onClick={() => (isEditing || step > s.id) && setStep(s.id)}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: step > s.id ? '#10B981' : step === s.id ? '#1A56DB' : isEditing ? '#E5E7EB' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: step > s.id ? '#10B981' : step === s.id ? 'var(--accent)' : isEditing ? '#E5E7EB' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {step > s.id
                     ? <i className="ti ti-check" style={{ fontSize: '13px', color: '#fff' }} />
                     : <i className={`ti ${s.icon}`} style={{ fontSize: '13px', color: step === s.id ? '#fff' : 'var(--text-tertiary)' }} />
@@ -507,7 +507,7 @@ export default function OnboardingPage() {
               Modifications enregistrées
             </div>
           ) : (
-            <div style={{ background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: '#1A56DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '9px', padding: '10px 16px', fontSize: '12px', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="ti ti-edit" style={{ fontSize: '14px' }} />
               Mode modification — cliquez sur une étape pour la modifier
             </div>
@@ -533,19 +533,19 @@ export default function OnboardingPage() {
               <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Ces informations seront utilisées automatiquement dans tous vos documents.</div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Logo</div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Logo</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '100px', height: '70px', border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-hover)', overflow: 'hidden', flexShrink: 0 }}>
                   {societe.logo_url ? <img src={societe.logo_url} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ textAlign: 'center' }}><i className="ti ti-photo" style={{ fontSize: '24px', color: 'var(--text-tertiary)', display: 'block' }} /></div>}
                 </div>
-                <label style={{ padding: '8px 16px', background: '#EBF2FF', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: '#1A56DB', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ padding: '8px 16px', background: 'var(--accent-light)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: 'var(--radius-sm)', color: 'var(--accent)', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: 'var(--font)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <i className="ti ti-upload" style={{ fontSize: '14px' }} />{uploadingLogo ? 'Upload...' : 'Uploader votre logo'}
                   <input type='file' accept='image/*' style={{ display: 'none' }} onChange={handleUploadLogo} />
                 </label>
               </div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Identité</div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Identité</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Raison sociale *</label>
@@ -558,7 +558,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#1A56DB', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées</div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Coordonnées</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Adresse</label><input value={societe.adresse_siege} onChange={e => setSociete(p => ({ ...p, adresse_siege: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Code postal</label><input value={societe.code_postal} onChange={async e => { const cp = e.target.value; setSociete(p => ({ ...p, code_postal: cp })); if (cp.length === 5) { const ville = await fetchVille(cp); if (ville) setSociete(p => ({ ...p, ville })) } }} style={inputStyle} /></div>
@@ -568,7 +568,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <button onClick={saveSociete} disabled={saving || !societe.raison_sociale}
-              style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              style={{ width: '100%', padding: '13px', background: saving || !societe.raison_sociale ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: saving || !societe.raison_sociale ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
               {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
             </button>
           </div>
@@ -585,7 +585,7 @@ export default function OnboardingPage() {
               <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
                     {etab.est_siege ? 'Siège social' : `Établissement ${i + 1}`}
                     {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
                   </div>
@@ -607,7 +607,7 @@ export default function OnboardingPage() {
             </button>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveEtablissements} disabled={saving || !etablissements.some(e => e.nom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
@@ -644,7 +644,7 @@ export default function OnboardingPage() {
             </button>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(2)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={savePersonnes} disabled={saving || !personnes.some(p => p.nom && p.prenom)} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
@@ -684,7 +684,7 @@ export default function OnboardingPage() {
             ))}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setStep(3)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveResponsabilites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveResponsabilites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
@@ -701,19 +701,19 @@ export default function OnboardingPage() {
             {etablissements.map((etab, eIdx) => (
               <div key={eIdx} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-building" style={{ fontSize: '15px', color: '#1A56DB' }} />
+                  <i className="ti ti-building" style={{ fontSize: '15px', color: 'var(--accent)' }} />
                   {etab.nom || `Établissement ${eIdx + 1}`}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {ACTIVITES_LIST.map(act => {
                     const currentMode = activites[eIdx]?.[act]
                     return (
-                      <div key={act} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: currentMode && currentMode !== 'non_concerne' ? '#EBF2FF' : 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: `1px solid ${currentMode && currentMode !== 'non_concerne' ? 'rgba(26,86,219,0.2)' : 'var(--border)'}` }}>
+                      <div key={act} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: currentMode && currentMode !== 'non_concerne' ? 'var(--accent-light)' : 'var(--surface-hover)', borderRadius: 'var(--radius-sm)', border: `1px solid ${currentMode && currentMode !== 'non_concerne' ? 'rgba(26,86,219,0.2)' : 'var(--border)'}` }}>
                         <div style={{ flex: 1, fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{act}</div>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           {['interne', 'sous_traite', 'mixte', 'non_concerne'].map(mode => (
                             <button key={mode} onClick={() => toggleActivite(eIdx, act, mode)}
-                              style={{ padding: '4px 8px', border: `1px solid ${currentMode === mode ? '#1A56DB' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: currentMode === mode ? '#1A56DB' : 'transparent', color: currentMode === mode ? '#fff' : 'var(--text-tertiary)', fontSize: '10px', fontWeight: currentMode === mode ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
+                              style={{ padding: '4px 8px', border: `1px solid ${currentMode === mode ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: currentMode === mode ? 'var(--accent)' : 'transparent', color: currentMode === mode ? '#fff' : 'var(--text-tertiary)', fontSize: '10px', fontWeight: currentMode === mode ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>
                               {mode === 'interne' ? 'Interne' : mode === 'sous_traite' ? 'Sous-traité' : mode === 'mixte' ? 'Mixte' : 'Non concerné'}
                             </button>
                           ))}
@@ -726,7 +726,7 @@ export default function OnboardingPage() {
             ))}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(4)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveActivites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : '#1A56DB', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+              <button onClick={saveActivites} disabled={saving} style={{ flex: 2, padding: '12px', background: saving ? 'rgba(26,86,219,0.4)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer' : 'Continuer →'}
               </button>
             </div>
@@ -745,7 +745,7 @@ export default function OnboardingPage() {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                 {[{ key: 'logiciel_metier', label: 'Logiciel métier', icon: 'ti-device-laptop' }, { key: 'papier', label: 'Papier', icon: 'ti-file' }, { key: 'mixte', label: 'Mixte', icon: 'ti-files' }, { key: 'autre', label: 'Autre', icon: 'ti-dots' }].map(opt => (
                   <button key={opt.key} onClick={() => setOrganisation(p => ({ ...p, dossier_usager: opt.key }))}
-                    style={{ padding: '10px 16px', border: `2px solid ${organisation.dossier_usager === opt.key ? '#1A56DB' : 'var(--border)'}`, borderRadius: '10px', background: organisation.dossier_usager === opt.key ? '#EBF2FF' : '#fff', color: organisation.dossier_usager === opt.key ? '#1A56DB' : 'var(--text-secondary)', fontSize: '13px', fontWeight: organisation.dossier_usager === opt.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    style={{ padding: '10px 16px', border: `2px solid ${organisation.dossier_usager === opt.key ? 'var(--accent)' : 'var(--border)'}`, borderRadius: '10px', background: organisation.dossier_usager === opt.key ? 'var(--accent-light)' : '#fff', color: organisation.dossier_usager === opt.key ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: organisation.dossier_usager === opt.key ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <i className={`ti ${opt.icon}`} style={{ fontSize: '15px' }} />{opt.label}
                   </button>
                 ))}
@@ -778,13 +778,13 @@ export default function OnboardingPage() {
                 <div><label style={labelStyle}>Qui reçoit les appels ?</label><input value={organisation.depannage_qui_recoit} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_recoit: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Qui intervient ?</label><input value={organisation.depannage_qui_intervient} onChange={e => setOrganisation(p => ({ ...p, depannage_qui_intervient: e.target.value }))} style={inputStyle} /></div>
               </div>
-              <div style={{ padding: '14px 16px', background: organisation.astreinte ? '#EBF2FF' : 'var(--surface-hover)', borderRadius: '10px', border: `1px solid ${organisation.astreinte ? '#BFDBFE' : 'var(--border)'}` }}>
+              <div style={{ padding: '14px 16px', background: organisation.astreinte ? 'var(--accent-light)' : 'var(--surface-hover)', borderRadius: '10px', border: `1px solid ${organisation.astreinte ? '#BFDBFE' : 'var(--border)'}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: organisation.astreinte ? '12px' : '0' }}>
                   <div>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Astreinte 24h/24 — 7j/7</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Obligatoire si vous gérez l'oxygène ou les VPH</div>
                   </div>
-                  <button onClick={() => setOrganisation(p => ({ ...p, astreinte: !p.astreinte }))} style={{ width: '44px', height: '24px', borderRadius: '12px', background: organisation.astreinte ? '#1A56DB' : '#D1D5DB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
+                  <button onClick={() => setOrganisation(p => ({ ...p, astreinte: !p.astreinte }))} style={{ width: '44px', height: '24px', borderRadius: '12px', background: organisation.astreinte ? 'var(--accent)' : '#D1D5DB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s' }}>
                     <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px', left: organisation.astreinte ? '23px' : '3px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
                   </button>
                 </div>
@@ -793,7 +793,7 @@ export default function OnboardingPage() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(5)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveOrganisation} disabled={saving} style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, #1A56DB 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={saveOrganisation} disabled={saving} style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <i className="ti ti-rocket" style={{ fontSize: '16px' }} />
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Lancer la certification !'}
               </button>

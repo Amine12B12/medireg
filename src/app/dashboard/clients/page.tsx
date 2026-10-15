@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 const FORFAITS = {
   starter: { label: 'Starter', color: '#6B7280', bg: '#F3F4F6' },
-  pro: { label: 'Pro', color: '#1A56DB', bg: '#EBF2FF' },
+  pro: { label: 'Pro', color: 'var(--accent)', bg: 'var(--accent-light)' },
   premium: { label: 'Premium', color: '#7C3AED', bg: '#F5F3FF' },
 }
 
@@ -136,7 +136,7 @@ export default function ClientsPage() {
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{clients.length} client{clients.length > 1 ? 's' : ''} · {clients.filter(c => c.forfait_actif).length} actifs</div>
         </div>
         <button onClick={() => setShowAddModal(true)}
-          style={{ padding: '9px 18px', background: '#1A56DB', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px' }}>
+          style={{ padding: '9px 18px', background: 'var(--accent)', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '7px' }}>
           <i className="ti ti-user-plus" style={{ fontSize: '15px' }} />
           Ajouter un client
         </button>
@@ -169,7 +169,7 @@ export default function ClientsPage() {
         </div>
         {['tous', 'starter', 'pro', 'premium'].map(f => (
           <button key={f} onClick={() => setFilterForfait(f)}
-            style={{ padding: '7px 14px', borderRadius: '20px', border: `1px solid ${filterForfait === f ? '#1A56DB' : 'var(--border)'}`, background: filterForfait === f ? '#EBF2FF' : 'var(--surface)', color: filterForfait === f ? '#1A56DB' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filterForfait === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', textTransform: 'capitalize' }}>
+            style={{ padding: '7px 14px', borderRadius: '20px', border: `1px solid ${filterForfait === f ? 'var(--accent)' : 'var(--border)'}`, background: filterForfait === f ? 'var(--accent-light)' : 'var(--surface)', color: filterForfait === f ? 'var(--accent)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: filterForfait === f ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', textTransform: 'capitalize' }}>
             {f === 'tous' ? 'Tous' : f}
           </button>
         ))}
@@ -182,7 +182,7 @@ export default function ClientsPage() {
           <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun client</div>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>Ajoutez votre premier client pour commencer</div>
           <button onClick={() => setShowAddModal(true)}
-            style={{ padding: '9px 20px', background: '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            style={{ padding: '9px 20px', background: 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
             Ajouter un client
           </button>
         </div>
@@ -242,7 +242,7 @@ export default function ClientsPage() {
                   <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {CHAPITRES.map(chap => {
                       const chapData = kpi.chapitres?.[chap] || { score: 0, conformes: 0, total: 0 }
-                      const colors = ['#7C3AED', '#1A56DB', '#0A7C4E', '#B45309']
+                      const colors = ['#7C3AED', 'var(--accent)', '#0A7C4E', '#B45309']
                       const color = colors[parseInt(chap) - 1]
                       return (
                         <div key={chap} style={{ flex: 1, minWidth: '60px', background: '#F9FAFB', borderRadius: '8px', padding: '6px 8px' }}>
@@ -258,7 +258,7 @@ export default function ClientsPage() {
 
                   {/* Docs */}
                   <div style={{ flex: '0 0 80px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#1A56DB' }}>{kpi.docs}</div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--accent)' }}>{kpi.docs}</div>
                     <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>docs</div>
                   </div>
 
@@ -272,7 +272,7 @@ export default function ClientsPage() {
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                     <button onClick={() => router.push(`/dashboard/clients/${client.id}`)}
-                      style={{ height: '32px', padding: '0 14px', background: '#EBF2FF', border: '1px solid #BFDBFE', borderRadius: '8px', color: '#1A56DB', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      style={{ height: '32px', padding: '0 14px', background: 'var(--accent-light)', border: '1px solid #BFDBFE', borderRadius: '8px', color: 'var(--accent)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <i className="ti ti-eye" style={{ fontSize: '13px' }} />
                       Voir
                     </button>
@@ -340,7 +340,7 @@ export default function ClientsPage() {
                 Annuler
               </button>
               <button onClick={handleAdd} disabled={saving || !form.nom || !form.email}
-                style={{ flex: 1, padding: '10px', background: !form.nom || !form.email ? 'rgba(26,86,219,0.3)' : '#1A56DB', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !form.nom || !form.email ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                style={{ flex: 1, padding: '10px', background: !form.nom || !form.email ? 'rgba(26,86,219,0.3)' : 'var(--accent)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !form.nom || !form.email ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                 {saving ? 'Création...' : 'Créer le client'}
               </button>
             </div>
