@@ -204,7 +204,7 @@ export default function ReseauDashboard() {
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: score >= 75 ? '#10B981' : score >= 40 ? '#F59E0B' : '#E5E7EB' }} />
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                       {client.nom?.[0]}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>

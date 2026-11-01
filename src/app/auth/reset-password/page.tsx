@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
       <div style={{ background: '#fff', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '400px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
             <i className="ti ti-shield-check" style={{ fontSize: '26px', color: '#fff' }} />
           </div>
           <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827', letterSpacing: '-0.3px' }}>MediReg</div>
@@ -110,14 +110,14 @@ export default function ResetPasswordPage() {
             <div style={{ fontSize: '13px', color: '#DC2626', marginBottom: '16px' }}>
               Le lien a expiré ou est invalide.
             </div>
-            <a href="/login" style={{ color: '#7C3AED', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>
+            <a href="/login" style={{ color: '#6E56CF', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>
               Retour à la connexion
             </a>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>
                 Mot de passe
               </label>
               <input
@@ -127,13 +127,13 @@ export default function ResetPasswordPage() {
                 placeholder="Minimum 8 caractères"
                 autoFocus
                 style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '14px', color: '#111827', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                onFocus={e => e.target.style.borderColor = '#6E56CF'}
                 onBlur={e => e.target.style.borderColor = '#E5E7EB'}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>
                 Confirmer
               </label>
               <input
@@ -142,7 +142,7 @@ export default function ResetPasswordPage() {
                 onChange={e => setConfirm(e.target.value)}
                 placeholder="Répétez votre mot de passe"
                 style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '14px', color: '#111827', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                onFocus={e => e.target.style.borderColor = '#6E56CF'}
                 onBlur={e => e.target.style.borderColor = '#E5E7EB'}
                 onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
               />
@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
             )}
 
             <button onClick={handleSubmit} disabled={loading || !password || !confirm}
-              style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+              style={{ width: '100%', padding: '13px', background: loading || !password || !confirm ? 'rgba(110,86,207,0.3)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading || !password || !confirm ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
               {loading ? 'Enregistrement...' : 'Accéder à mon espace →'}
             </button>
           </div>

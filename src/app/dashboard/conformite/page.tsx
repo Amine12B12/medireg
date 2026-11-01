@@ -127,7 +127,7 @@ export default function ConformitePage() {
         </div>
 
         {[
-          { label: 'Audits', value: audits.length, sub: `${auditsTermines.length} termine${auditsTermines.length > 1 ? 's' : ''}`, color: '#7C3AED', bg: '#F5F3FF', icon: 'ti-clipboard-check' },
+          { label: 'Audits', value: audits.length, sub: `${auditsTermines.length} termine${auditsTermines.length > 1 ? 's' : ''}`, color: '#6E56CF', bg: '#F0EEFF', icon: 'ti-clipboard-check' },
           { label: 'NC majeures', value: ncMajeures.length, sub: 'Ouvertes', color: 'var(--danger)', bg: 'var(--danger-light)', icon: 'ti-alert-triangle' },
           { label: 'NC mineures', value: ncMineures.length, sub: 'Ouvertes', color: 'var(--warning)', bg: 'var(--warning-light)', icon: 'ti-alert-circle' },
           { label: 'Plans d actions', value: plansActions.length, sub: `${paTermines.length} termine${paTermines.length > 1 ? 's' : ''}`, color: 'var(--accent)', bg: 'var(--accent-light)', icon: 'ti-list-check' },
@@ -169,7 +169,7 @@ export default function ConformitePage() {
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="ti ti-clipboard-check" style={{ fontSize: '15px', color: '#7C3AED' }} />
+              <i className="ti ti-clipboard-check" style={{ fontSize: '15px', color: '#6E56CF' }} />
               Audits
             </div>
             <button onClick={() => router.push('/dashboard/audits')}

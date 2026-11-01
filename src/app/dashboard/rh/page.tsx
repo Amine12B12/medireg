@@ -209,7 +209,7 @@ export default function RHPage() {
             style={{ width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: '9px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
             <i className="ti ti-arrow-left" style={{ fontSize: '16px' }} />
           </button>
-          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
             {selectedPersonne.prenom?.[0]}{selectedPersonne.nom?.[0]}
           </div>
           <div style={{ flex: 1 }}>
@@ -242,13 +242,13 @@ export default function RHPage() {
 
         {/* Responsabilités */}
         {responsabilites.length > 0 && (
-          <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '12px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#7C3AED', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ background: '#F0EEFF', border: '1px solid #DDD6FE', borderRadius: '12px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#6E56CF', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <i className="ti ti-shield" style={{ fontSize: '14px' }} />
               Responsabilités HAS :
             </div>
             {responsabilites.map((r: any, i: number) => (
-              <span key={i} style={{ padding: '4px 12px', background: '#fff', border: '1px solid #DDD6FE', borderRadius: '20px', fontSize: '12px', color: '#7C3AED', fontWeight: '500' }}>
+              <span key={i} style={{ padding: '4px 12px', background: '#fff', border: '1px solid #DDD6FE', borderRadius: '20px', fontSize: '12px', color: '#6E56CF', fontWeight: '500' }}>
                 {RESP_LABELS[r.responsabilite] || r.responsabilite}
               </span>
             ))}
@@ -282,7 +282,7 @@ export default function RHPage() {
                 const selected = persCompetences.includes(comp)
                 return (
                   <button key={comp} onClick={() => toggleCompetence(selectedPersonne.id, comp)}
-                    style={{ padding: '8px 14px', border: `1px solid ${selected ? '#7C3AED' : '#E5E7EB'}`, borderRadius: '20px', background: selected ? '#F5F3FF' : '#fff', color: selected ? '#7C3AED' : '#9CA3AF', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.15s' }}>
+                    style={{ padding: '8px 14px', border: `1px solid ${selected ? '#6E56CF' : '#E5E7EB'}`, borderRadius: '20px', background: selected ? '#F0EEFF' : '#fff', color: selected ? '#6E56CF' : '#9CA3AF', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.15s' }}>
                     {selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}
                     {comp}
                   </button>
@@ -354,13 +354,13 @@ export default function RHPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
               <button onClick={() => setShowForm('entretien')}
-                style={{ padding: '8px 16px', background: '#7C3AED', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                style={{ padding: '8px 16px', background: '#6E56CF', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <i className="ti ti-plus" style={{ fontSize: '13px' }} />Planifier un entretien
               </button>
             </div>
 
             {showForm === 'entretien' && (
-              <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+              <div style={{ background: '#F0EEFF', border: '1px solid #DDD6FE', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div><label style={labelStyle}>Type d'entretien</label><select value={entretienForm.type} onChange={e => setEntretienForm(p => ({ ...p, type: e.target.value }))} style={inp}>{TYPES_ENTRETIEN.map(t => <option key={t}>{t}</option>)}</select></div>
                   <div><label style={labelStyle}>Date</label><input type="date" value={entretienForm.date_entretien} onChange={e => setEntretienForm(p => ({ ...p, date_entretien: e.target.value }))} style={inp} /></div>
@@ -376,10 +376,10 @@ export default function RHPage() {
                       <label style={labelStyle}>Objectifs année suivante</label>
                       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                         <input value={entretienForm.newObj2} onChange={e => setEntretienForm(p => ({ ...p, newObj2: e.target.value }))} placeholder="Ajouter un objectif..." style={{ ...inp }} onKeyDown={e => { if (e.key === 'Enter' && entretienForm.newObj2) { setEntretienForm(p => ({ ...p, objectifs_annee_suivante: [...p.objectifs_annee_suivante, p.newObj2], newObj2: '' })) } }} />
-                        <button onClick={() => { if (entretienForm.newObj2) setEntretienForm(p => ({ ...p, objectifs_annee_suivante: [...p.objectifs_annee_suivante, p.newObj2], newObj2: '' })) }} style={{ padding: '0 14px', background: '#7C3AED', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>Ajouter</button>
+                        <button onClick={() => { if (entretienForm.newObj2) setEntretienForm(p => ({ ...p, objectifs_annee_suivante: [...p.objectifs_annee_suivante, p.newObj2], newObj2: '' })) }} style={{ padding: '0 14px', background: '#6E56CF', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}>Ajouter</button>
                       </div>
                       {entretienForm.objectifs_annee_suivante.map((obj, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F5F3FF', borderRadius: '8px', marginBottom: '4px', fontSize: '12px', color: '#7C3AED' }}>
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F0EEFF', borderRadius: '8px', marginBottom: '4px', fontSize: '12px', color: '#6E56CF' }}>
                           <i className="ti ti-target" style={{ fontSize: '13px' }} />
                           <span style={{ flex: 1 }}>{obj}</span>
                           <button onClick={() => setEntretienForm(p => ({ ...p, objectifs_annee_suivante: p.objectifs_annee_suivante.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '12px', padding: 0 }}>✕</button>
@@ -390,7 +390,7 @@ export default function RHPage() {
                 )}
                 <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
                   <button onClick={() => setShowForm(null)} style={{ padding: '8px 16px', background: '#F3F4F6', border: 'none', borderRadius: '8px', color: '#6B7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>Annuler</button>
-                  <button onClick={saveEntretien} disabled={saving} style={{ padding: '8px 16px', background: '#7C3AED', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
+                  <button onClick={saveEntretien} disabled={saving} style={{ padding: '8px 16px', background: '#6E56CF', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
                 </div>
               </div>
             )}
@@ -403,8 +403,8 @@ export default function RHPage() {
                   <div key={e.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: e.bilan ? '14px' : '0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: e.statut === 'realise' ? '#ECFDF5' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <i className={`ti ${e.statut === 'realise' ? 'ti-clipboard-check' : 'ti-clipboard-list'}`} style={{ fontSize: '18px', color: e.statut === 'realise' ? '#059669' : '#7C3AED' }} />
+                        <div style={{ width: '38px', height: '38px', borderRadius: '9px', background: e.statut === 'realise' ? '#ECFDF5' : '#F0EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <i className={`ti ${e.statut === 'realise' ? 'ti-clipboard-check' : 'ti-clipboard-list'}`} style={{ fontSize: '18px', color: e.statut === 'realise' ? '#059669' : '#6E56CF' }} />
                         </div>
                         <div>
                           <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>{e.type}</div>
@@ -412,7 +412,7 @@ export default function RHPage() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: e.statut === 'realise' ? '#059669' : '#7C3AED', background: e.statut === 'realise' ? '#D1FAE5' : '#F5F3FF', padding: '3px 10px', borderRadius: '20px' }}>{e.statut === 'realise' ? '✓ Réalisé' : 'Planifié'}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: e.statut === 'realise' ? '#059669' : '#6E56CF', background: e.statut === 'realise' ? '#D1FAE5' : '#F0EEFF', padding: '3px 10px', borderRadius: '20px' }}>{e.statut === 'realise' ? '✓ Réalisé' : 'Planifié'}</span>
                         <button onClick={() => deleteItem('rh_entretiens', e.id)} style={{ width: '28px', height: '28px', border: 'none', borderRadius: '6px', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <i className="ti ti-trash" style={{ fontSize: '13px' }} />
                         </button>
@@ -426,11 +426,11 @@ export default function RHPage() {
                         {e.formation_souhaitee && <div><div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Formation souhaitée</div><div style={{ fontSize: '12px', color: '#374151' }}>{e.formation_souhaitee}</div></div>}
                         {e.objectifs_annee_suivante?.length > 0 && (
                           <div style={{ gridColumn: '1 / -1' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Objectifs</div>
+                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#6E56CF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Objectifs</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {e.objectifs_annee_suivante.map((obj, i) => (
                                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#374151' }}>
-                                  <i className="ti ti-target" style={{ fontSize: '13px', color: '#7C3AED' }} />{obj}
+                                  <i className="ti ti-target" style={{ fontSize: '13px', color: '#6E56CF' }} />{obj}
                                 </div>
                               ))}
                             </div>
@@ -580,7 +580,7 @@ export default function RHPage() {
         {[
           { label: 'Collaborateurs', value: personnes.length, icon: 'ti-users', color: 'var(--accent)', bg: 'var(--accent-light)' },
           { label: 'Formations réalisées', value: formations.filter(f => f.statut === 'realisee').length, icon: 'ti-certificate', color: '#059669', bg: '#ECFDF5' },
-          { label: 'Entretiens réalisés', value: entretiens.filter(e => e.statut === 'realise').length, icon: 'ti-clipboard-check', color: '#7C3AED', bg: '#F5F3FF' },
+          { label: 'Entretiens réalisés', value: entretiens.filter(e => e.statut === 'realise').length, icon: 'ti-clipboard-check', color: '#6E56CF', bg: '#F0EEFF' },
           { label: 'Alertes habilitations', value: habilsExpired.length + habilsExpiring.length, icon: 'ti-alert-triangle', color: habilsExpired.length > 0 ? '#DC2626' : '#D97706', bg: habilsExpired.length > 0 ? '#FEF2F2' : '#FFFBEB' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -611,7 +611,7 @@ export default function RHPage() {
             </div>
           )}
           {entretiensDus.length > 0 && (
-            <div style={{ padding: '12px 16px', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '10px', fontSize: '13px', color: '#7C3AED', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '12px 16px', background: '#F0EEFF', border: '1px solid #DDD6FE', borderRadius: '10px', fontSize: '13px', color: '#6E56CF', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <i className="ti ti-clipboard-list" style={{ fontSize: '16px', flexShrink: 0 }} />
               <strong>{entretiensDus.length} collaborateur{entretiensDus.length > 1 ? 's' : ''}</strong> sans entretien annuel cette année
             </div>
@@ -645,10 +645,10 @@ export default function RHPage() {
               onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform = 'none'; el.style.boxShadow = 'none'; el.style.borderColor = habExpiredCount > 0 ? '#FECACA' : 'var(--border)' }}>
 
               {habExpiredCount > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#EF4444' }} />}
-              {entretienDu && !habExpiredCount && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#8B5CF6' }} />}
+              {entretienDu && !habExpiredCount && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#8B7BE0' }} />}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                   {pers.prenom?.[0]}{pers.nom?.[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -661,16 +661,16 @@ export default function RHPage() {
               {responsabilites.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '10px' }}>
                   {responsabilites.slice(0, 2).map((r: any, i: number) => (
-                    <span key={i} style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '2px 7px', borderRadius: '20px', fontWeight: '500' }}>{RESP_LABELS[r.responsabilite] || r.responsabilite}</span>
+                    <span key={i} style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '2px 7px', borderRadius: '20px', fontWeight: '500' }}>{RESP_LABELS[r.responsabilite] || r.responsabilite}</span>
                   ))}
                   {responsabilites.length > 2 && <span style={{ fontSize: '10px', color: '#9CA3AF', background: '#F3F4F6', padding: '2px 7px', borderRadius: '20px' }}>+{responsabilites.length - 2}</span>}
                 </div>
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '6px' }}>
-                <div style={{ padding: '8px', background: persCompetences.length > 0 ? '#F5F3FF' : '#F9FAFB', borderRadius: '8px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '16px', fontWeight: '700', color: persCompetences.length > 0 ? '#7C3AED' : '#9CA3AF' }}>{persCompetences.length}</div>
-                  <div style={{ fontSize: '10px', color: persCompetences.length > 0 ? '#7C3AED' : '#9CA3AF' }}>compétences</div>
+                <div style={{ padding: '8px', background: persCompetences.length > 0 ? '#F0EEFF' : '#F9FAFB', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: persCompetences.length > 0 ? '#6E56CF' : '#9CA3AF' }}>{persCompetences.length}</div>
+                  <div style={{ fontSize: '10px', color: persCompetences.length > 0 ? '#6E56CF' : '#9CA3AF' }}>compétences</div>
                 </div>
                 <div style={{ padding: '8px', background: formationsRealisees > 0 ? '#ECFDF5' : '#F9FAFB', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '16px', fontWeight: '700', color: formationsRealisees > 0 ? '#059669' : '#9CA3AF' }}>{formationsRealisees}</div>

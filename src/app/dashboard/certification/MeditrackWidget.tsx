@@ -14,7 +14,7 @@ interface Props {
 }
 
 type Indicateur = { cle: string; label: string; icon: string; color: string; bg: string }
-const BLEU = { color: 'var(--accent)', bg: 'var(--accent-light)' }, VERT = { color: '#059669', bg: '#ECFDF5' }, VIOLET = { color: '#7C3AED', bg: '#F5F3FF' }, ROUGE = { color: '#DC2626', bg: '#FEF2F2' }
+const BLEU = { color: 'var(--accent)', bg: 'var(--accent-light)' }, VERT = { color: '#059669', bg: '#ECFDF5' }, VIOLET = { color: '#6E56CF', bg: '#F0EEFF' }, ROUGE = { color: '#DC2626', bg: '#FEF2F2' }
 
 // Chaque indicateur correspond à un compteur renvoyé par la passerelle MediTrack (/api/passerelle/medireg)
 const CRITERE_CONFIG: Record<string, { titre: string; description: string; tables: Indicateur[] }> = {

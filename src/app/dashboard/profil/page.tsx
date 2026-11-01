@@ -171,7 +171,7 @@ export default function ProfilPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700', flexShrink: 0 }}>{i + 1}</div>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{etab.nom}</div>
-                {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
+                {etab.est_siege && <span style={{ fontSize: '10px', background: '#F0EEFF', color: '#6E56CF', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                 {etab.siret && <span><span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>SIRET </span>{etab.siret}</span>}
@@ -209,8 +209,8 @@ export default function ProfilPage() {
             const persResps = responsabilites.filter(r => r.personne_id === pers.id)
             return (
               <div key={pers.id} style={{ padding: '14px 16px', background: '#F9FAFB', borderRadius: '9px', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#7C3AED' }}>{pers.prenom?.charAt(0)}{pers.nom?.charAt(0)}</span>
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#F0EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#6E56CF' }}>{pers.prenom?.charAt(0)}{pers.nom?.charAt(0)}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{pers.prenom} {pers.nom}</div>
@@ -218,7 +218,7 @@ export default function ProfilPage() {
                   {persResps.length > 0 && (
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {persResps.map(r => (
-                        <span key={r.id} style={{ fontSize: '10px', fontWeight: '500', color: '#7C3AED', background: '#F5F3FF', padding: '3px 8px', borderRadius: '20px', border: '1px solid rgba(124,58,237,0.2)' }}>
+                        <span key={r.id} style={{ fontSize: '10px', fontWeight: '500', color: '#6E56CF', background: '#F0EEFF', padding: '3px 8px', borderRadius: '20px', border: '1px solid rgba(110,86,207,0.2)' }}>
                           {RESPONSABILITES_LABELS[r.responsabilite] || r.responsabilite}
                         </span>
                       ))}
@@ -264,7 +264,7 @@ export default function ProfilPage() {
                   <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)}
                     placeholder="Minimum 8 caractères"
                     style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                    onFocus={e => e.target.style.borderColor = '#6E56CF'}
                     onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                 </div>
                 <div>
@@ -274,7 +274,7 @@ export default function ProfilPage() {
                   <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)}
                     placeholder="Répétez le mot de passe"
                     style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                    onFocus={e => e.target.style.borderColor = '#6E56CF'}
                     onBlur={e => e.target.style.borderColor = '#E5E7EB'}
                     onKeyDown={e => { if (e.key === 'Enter') handleChangePwd() }} />
                 </div>
@@ -284,7 +284,7 @@ export default function ProfilPage() {
                   </div>
                 )}
                 <button onClick={handleChangePwd} disabled={pwdLoading || !newPwd || !confirmPwd}
-                  style={{ padding: '11px', background: pwdLoading || !newPwd || !confirmPwd ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: pwdLoading || !newPwd || !confirmPwd ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
+                  style={{ padding: '11px', background: pwdLoading || !newPwd || !confirmPwd ? 'rgba(110,86,207,0.3)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: pwdLoading || !newPwd || !confirmPwd ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
                   {pwdLoading ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
                 </button>
               </>

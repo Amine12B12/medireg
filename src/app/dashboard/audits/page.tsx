@@ -247,8 +247,8 @@ export default function AuditsPage() {
 
       {filtered.length === 0 ? (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '64px', textAlign: 'center' }}>
-          <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <i className="ti ti-clipboard-check" style={{ fontSize: '26px', color: '#7C3AED' }} />
+          <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#F0EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <i className="ti ti-clipboard-check" style={{ fontSize: '26px', color: '#6E56CF' }} />
           </div>
           <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>Aucun audit</div>
           <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
@@ -261,7 +261,7 @@ export default function AuditsPage() {
             const st = statutStyle(audit.statut)
             return (
               <div key={audit.id} onClick={() => openDetail(audit)}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', borderLeft: '3px solid #7C3AED' }}
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '18px 20px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', borderLeft: '3px solid #6E56CF' }}
                 onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-hover)'}
                 onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--surface)'}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>

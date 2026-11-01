@@ -92,13 +92,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const nav = role === 'consultant' ? navConsultant : navClient
   const page = pageTitles[pathname] || { title: 'MediReg', sub: '' }
   const roleLabel = role === 'consultant' ? 'Consultant' : 'Mon espace'
-  const roleColor = role === 'consultant' ? '#7C3AED' : 'var(--accent)'
-  const roleBg = role === 'consultant' ? '#F5F3FF' : 'var(--accent-light)'
+  const roleColor = role === 'consultant' ? '#6E56CF' : 'var(--accent)'
+  const roleBg = role === 'consultant' ? '#F0EEFF' : 'var(--accent-light)'
 
   if (!role) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #6E56CF 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
         </div>
         <span>Chargement...</span>
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div style={{ padding: '20px 18px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #6E56CF 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
             </div>
             <div>
@@ -206,7 +206,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {role === 'consultant' && (
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setShowNotifs(!showNotifs)}
-                  style={{ width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: notifCount > 0 ? '#7C3AED' : 'var(--text-secondary)', position: 'relative' }}>
+                  style={{ width: '36px', height: '36px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: notifCount > 0 ? '#6E56CF' : 'var(--text-secondary)', position: 'relative' }}>
                   <i className="ti ti-bell" style={{ fontSize: '18px' }} />
                   {notifCount > 0 && (
                     <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '18px', height: '18px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
@@ -225,7 +225,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             const { data: { user: u2 } } = await supabase.auth.getUser(); await supabase.from('notifications').update({ lu: true }).eq('lu', false).eq('consultant_id', u2?.id)
                             setNotifCount(0)
                             setNotifs([])
-                          }} style={{ fontSize: '11px', color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
+                          }} style={{ fontSize: '11px', color: '#6E56CF', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: '600' }}>
                             Tout lire
                           </button>
                         )}

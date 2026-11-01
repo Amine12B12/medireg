@@ -10,12 +10,12 @@ const TYPES_DOC = ['procedure', 'modele', 'formulaire', 'checklist', 'registre',
 
 const typeDocStyle = (t: string) => {
   if (t === 'procedure') return { color: 'var(--accent)', bg: 'var(--accent-light)', icon: 'ti-file-description' }
-  if (t === 'modele') return { color: '#7C3AED', bg: '#F5F3FF', icon: 'ti-template' }
+  if (t === 'modele') return { color: '#6E56CF', bg: '#F0EEFF', icon: 'ti-template' }
   if (t === 'formulaire') return { color: '#0891B2', bg: '#E0F2FE', icon: 'ti-forms' }
   if (t === 'checklist') return { color: '#059669', bg: '#D1FAE5', icon: 'ti-checklist' }
   if (t === 'registre') return { color: '#D97706', bg: '#FEF3C7', icon: 'ti-notebook' }
   if (t === 'preuve') return { color: '#DC2626', bg: '#FEE2E2', icon: 'ti-certificate' }
-  if (t === 'certificat') return { color: '#7C3AED', bg: '#F5F3FF', icon: 'ti-award' }
+  if (t === 'certificat') return { color: '#6E56CF', bg: '#F0EEFF', icon: 'ti-award' }
   return { color: 'var(--text-secondary)', bg: 'var(--surface-hover)', icon: 'ti-file' }
 }
 

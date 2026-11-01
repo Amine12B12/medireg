@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  '1': { label: 'Éthique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
+  '1': { label: 'Éthique, droits et satisfaction', color: '#6E56CF', bg: '#F0EEFF', border: '#DDD6FE' },
   '2': { label: 'Distribution et réalisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE' },
   '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0' },
   '4': { label: 'Qualité et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' },
@@ -186,7 +186,7 @@ export default function DocumentsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
         {[
           { label: 'Documents signés', value: docsEditables.length, icon: 'ti-signature', color: '#059669', bg: '#ECFDF5' },
-          { label: 'Preuves uploadées', value: docsQualite.filter(d => d.code_doc?.startsWith('PREUVE_')).length, icon: 'ti-paperclip', color: '#7C3AED', bg: '#F5F3FF' },
+          { label: 'Preuves uploadées', value: docsQualite.filter(d => d.code_doc?.startsWith('PREUVE_')).length, icon: 'ti-paperclip', color: '#6E56CF', bg: '#F0EEFF' },
           { label: 'Chapitres couverts', value: Object.keys(docsParChapitre).filter(k => k !== '?').length, icon: 'ti-book', color: 'var(--accent)', bg: 'var(--accent-light)' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -282,9 +282,9 @@ function DocItem({ doc, router }: { doc: any; router: any }) {
     <div style={{ background: 'var(--surface)', border: `1px solid ${isEditable ? '#A7F3D0' : 'var(--border)'}`, borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
 
       {/* Icone */}
-      <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: isEditable ? '#ECFDF5' : isPreuve ? '#F5F3FF' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '9px', background: isEditable ? '#ECFDF5' : isPreuve ? '#F0EEFF' : 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <i className={`ti ${isEditable ? 'ti-signature' : isPreuve ? 'ti-paperclip' : 'ti-file-text'}`}
-          style={{ fontSize: '18px', color: isEditable ? '#059669' : isPreuve ? '#7C3AED' : 'var(--accent)' }} />
+          style={{ fontSize: '18px', color: isEditable ? '#059669' : isPreuve ? '#6E56CF' : 'var(--accent)' }} />
       </div>
 
       {/* Infos */}
@@ -292,7 +292,7 @@ function DocItem({ doc, router }: { doc: any; router: any }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{doc.titre}</span>
           {isEditable && <span style={{ fontSize: '10px', color: '#059669', background: '#ECFDF5', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Signé</span>}
-          {isPreuve && <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Uploadé</span>}
+          {isPreuve && <span style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Uploadé</span>}
           {doc.code && !isPreuve && <span style={{ fontSize: '10px', color: '#6B7280', background: '#F3F4F6', padding: '1px 7px', borderRadius: '20px' }}>{doc.code}</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

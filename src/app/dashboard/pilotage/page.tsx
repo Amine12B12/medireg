@@ -86,7 +86,7 @@ export default function PilotagePage() {
 
   const typeColors: Record<string, { color: string; bg: string }> = {
     'Hopital': { color: 'var(--danger)', bg: 'var(--danger-light)' },
-    'Clinique': { color: '#7C3AED', bg: '#F5F3FF' },
+    'Clinique': { color: '#6E56CF', bg: '#F0EEFF' },
     'PSDM': { color: 'var(--accent)', bg: 'var(--accent-light)' },
     'EHPAD': { color: 'var(--success)', bg: 'var(--success-light)' },
     'Pharmacie': { color: 'var(--warning)', bg: 'var(--warning-light)' },
@@ -103,7 +103,7 @@ export default function PilotagePage() {
         {[
           { label: 'Clients actifs', value: `${stats.clientsActifs}/${stats.clients}`, color: 'var(--accent)', bg: 'var(--accent-light)', icon: 'ti-building-hospital' },
           { label: 'Score moyen', value: stats.scoreMoyen !== null ? `${stats.scoreMoyen}%` : '-', color: scoreColor(stats.scoreMoyen), bg: stats.scoreMoyen === null ? 'var(--surface-hover)' : stats.scoreMoyen >= 80 ? 'var(--success-light)' : stats.scoreMoyen >= 60 ? 'var(--warning-light)' : 'var(--danger-light)', icon: 'ti-chart-pie' },
-          { label: 'Audits', value: stats.audits, color: '#7C3AED', bg: '#F5F3FF', icon: 'ti-clipboard-check', sub: `${stats.auditsEnCours} en cours` },
+          { label: 'Audits', value: stats.audits, color: '#6E56CF', bg: '#F0EEFF', icon: 'ti-clipboard-check', sub: `${stats.auditsEnCours} en cours` },
           { label: 'NC ouvertes', value: stats.ncOuvertes, color: 'var(--danger)', bg: 'var(--danger-light)', icon: 'ti-alert-triangle', sub: `${stats.ncMajeures} majeures` },
           { label: 'Plans d actions', value: stats.paTotal, color: 'var(--warning)', bg: 'var(--warning-light)', icon: 'ti-list-check', sub: `${stats.paTermines} termines` },
           { label: 'Documents', value: stats.documents, color: 'var(--success)', bg: 'var(--success-light)', icon: 'ti-books' },
@@ -125,7 +125,7 @@ export default function PilotagePage() {
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '20px' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="ti ti-chart-bar" style={{ fontSize: '15px', color: '#7C3AED' }} />
+            <i className="ti ti-chart-bar" style={{ fontSize: '15px', color: '#6E56CF' }} />
             Comparatif clients
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{clientsData.length} clients</div>
@@ -162,7 +162,7 @@ export default function PilotagePage() {
                   <td style={{ padding: '12px 14px' }}>
                     <span style={{ background: tc.bg, color: tc.color, padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: '500' }}>{c.type}</span>
                   </td>
-                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: c.audits > 0 ? '#7C3AED' : 'var(--text-tertiary)' }}>{c.audits}</td>
+                  <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: c.audits > 0 ? '#6E56CF' : 'var(--text-tertiary)' }}>{c.audits}</td>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: scoreColor(c.score) }}>
                       {c.score !== null ? `${c.score}%` : '-'}
@@ -198,7 +198,7 @@ export default function PilotagePage() {
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="ti ti-clipboard-check" style={{ fontSize: '15px', color: '#7C3AED' }} />
+            <i className="ti ti-clipboard-check" style={{ fontSize: '15px', color: '#6E56CF' }} />
             Derniers audits
           </div>
           <button onClick={() => router.push('/dashboard/audits')}

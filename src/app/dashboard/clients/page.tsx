@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 const FORFAITS = {
   starter: { label: 'Starter', color: '#6B7280', bg: '#F3F4F6' },
   pro: { label: 'Pro', color: 'var(--accent)', bg: 'var(--accent-light)' },
-  premium: { label: 'Premium', color: '#7C3AED', bg: '#F5F3FF' },
+  premium: { label: 'Premium', color: '#6E56CF', bg: '#F0EEFF' },
 }
 
 const CHAPITRES = ['1', '2', '3', '4']
@@ -210,7 +210,7 @@ export default function ClientsPage() {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.nom}</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.contact_email}</div>
-                      {reseau && <div style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 6px', borderRadius: '20px', display: 'inline-block', marginTop: '2px' }}>{reseau.nom}</div>}
+                      {reseau && <div style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '1px 6px', borderRadius: '20px', display: 'inline-block', marginTop: '2px' }}>{reseau.nom}</div>}
                     </div>
                   </div>
 
@@ -242,7 +242,7 @@ export default function ClientsPage() {
                   <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {CHAPITRES.map(chap => {
                       const chapData = kpi.chapitres?.[chap] || { score: 0, conformes: 0, total: 0 }
-                      const colors = ['#7C3AED', 'var(--accent)', '#0A7C4E', '#B45309']
+                      const colors = ['#6E56CF', 'var(--accent)', '#0A7C4E', '#B45309']
                       const color = colors[parseInt(chap) - 1]
                       return (
                         <div key={chap} style={{ flex: 1, minWidth: '60px', background: '#F9FAFB', borderRadius: '8px', padding: '6px 8px' }}>

@@ -76,7 +76,7 @@ const CRITERES_CONFIG: Record<string, { questions: { id: string; label: string }
 }
 
 const CHAPITRES: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
-  '1': { label: 'Ethique, droits et satisfaction', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
+  '1': { label: 'Ethique, droits et satisfaction', color: '#6E56CF', bg: '#F0EEFF', border: '#DDD6FE', icon: 'ti-heart' },
   '2': { label: 'Distribution et realisation', color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
   '3': { label: 'Fonctions support', color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings' },
   '4': { label: 'Qualite et risques', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check' },
@@ -85,7 +85,7 @@ const CHAPITRES: Record<string, { label: string; color: string; bg: string; bord
 const STATUTS = [
   { key: 'non_analyse', label: 'Non analysé', color: '#6B7280', bg: '#F9FAFB', dot: '#D1D5DB' },
   { key: 'non_applicable', label: 'Non applicable', color: '#9CA3AF', bg: '#F3F4F6', dot: '#D1D5DB' },
-  { key: 'information_manquante', label: 'Info manquante', color: '#7C3AED', bg: '#F5F3FF', dot: '#8B5CF6' },
+  { key: 'information_manquante', label: 'Info manquante', color: '#6E56CF', bg: '#F0EEFF', dot: '#8B7BE0' },
   { key: 'preuve_manquante', label: 'Preuve manquante', color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
   { key: 'procedure_a_valider', label: 'À valider', color: '#2563EB', bg: '#EFF6FF', dot: '#3B82F6' },
   { key: 'action_corrective', label: 'Action corrective', color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
@@ -318,7 +318,7 @@ export default function ClientDetailPage() {
             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
               {client?.contact_email} · Forfait {client?.forfait}
               {totalMsgsNonLus > 0 && (
-                <span style={{ marginLeft: '8px', color: '#7C3AED', fontWeight: '600' }}>
+                <span style={{ marginLeft: '8px', color: '#6E56CF', fontWeight: '600' }}>
                   · {totalMsgsNonLus} message{totalMsgsNonLus > 1 ? 's' : ''} non lu{totalMsgsNonLus > 1 ? 's' : ''}
                 </span>
               )}
@@ -333,7 +333,7 @@ export default function ClientDetailPage() {
             { label: 'À valider', value: aValider, color: '#2563EB', bg: '#EFF6FF', filterKey: 'procedure_a_valider' },
             { label: 'Action corrective', value: actionsCorr, color: '#DC2626', bg: '#FEF2F2', filterKey: 'action_corrective' },
             { label: 'Preuve manquante', value: preuveManquante, color: '#D97706', bg: '#FFFBEB', filterKey: 'preuve_manquante' },
-            { label: 'Msg non lus', value: totalMsgsNonLus, color: '#7C3AED', bg: '#F5F3FF', filterKey: null },
+            { label: 'Msg non lus', value: totalMsgsNonLus, color: '#6E56CF', bg: '#F0EEFF', filterKey: null },
           ].map(kpi => (
             <div key={kpi.label}
               onClick={() => kpi.filterKey && setFilterStatut(filterStatut === kpi.filterKey ? 'tous' : kpi.filterKey)}
@@ -429,7 +429,7 @@ export default function ClientDetailPage() {
                   <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: '1.3' }}>{critere.titre}</div>
                   <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                     {docsCritere.length > 0 && (
-                      <span style={{ fontSize: '10px', color: '#7C3AED', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <span style={{ fontSize: '10px', color: '#6E56CF', display: 'flex', alignItems: 'center', gap: '3px' }}>
                         <i className="ti ti-paperclip" style={{ fontSize: '10px' }} />{docsCritere.length} doc{docsCritere.length > 1 ? 's' : ''}
                       </span>
                     )}
@@ -543,7 +543,7 @@ export default function ClientDetailPage() {
           {/* Réponses aux questions */}
           {Object.keys(panelReponseQuestions).length > 0 && (
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: '#FAFAFA' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#6E56CF', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <i className="ti ti-question-mark" style={{ fontSize: '12px' }} />
                 Réponses du client
               </div>
@@ -553,8 +553,8 @@ export default function ClientDetailPage() {
                   const config = CRITERES_CONFIG[selectedCritere?.code]
                   const question = config?.questions?.find(q => q.id === qId)
                   return (
-                    <div key={qId} style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #EDE9FE' }}>
-                      <div style={{ fontSize: '11px', color: '#7C3AED', marginBottom: '4px', fontWeight: '600', lineHeight: '1.4' }}>
+                    <div key={qId} style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #E4DFFB' }}>
+                      <div style={{ fontSize: '11px', color: '#6E56CF', marginBottom: '4px', fontWeight: '600', lineHeight: '1.4' }}>
                         {question?.label || `Question ${qId}`}
                       </div>
                       <div style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>
@@ -629,8 +629,8 @@ export default function ClientDetailPage() {
 
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', gap: '6px', alignItems: 'flex-end' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`ti ${isMine ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#7C3AED' }} />
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F0EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className={`ti ${isMine ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#6E56CF' }} />
                   </div>
                   <div style={{ maxWidth: '80%' }}>
                     <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? 'var(--accent)' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>
@@ -656,11 +656,11 @@ export default function ClientDetailPage() {
               rows={1}
               style={{ flex: 1, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '9px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface-hover)', resize: 'none', lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto', boxSizing: 'border-box' as const }}
               onInput={e => { const el = e.target as HTMLTextAreaElement; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px' }}
-              onFocus={e => e.target.style.borderColor = '#7C3AED'}
+              onFocus={e => e.target.style.borderColor = '#6E56CF'}
               onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
             <button onClick={sendPanelMessage} disabled={panelSending || !panelInput.trim()}
-              style={{ width: '36px', height: '36px', background: panelSending || !panelInput.trim() ? 'rgba(124,58,237,0.2)' : '#7C3AED', border: 'none', borderRadius: '9px', cursor: panelSending || !panelInput.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              style={{ width: '36px', height: '36px', background: panelSending || !panelInput.trim() ? 'rgba(110,86,207,0.2)' : '#6E56CF', border: 'none', borderRadius: '9px', cursor: panelSending || !panelInput.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <i className="ti ti-send" style={{ fontSize: '15px', color: '#fff' }} />
             </button>
           </div>

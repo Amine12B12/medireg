@@ -446,7 +446,7 @@ export default function OnboardingPage() {
   if (!initialized) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', color: 'var(--text-tertiary)', fontSize: '13px', background: 'var(--bg)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #6E56CF 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
         </div>
         Chargement...
@@ -460,7 +460,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #6E56CF 0%, var(--accent) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <i className="ti ti-shield-check" style={{ fontSize: '16px', color: '#fff' }} />
           </div>
           <div>
@@ -587,7 +587,7 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
                     {etab.est_siege ? 'Siège social' : `Établissement ${i + 1}`}
-                    {etab.est_siege && <span style={{ fontSize: '10px', background: '#F5F3FF', color: '#7C3AED', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
+                    {etab.est_siege && <span style={{ fontSize: '10px', background: '#F0EEFF', color: '#6E56CF', padding: '2px 8px', borderRadius: '20px' }}>Siège</span>}
                   </div>
                   {!etab.est_siege && <button onClick={() => setEtablissements(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} /> Supprimer</button>}
                 </div>
@@ -625,7 +625,7 @@ export default function OnboardingPage() {
               <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6E56CF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', fontWeight: '700' }}>{i + 1}</div>
                     Personne {i + 1}
                   </div>
                   {i > 0 && <button onClick={() => setPersonnes(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontFamily: 'var(--font)' }}><i className="ti ti-trash" style={{ fontSize: '14px' }} /> Supprimer</button>}
@@ -662,7 +662,7 @@ export default function OnboardingPage() {
             {RESPONSABILITES_LIST.map(resp => (
               <div key={resp.key} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', marginBottom: '10px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="ti ti-shield" style={{ fontSize: '15px', color: '#7C3AED' }} />{resp.label}
+                  <i className="ti ti-shield" style={{ fontSize: '15px', color: '#6E56CF' }} />{resp.label}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {personnes.map((pers, pIdx) =>
@@ -671,7 +671,7 @@ export default function OnboardingPage() {
                       const isSelected = (responsabilites[resp.key] || []).some(a => a.personne_idx === pIdx && a.etablissement_idx === eIdx)
                       return (
                         <button key={`${pIdx}-${eIdx}`} onClick={() => toggleResponsabilite(resp.key, pIdx, eIdx)}
-                          style={{ padding: '7px 14px', border: `1px solid ${isSelected ? '#7C3AED' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: isSelected ? '#F5F3FF' : 'transparent', color: isSelected ? '#7C3AED' : 'var(--text-secondary)', fontSize: '12px', fontWeight: isSelected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          style={{ padding: '7px 14px', border: `1px solid ${isSelected ? '#6E56CF' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: isSelected ? '#F0EEFF' : 'transparent', color: isSelected ? '#6E56CF' : 'var(--text-secondary)', fontSize: '12px', fontWeight: isSelected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                           {isSelected && <i className="ti ti-check" style={{ fontSize: '12px' }} />}
                           {pers.prenom} {pers.nom}
                           {etablissements.length > 1 && <span style={{ opacity: 0.7, fontSize: '11px' }}>· {etab.nom || `Etab ${eIdx + 1}`}</span>}
@@ -768,7 +768,7 @@ export default function OnboardingPage() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {FAMILLES_MATERIELS.map(fam => {
                   const selected = organisation.familles_materiels.includes(fam)
-                  return <button key={fam} onClick={() => toggleFamillesMat(fam)} style={{ padding: '7px 14px', border: `1px solid ${selected ? '#7C3AED' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#F5F3FF' : '#fff', color: selected ? '#7C3AED' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>{selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}{fam}</button>
+                  return <button key={fam} onClick={() => toggleFamillesMat(fam)} style={{ padding: '7px 14px', border: `1px solid ${selected ? '#6E56CF' : 'var(--border)'}`, borderRadius: '20px', background: selected ? '#F0EEFF' : '#fff', color: selected ? '#6E56CF' : 'var(--text-secondary)', fontSize: '12px', fontWeight: selected ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>{selected && <i className="ti ti-check" style={{ fontSize: '11px' }} />}{fam}</button>
                 })}
               </div>
             </div>
@@ -793,7 +793,7 @@ export default function OnboardingPage() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setStep(5)} style={{ flex: 1, padding: '12px', background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>← Retour</button>
-              <button onClick={saveOrganisation} disabled={saving} style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #7C3AED 0%, var(--accent) 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={saveOrganisation} disabled={saving} style={{ flex: 2, padding: '13px', background: saving ? 'rgba(26,86,219,0.4)' : 'linear-gradient(135deg, #6E56CF 0%, var(--accent) 100%)', border: 'none', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <i className="ti ti-rocket" style={{ fontSize: '16px' }} />
                 {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Lancer la certification !'}
               </button>

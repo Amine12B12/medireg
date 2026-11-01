@@ -1350,7 +1350,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
               {saved ? 'Enregistré !' : 'Sauvegarder'}
             </button>
             <button onClick={() => setShowSignature(true)}
-              style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <i className="ti ti-signature" style={{ fontSize: '13px' }} />
               Signer le document
             </button>
@@ -1377,7 +1377,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '800', color: 'var(--accent)', flexShrink: 0 }}>{i + 1}</div>
                   {section.titre}
                   {section.modifiable && (
-                    <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Modifiable</span>
+                    <span style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '1px 7px', borderRadius: '20px', fontWeight: '600' }}>Modifiable</span>
                   )}
                 </div>
 
@@ -1395,7 +1395,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                     onFocus={() => setActiveSection(section.id)}
                     onBlur={() => setActiveSection(null)}
                     style={{
-                      width: '100%', padding: '14px 16px', border: `2px solid ${activeSection === section.id ? '#7C3AED' : '#E5E7EB'}`,
+                      width: '100%', padding: '14px 16px', border: `2px solid ${activeSection === section.id ? '#6E56CF' : '#E5E7EB'}`,
                       borderRadius: '10px', fontSize: '13px', color: '#374151', fontFamily: 'var(--font)', outline: 'none',
                       resize: 'vertical', lineHeight: '1.7', boxSizing: 'border-box' as const,
                       minHeight: `${Math.max(120, section.contenu.split('\n').length * 24 + 40)}px`,
@@ -1447,7 +1447,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                 <input value={signePar} onChange={e => setSignePar(e.target.value)}
                   placeholder="Ou saisir un nom manuellement"
                   style={{ width: '100%', padding: '11px 14px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' as const }}
-                  onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                  onFocus={e => e.target.style.borderColor = '#6E56CF'}
                   onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
               </div>
               <div style={{ padding: '12px', background: '#F9FAFB', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', color: '#6B7280', lineHeight: '1.5' }}>
@@ -1460,7 +1460,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                   Annuler
                 </button>
                 <button onClick={() => saveDoc('signe')} disabled={!signePar.trim() || signing}
-                  style={{ flex: 2, padding: '11px', background: !signePar.trim() ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !signePar.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  style={{ flex: 2, padding: '11px', background: !signePar.trim() ? 'rgba(110,86,207,0.3)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !signePar.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <i className="ti ti-signature" style={{ fontSize: '14px' }} />
                   Signer et valider
                 </button>

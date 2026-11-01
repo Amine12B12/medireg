@@ -27,7 +27,7 @@ async function sendInvitationEmail(email: string, nom: string, password: string)
     <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
     <body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
       <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-        <div style="background:linear-gradient(135deg,#7C3AED,#1A56DB);padding:28px 36px;text-align:center;">
+        <div style="background:linear-gradient(135deg,#6E56CF,#1A56DB);padding:28px 36px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;">MediReg</div>
           <div style="color:rgba(255,255,255,0.75);font-size:13px;margin-top:4px;">Certification HAS PSDM</div>
         </div>
@@ -49,7 +49,7 @@ async function sendInvitationEmail(email: string, nom: string, password: string)
           </div>
           <div style="text-align:center;margin:28px 0;">
             <a href="${APP_URL}/login"
-               style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7C3AED,#1A56DB);color:#fff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
+               style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#6E56CF,#1A56DB);color:#fff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
               Acceder a mon espace
             </a>
           </div>

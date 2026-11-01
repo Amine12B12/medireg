@@ -790,7 +790,7 @@ const CRITERES_CONFIG: Record<string, {
 const STATUTS = [
   { key: 'non_analyse', label: 'Non analysé', color: '#6B7280', bg: '#F9FAFB', dot: '#D1D5DB' },
   { key: 'non_applicable', label: 'Non applicable', color: '#9CA3AF', bg: '#F3F4F6', dot: '#D1D5DB' },
-  { key: 'information_manquante', label: 'Info manquante', color: '#7C3AED', bg: '#F5F3FF', dot: '#8B5CF6' },
+  { key: 'information_manquante', label: 'Info manquante', color: '#6E56CF', bg: '#F0EEFF', dot: '#8B7BE0' },
   { key: 'preuve_manquante', label: 'Preuve manquante', color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
   { key: 'procedure_a_valider', label: 'À valider', color: '#2563EB', bg: '#EFF6FF', dot: '#3B82F6' },
   { key: 'action_corrective', label: 'Action corrective', color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
@@ -923,7 +923,7 @@ function ChatCritere({ critereId, etabId, userRole, fullHeight }: { critereId: s
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', marginTop: '20px' }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px', background: '#FAFAFA' }}>
-        <i className="ti ti-message-circle" style={{ fontSize: '15px', color: '#7C3AED' }} />
+        <i className="ti ti-message-circle" style={{ fontSize: '15px', color: '#6E56CF' }} />
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
           {isConsultant ? 'Discussion avec le client' : 'Discussion avec votre consultant'}
         </span>
@@ -943,8 +943,8 @@ function ChatCritere({ critereId, etabId, userRole, fullHeight }: { critereId: s
           )
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', gap: '6px', alignItems: 'flex-end' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className={`ti ${msg.auteur_role === 'consultant' ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#7C3AED' }} />
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isMine ? 'var(--accent-light)' : '#F0EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={`ti ${msg.auteur_role === 'consultant' ? 'ti-user-star' : 'ti-user'}`} style={{ fontSize: '11px', color: isMine ? 'var(--accent)' : '#6E56CF' }} />
               </div>
               <div style={{ maxWidth: '80%' }}>
                 <div style={{ padding: '8px 12px', borderRadius: isMine ? '12px 3px 12px 12px' : '3px 12px 12px 12px', background: isMine ? 'var(--accent)' : '#F3F4F6', color: isMine ? '#fff' : 'var(--text-primary)', fontSize: '13px', lineHeight: '1.5' }}>{msg.contenu}</div>
@@ -960,9 +960,9 @@ function ChatCritere({ critereId, etabId, userRole, fullHeight }: { critereId: s
           placeholder={isConsultant ? 'Envoyer un retour au client...' : 'Poser une question à votre consultant...'}
           rows={1} style={{ flex: 1, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: '9px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface-hover)', resize: 'none', lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto', boxSizing: 'border-box' as const }}
           onInput={e => { const el = e.target as HTMLTextAreaElement; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px' }}
-          onFocus={e => e.target.style.borderColor = '#7C3AED'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+          onFocus={e => e.target.style.borderColor = '#6E56CF'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
         <button onClick={sendMessage} disabled={sending || !input.trim()}
-          style={{ width: '36px', height: '36px', background: sending || !input.trim() ? 'rgba(124,58,237,0.2)' : '#7C3AED', border: 'none', borderRadius: '9px', cursor: sending || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          style={{ width: '36px', height: '36px', background: sending || !input.trim() ? 'rgba(110,86,207,0.2)' : '#6E56CF', border: 'none', borderRadius: '9px', cursor: sending || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <i className="ti ti-send" style={{ fontSize: '15px', color: '#fff' }} />
         </button>
       </div>
@@ -1320,7 +1320,7 @@ export default function CritereDetail({
       {config?.questions && config.questions.length > 0 && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
           <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="ti ti-question-mark" style={{ fontSize: '15px', color: '#7C3AED' }} />
+            <i className="ti ti-question-mark" style={{ fontSize: '15px', color: '#6E56CF' }} />
             Questions de mise en conformité
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1350,7 +1350,7 @@ export default function CritereDetail({
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {q.options.map(opt => (
                       <button key={opt} onClick={() => setReponseQuestions(p => ({ ...p, [q.id]: opt }))}
-                        style={{ padding: '7px 14px', border: `1px solid ${reponseQuestions[q.id] === opt ? '#7C3AED' : '#E5E7EB'}`, borderRadius: '20px', background: reponseQuestions[q.id] === opt ? '#F5F3FF' : '#fff', color: reponseQuestions[q.id] === opt ? '#7C3AED' : '#6B7280', fontSize: '12px', fontWeight: reponseQuestions[q.id] === opt ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                        style={{ padding: '7px 14px', border: `1px solid ${reponseQuestions[q.id] === opt ? '#6E56CF' : '#E5E7EB'}`, borderRadius: '20px', background: reponseQuestions[q.id] === opt ? '#F0EEFF' : '#fff', color: reponseQuestions[q.id] === opt ? '#6E56CF' : '#6B7280', fontSize: '12px', fontWeight: reponseQuestions[q.id] === opt ? '600' : '400', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                         {opt}
                       </button>
                     ))}
@@ -1377,13 +1377,13 @@ export default function CritereDetail({
                   <textarea value={reponseQuestions[q.id] || ''} onChange={e => setReponseQuestions(p => ({ ...p, [q.id]: e.target.value }))}
                     placeholder="Votre réponse..." rows={2}
                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' as const }}
-                    onFocus={e => e.target.style.borderColor = '#7C3AED'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+                    onFocus={e => e.target.style.borderColor = '#6E56CF'} onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
                 )}
               </div>
             ))}
           </div>
           <button onClick={saveQuestions} disabled={savingQuestions}
-            style={{ marginTop: '16px', padding: '9px 20px', background: savedQuestions ? '#10B981' : '#7C3AED', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            style={{ marginTop: '16px', padding: '9px 20px', background: savedQuestions ? '#10B981' : '#6E56CF', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className={`ti ${savedQuestions ? 'ti-check' : 'ti-device-floppy'}`} style={{ fontSize: '14px' }} />
             {savingQuestions ? 'Enregistrement...' : savedQuestions ? 'Enregistré !' : 'Enregistrer mes réponses'}
           </button>
@@ -1406,8 +1406,8 @@ export default function CritereDetail({
               return (
                 <div key={i} style={{ padding: '14px 16px', background: hasDoc ? '#ECFDF5' : '#F9FAFB', border: `1px solid ${hasDoc ? '#A7F3D0' : 'var(--border)'}`, borderRadius: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isGeneree ? 'var(--accent-light)' : isRegistre ? '#F5F3FF' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={`ti ${isGeneree ? 'ti-sparkles' : isRegistre ? 'ti-clipboard-list' : 'ti-upload'}`} style={{ fontSize: '15px', color: isGeneree ? 'var(--accent)' : isRegistre ? '#7C3AED' : '#6B7280' }} />
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isGeneree ? 'var(--accent-light)' : isRegistre ? '#F0EEFF' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={`ti ${isGeneree ? 'ti-sparkles' : isRegistre ? 'ti-clipboard-list' : 'ti-upload'}`} style={{ fontSize: '15px', color: isGeneree ? 'var(--accent)' : isRegistre ? '#6E56CF' : '#6B7280' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '3px' }}>{preuve.label}</div>
@@ -1428,7 +1428,7 @@ export default function CritereDetail({
                           <span style={{ fontSize: '10px', color: '#6B7280', background: '#F3F4F6', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>À uploader</span>
                         )}
                         {isRegistre && (
-                          <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Registre MediReg</span>
+                          <span style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>Registre MediReg</span>
                         )}
                         {hasDoc && <span style={{ fontSize: '10px', color: '#059669', background: '#D1FAE5', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>✓ Disponible</span>}
                       </div>
@@ -1496,7 +1496,7 @@ export default function CritereDetail({
                 <i className="ti ti-alert-triangle" style={{ fontSize: '12px', flexShrink: 0, marginTop: '1px' }} />
                 <span><strong>Important :</strong> N&apos;uploadez jamais de document contenant le nom, prénom ou toute donnée identifiante d&apos;un patient. Le certificateur ne doit voir aucune donnée personnelle patient. Utilisez uniquement des procédures internes ou documents anonymisés.</span>
               </div>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#7C3AED', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#6E56CF', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                 <i className="ti ti-paperclip" style={{ fontSize: '13px' }} />
                 Choisir un fichier
                 <input type="file" accept=".pdf,.doc,.docx,.jpg,.png" style={{ display: 'none' }}
@@ -1518,20 +1518,20 @@ export default function CritereDetail({
       {/* Preuves uploadées */}
       {preuvesUploadees.length > 0 && (
         <div style={{ background: 'var(--surface)', border: '1px solid #DDD6FE', borderRadius: '12px', padding: '16px 18px', marginBottom: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#7C3AED', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#6E56CF', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-paperclip" style={{ fontSize: '14px' }} />
             Documents uploadés ({preuvesUploadees.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {preuvesUploadees.map((doc: any) => (
-              <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#F5F3FF', borderRadius: '8px', border: '1px solid #DDD6FE' }}>
-                <i className="ti ti-file" style={{ fontSize: '16px', color: '#7C3AED', flexShrink: 0 }} />
+              <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#F0EEFF', borderRadius: '8px', border: '1px solid #DDD6FE' }}>
+                <i className="ti ti-file" style={{ fontSize: '16px', color: '#6E56CF', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '600', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.nom}</div>
                   <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{new Date(doc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 </div>
                 <a href={`/api/generate-doc?path=${encodeURIComponent(doc.url)}`} download
-                  style={{ height: '30px', padding: '0 12px', background: '#EDE9FE', border: '1px solid #DDD6FE', borderRadius: '7px', color: '#7C3AED', fontSize: '11px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                  style={{ height: '30px', padding: '0 12px', background: '#E4DFFB', border: '1px solid #DDD6FE', borderRadius: '7px', color: '#6E56CF', fontSize: '11px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
                   <i className="ti ti-download" style={{ fontSize: '12px' }} />Télécharger
                 </a>
               </div>
@@ -1609,7 +1609,7 @@ function ChatFlottant({ critereId, etabId }: { critereId: string; etabId: string
     <>
       {/* Bouton flottant */}
       <button onClick={() => { setOpen(true); setNonLus(0) }}
-        style={{ position: 'fixed', bottom: '28px', right: '28px', width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(26,86,219,0.4)', zIndex: 500, transition: 'transform 0.15s' }}
+        style={{ position: 'fixed', bottom: '28px', right: '28px', width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(26,86,219,0.4)', zIndex: 500, transition: 'transform 0.15s' }}
         onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)'}
         onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'}>
         <i className="ti ti-message-circle" style={{ fontSize: '24px', color: '#fff' }} />
@@ -1623,7 +1623,7 @@ function ChatFlottant({ critereId, etabId }: { critereId: string; etabId: string
       {/* Popup chat pleine hauteur */}
       {open && (
         <div style={{ position: 'fixed', bottom: '100px', right: '28px', width: '420px', height: '560px', background: '#fff', borderRadius: '16px', boxShadow: '0 16px 48px rgba(0,0,0,0.18)', zIndex: 600, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="ti ti-message-circle" style={{ fontSize: '18px', color: '#fff' }} />
               <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>Discussion avec le client</span>

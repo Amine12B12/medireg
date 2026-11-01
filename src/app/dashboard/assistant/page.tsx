@@ -108,13 +108,13 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
       if (line.startsWith('**') && line.endsWith('**')) return <div key={i} style={{ fontWeight: '600', color: 'var(--text-primary)', marginTop: '8px' }}>{line.replace(/\*\*/g, '')}</div>
       if (line.startsWith('- ') || line.startsWith('• ')) return (
         <div key={i} style={{ display: 'flex', gap: '8px', marginTop: '4px', paddingLeft: '8px' }}>
-          <span style={{ color: '#7C3AED', flexShrink: 0, marginTop: '2px' }}>▸</span>
+          <span style={{ color: '#6E56CF', flexShrink: 0, marginTop: '2px' }}>▸</span>
           <span>{line.replace(/^[-•] /, '')}</span>
         </div>
       )
       if (line.match(/^\d+\. /)) return (
         <div key={i} style={{ display: 'flex', gap: '8px', marginTop: '4px', paddingLeft: '8px' }}>
-          <span style={{ color: '#7C3AED', flexShrink: 0, fontWeight: '600', minWidth: '20px' }}>{line.match(/^\d+/)?.[0]}.</span>
+          <span style={{ color: '#6E56CF', flexShrink: 0, fontWeight: '600', minWidth: '20px' }}>{line.match(/^\d+/)?.[0]}.</span>
           <span>{line.replace(/^\d+\. /, '')}</span>
         </div>
       )
@@ -128,7 +128,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
 
       {/* Header */}
       <div style={{ padding: '14px 24px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <i className="ti ti-sparkles" style={{ fontSize: '18px', color: '#fff' }} />
         </div>
         <div style={{ flex: 1 }}>
@@ -183,7 +183,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
             {/* Intro sans contexte */}
             {!societe && (
               <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                   <i className="ti ti-sparkles" style={{ fontSize: '26px', color: '#fff' }} />
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>Assistant certification HAS PSDM</div>
@@ -213,7 +213,7 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
           <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: 'flex', gap: '12px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: msg.role === 'user' ? 'var(--accent-light)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: msg.role === 'user' ? 'var(--accent-light)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {msg.role === 'user'
                     ? <i className="ti ti-user" style={{ fontSize: '15px', color: 'var(--accent)' }} />
                     : <i className="ti ti-sparkles" style={{ fontSize: '15px', color: '#fff' }} />
@@ -226,12 +226,12 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
             ))}
             {loading && (
               <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className="ti ti-sparkles" style={{ fontSize: '15px', color: '#fff' }} />
                 </div>
                 <div style={{ padding: '14px 18px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px 16px 16px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {[0, 1, 2].map(j => (
-                    <div key={j} style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#7C3AED', opacity: 0.4, animation: `pulse 1.2s ease-in-out ${j * 0.2}s infinite` }} />
+                    <div key={j} style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#6E56CF', opacity: 0.4, animation: `pulse 1.2s ease-in-out ${j * 0.2}s infinite` }} />
                   ))}
                 </div>
               </div>
@@ -251,12 +251,12 @@ Réponds en français, de façon pratique et actionnable, spécifiquement pour c
               rows={1}
               style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font)', outline: 'none', background: 'var(--surface-hover)', resize: 'none', lineHeight: '1.5', maxHeight: '120px', overflowY: 'auto', boxSizing: 'border-box', transition: 'border-color 0.1s' }}
               onInput={e => { const el = e.target as HTMLTextAreaElement; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px' }}
-              onFocus={e => e.target.style.borderColor = '#7C3AED'}
+              onFocus={e => e.target.style.borderColor = '#6E56CF'}
               onBlur={e => e.target.style.borderColor = 'var(--border)'}
             />
           </div>
           <button onClick={() => sendMessage()} disabled={loading || !input.trim()}
-            style={{ width: '44px', height: '44px', background: loading || !input.trim() ? 'rgba(124,58,237,0.2)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '10px', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.1s' }}>
+            style={{ width: '44px', height: '44px', background: loading || !input.trim() ? 'rgba(110,86,207,0.2)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '10px', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.1s' }}>
             <i className="ti ti-send" style={{ fontSize: '18px', color: '#fff' }} />
           </button>
         </div>

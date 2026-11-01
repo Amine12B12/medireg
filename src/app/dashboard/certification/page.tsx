@@ -11,7 +11,7 @@ import { critereApplicable } from '@/lib/applicabilite'
 
 // Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
 const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
-  '1': { color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: 'ti-heart' },
+  '1': { color: '#6E56CF', bg: '#F0EEFF', border: '#DDD6FE', icon: 'ti-heart' },
   '2': { color: '#1A56DB', bg: '#EBF2FF', border: '#BFDBFE', icon: 'ti-truck-delivery' },
   '3': { color: '#0A7C4E', bg: '#E8F5EE', border: '#A7F3D0', icon: 'ti-settings' },
   '4': { color: '#B45309', bg: '#FEF3C7', border: '#FDE68A', icon: 'ti-shield-check' },
@@ -23,7 +23,7 @@ const CHAPITRES: Record<string, ChapitreInfo> = Object.fromEntries(
 const STATUTS = [
   { key: 'non_analyse', label: 'Non analysé', color: '#6B7280', bg: '#F9FAFB', dot: '#D1D5DB' },
   { key: 'non_applicable', label: 'Non applicable', color: '#9CA3AF', bg: '#F3F4F6', dot: '#D1D5DB' },
-  { key: 'information_manquante', label: 'Info manquante', color: '#7C3AED', bg: '#F5F3FF', dot: '#8B5CF6' },
+  { key: 'information_manquante', label: 'Info manquante', color: '#6E56CF', bg: '#F0EEFF', dot: '#8B7BE0' },
   { key: 'preuve_manquante', label: 'Preuve manquante', color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
   { key: 'procedure_a_valider', label: 'À valider', color: '#2563EB', bg: '#EFF6FF', dot: '#3B82F6' },
   { key: 'action_corrective', label: 'Action corrective', color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },

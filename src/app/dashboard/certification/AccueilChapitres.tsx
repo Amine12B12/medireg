@@ -78,7 +78,7 @@ export default function AccueilChapitres({ chapitres, stats, dernierCritere, onO
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {s.actionsCorrectives > 0 && <Pastille couleur="#DC2626" fond="#FEF2F2" texte={`${s.actionsCorrectives} action${s.actionsCorrectives > 1 ? 's' : ''} corrective${s.actionsCorrectives > 1 ? 's' : ''}`} />}
                   {s.aValider > 0 && <Pastille couleur="#2563EB" fond="#EFF6FF" texte={`${s.aValider} à valider`} />}
-                  {s.messagesNonLus > 0 && <Pastille couleur="#7C3AED" fond="#F5F3FF" texte={`${s.messagesNonLus} message${s.messagesNonLus > 1 ? 's' : ''} non lu${s.messagesNonLus > 1 ? 's' : ''}`} />}
+                  {s.messagesNonLus > 0 && <Pastille couleur="#6E56CF" fond="#F0EEFF" texte={`${s.messagesNonLus} message${s.messagesNonLus > 1 ? 's' : ''} non lu${s.messagesNonLus > 1 ? 's' : ''}`} />}
                 </div>
               )}
 

@@ -28,11 +28,11 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', padding: '20px' }}>
 
       {/* Background gradients */}
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(110,86,207,0.06) 0%, transparent 70%)' }} />
         <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,86,219,0.05) 0%, transparent 70%)' }} />
       </div>
 
@@ -40,10 +40,10 @@ function LoginForm() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 16px rgba(124,58,237,0.25)' }}>
+          <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 16px rgba(110,86,207,0.25)' }}>
             <i className="ti ti-shield-check" style={{ fontSize: '26px', color: '#fff' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#111827', letterSpacing: '-0.5px' }}>MediReg</div>
+          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Medi<span style={{ color: 'var(--accent)' }}>Reg</span></div>
           <div style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '6px' }}>Certification HAS PSDM</div>
         </div>
 
@@ -69,29 +69,29 @@ function LoginForm() {
           )}
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Email</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>Adresse email</label>
             <div style={{ position: 'relative' }}>
               <i className="ti ti-mail" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '15px', color: '#9CA3AF' }} />
               <input type="email" placeholder="votre@email.fr" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 style={{ width: '100%', padding: '11px 12px 11px 38px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', color: '#111827', fontFamily: 'inherit', outline: 'none', background: '#fff', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                onFocus={e => e.target.style.borderColor = '#6E56CF'}
                 onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
             </div>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Mot de passe</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px', letterSpacing: '0.2px' }}>Mot de passe</label>
             <div style={{ position: 'relative' }}>
               <i className="ti ti-lock" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '15px', color: '#9CA3AF' }} />
               <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 style={{ width: '100%', padding: '11px 12px 11px 38px', border: '1px solid #E5E7EB', borderRadius: '9px', fontSize: '13px', color: '#111827', fontFamily: 'inherit', outline: 'none', background: '#fff', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                onFocus={e => e.target.style.borderColor = '#6E56CF'}
                 onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
             </div>
           </div>
 
           <button onClick={handleLogin} disabled={loading}
-            style={{ width: '100%', padding: '12px', background: loading ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg, #7C3AED, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: loading ? 'none' : '0 2px 8px rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s' }}>
+            style={{ width: '100%', padding: '12px', background: loading ? 'rgba(110,86,207,0.4)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: loading ? 'none' : '0 2px 8px rgba(110,86,207,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s' }}>
             {loading ? (
               <>
                 <i className="ti ti-loader-2" style={{ fontSize: '16px', animation: 'spin 1s linear infinite' }} />

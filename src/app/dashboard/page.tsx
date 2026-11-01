@@ -103,7 +103,7 @@ export default function DashboardPage() {
           { label: 'Clients actifs', value: totalClients, icon: 'ti-building', color: 'var(--accent)', bg: 'var(--accent-light)' },
           { label: 'Critères validés', value: totalPrets, icon: 'ti-circle-check', color: '#059669', bg: '#ECFDF5' },
           { label: 'En attente validation', value: totalAValider, icon: 'ti-clock', color: '#D97706', bg: '#FFFBEB' },
-          { label: 'Score moyen', value: `${scoreGlobal}%`, icon: 'ti-chart-bar', color: '#7C3AED', bg: '#F5F3FF' },
+          { label: 'Score moyen', value: `${scoreGlobal}%`, icon: 'ti-chart-bar', color: '#6E56CF', bg: '#F0EEFF' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                   onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'var(--border)'; el.style.boxShadow = 'none' }}>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #6E56CF, var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
                       {client.nom?.[0]}
                     </div>
                     <div style={{ flex: 1 }}>

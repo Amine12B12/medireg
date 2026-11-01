@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const CHAPITRES: Record<string, { color: string; bg: string }> = {
-  '1': { color: '#7C3AED', bg: '#F5F3FF' },
+  '1': { color: '#6E56CF', bg: '#F0EEFF' },
   '2': { color: '#1A56DB', bg: '#EBF2FF' },
   '3': { color: '#0A7C4E', bg: '#E8F5EE' },
   '4': { color: '#B45309', bg: '#FEF3C7' },

@@ -114,7 +114,7 @@ export default function ListeChapitre({ code, chapitre: ch, criteresDuChapitre, 
                           <span style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: '1.45' }}>{c.titre}</span>
                           {(c.champ_application || nbMsg > 0 || docs.total > 0) && (
                             <span style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
-                              {c.champ_application && <span style={{ fontSize: '10px', color: '#7C3AED', background: '#F5F3FF', padding: '1px 6px', borderRadius: '4px', fontWeight: '500' }}>{c.champ_application}</span>}
+                              {c.champ_application && <span style={{ fontSize: '10px', color: '#6E56CF', background: '#F0EEFF', padding: '1px 6px', borderRadius: '4px', fontWeight: '500' }}>{c.champ_application}</span>}
                               {nbMsg > 0 && <span style={{ fontSize: '10px', color: '#DC2626', background: '#FEF2F2', padding: '1px 6px', borderRadius: '4px', fontWeight: '600' }}>{nbMsg} message{nbMsg > 1 ? 's' : ''}</span>}
                               {docs.total > 0 && <span style={{ fontSize: '10px', color: docs.generes === docs.total ? '#059669' : 'var(--accent)', background: docs.generes === docs.total ? '#D1FAE5' : 'var(--accent-light)', padding: '1px 6px', borderRadius: '4px', fontWeight: '500' }}>{docs.generes}/{docs.total} docs</span>}
                             </span>

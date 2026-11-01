@@ -38,7 +38,7 @@ const organismeStyle = (o: string) => {
   if (o === 'HAS') return { color: 'var(--accent)', bg: 'var(--accent-light)' }
   if (o === 'ANSM') return { color: '#0891B2', bg: '#E0F2FE' }
   if (o === 'Ministere Sante Maroc') return { color: '#D97706', bg: '#FEF3C7' }
-  if (o === 'ISO') return { color: '#7C3AED', bg: '#F5F3FF' }
+  if (o === 'ISO') return { color: '#6E56CF', bg: '#F0EEFF' }
   if (o === 'COFRAC') return { color: '#059669', bg: '#D1FAE5' }
   return { color: 'var(--text-secondary)', bg: 'var(--surface-hover)' }
 }
