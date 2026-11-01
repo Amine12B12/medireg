@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { critereApplicable } from '@/lib/applicabilite'
 
 const supabase = createClient()
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const [clients, setClients] = useState<any[]>([])
   const [kpis, setKpis] = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
+  const [suivi, setSuivi] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -24,7 +26,27 @@ export default function DashboardPage() {
     setProfile(prof)
 
     if (prof?.role === 'client') {
-      // Client → afficher le dashboard client
+      // Client → sa propre progression, pas la liste de clients du consultant
+      const { data: soc } = await supabase.from('societes').select('id, raison_sociale').eq('client_id', prof.client_id).single()
+      const { data: etabs } = soc ? await supabase.from('etablissements_psdm').select('id').eq('societe_id', soc.id) : { data: [] }
+      const etabId = etabs?.[0]?.id
+      if (etabId) {
+        const [{ data: reps }, { data: crits }, { data: acts }, { count: evts }, { count: recls }] = await Promise.all([
+          supabase.from('reponses_criteres').select('critere_id, statut').eq('etablissement_id', etabId),
+          supabase.from('criteres_psdm').select('id, champ_application'),
+          supabase.from('activites_etablissement').select('activite').eq('etablissement_id', etabId).neq('mode', 'non_concerne'),
+          supabase.from('evenements_indesirables').select('id', { count: 'exact', head: true }).eq('etablissement_id', etabId).neq('statut', 'clos'),
+          supabase.from('registre_reclamations').select('id', { count: 'exact', head: true }).eq('etablissement_id', etabId).neq('statut', 'clos'),
+        ])
+        // Même calcul que la page Certification : seuls les critères applicables aux activités de l'établissement comptent
+        const activites = (acts || []).map(a => a.activite)
+        const statuts = new Map((reps || []).map(r => [r.critere_id, r.statut]))
+        const applicables = (crits || []).filter(c => critereApplicable(c.champ_application, activites)).map(c => statuts.get(c.id) || 'non_analyse')
+        const compte = (s: string) => applicables.filter(st => st === s).length
+        setSuivi({ societe: soc?.raison_sociale, total: applicables.length, prets: compte('pret_audit'), aValider: compte('procedure_a_valider'), correctives: compte('action_corrective'), aTraiter: applicables.length - compte('pret_audit') - compte('procedure_a_valider') - compte('action_corrective'), evts: evts || 0, recls: recls || 0 })
+      } else {
+        setSuivi({ societe: soc?.raison_sociale, total: 0, prets: 0, aValider: 0, correctives: 0, aTraiter: 0, evts: 0, recls: 0 })
+      }
       setLoading(false)
       return
     }
@@ -78,6 +100,87 @@ export default function DashboardPage() {
       Chargement...
     </div>
   )
+
+  if (profile?.role === 'client' && suivi) {
+    const total = suivi.total
+    const score = total > 0 ? Math.round((suivi.prets / total) * 100) : 0
+    const carte = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' }
+    const actions = [
+      { n: suivi.correctives, label: 'action(s) corrective(s) à mener', icon: 'ti-alert-triangle', color: '#DC2626', path: '/dashboard/certification' },
+      { n: suivi.aValider, label: 'procédure(s) en attente de validation', icon: 'ti-clock', color: '#D97706', path: '/dashboard/certification' },
+      { n: suivi.aTraiter, label: 'critère(s) à compléter', icon: 'ti-file-alert', color: '#6E56CF', path: '/dashboard/certification' },
+      { n: suivi.evts, label: 'événement(s) indésirable(s) ouvert(s)', icon: 'ti-urgent', color: '#DC2626', path: '/dashboard/certification' },
+      { n: suivi.recls, label: 'réclamation(s) en cours', icon: 'ti-message-report', color: '#D97706', path: '/dashboard/certification' },
+    ].filter(a => a.n > 0)
+    return (
+      <div style={{ padding: '28px', fontFamily: 'var(--font)', maxWidth: '1100px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+            Bonjour {profile?.prenom || profile?.nom || ''}
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '3px' }}>
+            {suivi.societe ? `${suivi.societe} : ` : ''}où en est votre certification HAS
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { label: 'Progression vers l\'audit', value: `${score}%`, icon: 'ti-chart-bar', color: 'var(--accent)', bg: 'var(--accent-light)' },
+            { label: `Critères prêts (sur ${total})`, value: suivi.prets, icon: 'ti-circle-check', color: '#059669', bg: '#ECFDF5' },
+            { label: 'À valider', value: suivi.aValider, icon: 'ti-clock', color: '#D97706', bg: '#FFFBEB' },
+            { label: 'Actions correctives', value: suivi.correctives, icon: 'ti-alert-triangle', color: '#DC2626', bg: '#FEF2F2' },
+          ].map(s => (
+            <div key={s.label} style={{ ...carte, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className={`ti ${s.icon}`} style={{ fontSize: '20px', color: s.color }} />
+              </div>
+              <div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: s.color, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>À faire</div>
+            <div style={{ ...carte, overflow: 'hidden' }}>
+              {actions.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: 'var(--text-tertiary)' }}>Rien en attente : tous vos critères sont prêts.</div>
+              ) : actions.map((a, i) => (
+                <button key={a.label} onClick={() => router.push(a.path)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', background: 'none', border: 'none', borderTop: i ? '1px solid var(--border)' : 'none', cursor: 'pointer', fontFamily: 'var(--font)', textAlign: 'left' }}>
+                  <i className={`ti ${a.icon}`} style={{ fontSize: '18px', color: a.color }} />
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: a.color, minWidth: '24px' }}>{a.n}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-primary)', flex: 1 }}>{a.label}</span>
+                  <i className="ti ti-chevron-right" style={{ fontSize: '14px', color: 'var(--text-tertiary)' }} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Accès rapide</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Continuer la certification', icon: 'ti-shield-check', path: '/dashboard/certification' },
+                { label: 'Mes documents', icon: 'ti-files', path: '/dashboard/documents' },
+                { label: 'Ressources humaines', icon: 'ti-users', path: '/dashboard/rh' },
+                { label: 'Mon profil', icon: 'ti-building', path: '/dashboard/profil' },
+              ].map(l => (
+                <button key={l.path} onClick={() => router.push(l.path)}
+                  style={{ ...carte, display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '13px', color: 'var(--text-primary)', textAlign: 'left' }}>
+                  <i className={`ti ${l.icon}`} style={{ fontSize: '17px', color: 'var(--accent)' }} />
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const totalClients = clients.length
   const totalPrets = kpis.reduce((a, k) => a + k.prets, 0)
