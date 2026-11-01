@@ -13,42 +13,46 @@ interface Props {
   onLink?: (etabId: string) => void
 }
 
-const CRITERE_CONFIG: Record<string, {
-  titre: string
-  description: string
-  tables: { table: string; label: string; icon: string; color: string; bg: string; statut_field?: string; statut_value?: string }[]
-}> = {
+type Indicateur = { cle: string; label: string; icon: string; color: string; bg: string }
+const BLEU = { color: 'var(--accent)', bg: 'var(--accent-light)' }, VERT = { color: '#059669', bg: '#ECFDF5' }, VIOLET = { color: '#7C3AED', bg: '#F5F3FF' }, ROUGE = { color: '#DC2626', bg: '#FEF2F2' }
+
+// Chaque indicateur correspond à un compteur renvoyé par la passerelle MediTrack (/api/passerelle/medireg)
+const CRITERE_CONFIG: Record<string, { titre: string; description: string; tables: Indicateur[] }> = {
+  '2.2.1': {
+    titre: 'Traçabilité des prescriptions',
+    description: "MediTrack rattache chaque dossier à son ordonnance et à son prescripteur, et gère le parc d'équipements prescrits.",
+    tables: [
+      { cle: 'dossiers', label: 'Dossiers patients', icon: 'ti-folders', ...BLEU },
+      { cle: 'ordonnances', label: 'Ordonnances enregistrées', icon: 'ti-prescription', ...VERT },
+      { cle: 'equipements', label: 'Équipements gérés', icon: 'ti-medical-cross', ...VIOLET },
+    ],
+  },
   '2.3.2': {
     titre: 'Traçabilité des livraisons',
-    description: "MediTrack trace chaque livraison de matériel — c'est la preuve que vos installations sont conformes à la prescription.",
+    description: "MediTrack trace chaque livraison et installation — c'est la preuve que vos installations sont conformes à la prescription.",
     tables: [
-      { table: 'livraisons', label: 'Livraisons tracées', icon: 'ti-truck-delivery', color: 'var(--accent)', bg: 'var(--accent-light)' },
-      { table: 'equipements', label: 'Équipements en service', icon: 'ti-medical-cross', color: '#059669', bg: '#ECFDF5', statut_field: 'statut', statut_value: 'en_service' },
-    ]
+      { cle: 'installations_effectuees', label: 'Installations à domicile', icon: 'ti-home-check', ...BLEU },
+      { cle: 'livraisons_effectuees', label: 'Livraisons effectuées', icon: 'ti-truck-delivery', ...VERT },
+      { cle: 'equipements_en_service', label: 'Équipements en service', icon: 'ti-medical-cross', ...VIOLET },
+    ],
   },
   '2.4.3': {
     titre: 'Traçabilité des maintenances',
-    description: 'MediTrack trace chaque maintenance et dépannage — preuve de la continuité du service SAV.',
+    description: 'MediTrack trace chaque maintenance, dépannage et désinfection — preuve de la continuité du service SAV.',
     tables: [
-      { table: 'maintenances', label: 'Maintenances planifiées', icon: 'ti-tool', color: '#7C3AED', bg: '#F5F3FF' },
-      { table: 'equipements', label: 'Équipements gérés', icon: 'ti-medical-cross', color: '#059669', bg: '#ECFDF5' },
-    ]
+      { cle: 'maintenances_terminees', label: 'Maintenances réalisées', icon: 'ti-tool', ...VIOLET },
+      { cle: 'desinfections_tracees', label: 'Désinfections tracées', icon: 'ti-spray', ...VERT },
+      { cle: 'equipements', label: 'Équipements gérés', icon: 'ti-medical-cross', ...BLEU },
+    ],
   },
   '2.5.1': {
     titre: 'Traçabilité des reprises',
-    description: 'MediTrack trace chaque reprise de matériel en fin de prestation.',
+    description: 'MediTrack trace chaque reprise de matériel en fin de prestation, suivie de sa désinfection.',
     tables: [
-      { table: 'equipements', label: 'Équipements retirés', icon: 'ti-arrow-back', color: '#DC2626', bg: '#FEF2F2', statut_field: 'statut', statut_value: 'retire' },
-      { table: 'livraisons', label: 'Reprises planifiées', icon: 'ti-clipboard-check', color: '#059669', bg: '#ECFDF5' },
-    ]
-  },
-  '2.2.1': {
-    titre: 'Traçabilité des prescriptions',
-    description: "MediTrack gère le parc d'équipements liés aux prescriptions médicales.",
-    tables: [
-      { table: 'equipements', label: 'Équipements gérés', icon: 'ti-medical-cross', color: 'var(--accent)', bg: 'var(--accent-light)' },
-      { table: 'livraisons', label: 'Mises en service', icon: 'ti-truck-delivery', color: '#059669', bg: '#ECFDF5' },
-    ]
+      { cle: 'reprises_effectuees', label: 'Reprises effectuées', icon: 'ti-arrow-back-up', ...ROUGE },
+      { cle: 'equipements_retires', label: 'Équipements retirés', icon: 'ti-arrow-back', ...VIOLET },
+      { cle: 'desinfections_tracees', label: 'Désinfections tracées', icon: 'ti-spray', ...VERT },
+    ],
   },
 }
 
@@ -70,13 +74,9 @@ export default function MeditrackWidget({ meditrackEtabId, clientId, critereCode
 
   async function loadStats(etabId: string) {
     setLoading(true)
-    const newStats: Record<string, number> = {}
-    const cle = (t: { table: string; statut_value?: string }) => t.table + (t.statut_value ? `:${t.statut_value}` : '')
-    const q = config.tables.map(cle).join(',')
-    const res = await fetch(`/api/meditrack?action=stats&clientId=${encodeURIComponent(clientId || '')}&q=${encodeURIComponent(q)}`)
+    const res = await fetch(`/api/meditrack?action=stats&clientId=${encodeURIComponent(clientId || '')}`)
     const json = res.ok ? await res.json() : {}
-    for (const t of config.tables) newStats[t.table + (t.statut_value || '')] = json.stats?.[cle(t)] || 0
-    setStats(newStats)
+    setStats(json.stats || {})
     setLoading(false)
   }
 
@@ -167,7 +167,7 @@ export default function MeditrackWidget({ meditrackEtabId, clientId, critereCode
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
             {config.tables.map(t => {
-              const key = t.table + (t.statut_value || '')
+              const key = t.cle
               const count = stats[key] || 0
               return (
                 <div key={key} style={{ padding: '14px', background: '#fff', borderRadius: '10px', border: `1px solid ${t.bg}` }}>

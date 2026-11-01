@@ -91,7 +91,7 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
     if (!livrForm.equipement_id) return
     setSaving(true)
     const { error } = await ajouter(clientId, 'livraisons', livrForm)
-    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setLivrForm(p => ({ ...p, notes: '', statut: 'planifiee' })) }
+    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setLivrForm(p => ({ ...p, notes: '', statut: 'planifie' })) }
     setSaving(false)
   }
 
@@ -99,7 +99,7 @@ export default function MeditrackSaisie({ meditrackEtabId, clientId, critereCode
     if (!maintForm.equipement_id) return
     setSaving(true)
     const { error } = await ajouter(clientId, 'maintenances', maintForm)
-    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setMaintForm(p => ({ ...p, notes: '', statut: 'planifiee', date_realisee: '' })) }
+    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); await loadData(); setMaintForm(p => ({ ...p, notes: '', statut: 'planifie', date_realisee: '' })) }
     setSaving(false)
   }
 

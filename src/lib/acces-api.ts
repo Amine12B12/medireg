@@ -32,7 +32,8 @@ export async function utilisateurConnecte(req: Request): Promise<Profil> {
 
   const bearer = req.headers.get('authorization')
   if (bearer?.toLowerCase().startsWith('bearer ')) {
-    const { data } = await createClient(url, anon, { global: { headers: { authorization: bearer } }, auth: { persistSession: false } }).auth.getUser()
+    // Le jeton doit être passé explicitement : sans session stockée, getUser() n'utilise pas l'en-tête global
+    const { data } = await createClient(url, anon, { auth: { persistSession: false } }).auth.getUser(bearer.slice(7).trim())
     userId = data.user?.id ?? null
   }
   if (!userId) {

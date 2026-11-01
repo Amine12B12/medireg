@@ -7,11 +7,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Créé à la demande : la clé n'existe que sur le serveur (variable MEDITRACK_SERVICE_ROLE_KEY)
-const meditrackClient = () => createClient(
-  process.env.MEDITRACK_SUPABASE_URL || 'https://nkfivuqomqubhpsvgdfm.supabase.co',
-  process.env.MEDITRACK_SERVICE_ROLE_KEY!
-)
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!
 const APP_URL = 'https://medireg.pro'
@@ -136,54 +131,23 @@ export async function POST(req: NextRequest) {
     // 3. Envoyer l'email
     await sendInvitationEmail(email, nom, tempPassword)
 
-    // 4. Créer l'établissement MediTrack
-    console.log('Creating MediTrack etablissement for:', nom, email)
-    const meditrackSupabase = meditrackClient()
-    const { data: meditrackEtab, error: meditrackError } = await meditrackSupabase
-      .from('etablissements')
-      .insert([{
-        nom,
-        type: 'PSDM',
-        adresse: adresse || '',
-        ville: ville || '',
-        contact_nom: nom,
-        contact_email: email,
-        statut: 'actif',
-        formule: forfait || 'standard'
-      }])
-      .select('id')
-      .single()
-
-    console.log('MediTrack result:', meditrackEtab, 'error:', meditrackError?.message)
-
-    if (meditrackEtab?.id) {
-      await supabase
-        .from('clients')
-        .update({ meditrack_etablissement_id: meditrackEtab.id })
-        .eq('id', client.id)
-      console.log('MediTrack link saved:', meditrackEtab.id)
-
-        // Créer le compte auth MediTrack avec le même email et mot de passe
-        try {
-          const { data: meditrackUser, error: authErr } = await meditrackSupabase.auth.admin.createUser({
-            email,
-            password: tempPassword,
-            email_confirm: true,
-            user_metadata: { nom, etablissement_id: meditrackEtab.id }
-          })
-          console.log('MediTrack auth user:', meditrackUser?.user?.id, 'error:', authErr?.message)
-
-          if (meditrackUser?.user?.id) {
-            await meditrackSupabase.from('profiles').insert([{
-              id: meditrackUser.user.id,
-              nom,
-              role: 'client',
-              etablissement_id: meditrackEtab.id
-            }])
-          }
-        } catch (authErr: any) {
-          console.error('MediTrack auth error:', authErr.message)
-        }
+    // 4. Créer l'établissement et le compte MediTrack via la passerelle (MediReg n'a pas accès à la base MediTrack)
+    try {
+      const base = (process.env.MEDITRACK_URL || 'https://www.meditrack-app.fr').replace(/\/$/, '')
+      const res = await fetch(`${base}/api/passerelle/medireg`, {
+        method: 'POST',
+        headers: { 'x-passerelle-cle': process.env.PASSERELLE_MEDIREG_SECRET || '', 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'provisionner', nom, email, adresse, ville, formule: forfait, motDePasse: tempPassword }),
+        cache: 'no-store',
+      })
+      const mt = await res.json().catch(() => ({}))
+      if (res.ok && mt.etablissementId) {
+        await supabase.from('clients').update({ meditrack_etablissement_id: mt.etablissementId }).eq('id', client.id)
+      } else {
+        console.error('Création MediTrack impossible :', mt.error || res.status)
+      }
+    } catch (e) {
+      console.error('MediTrack injoignable :', (e as Error).message)
     }
 
     return NextResponse.json({ success: true, client_id: client.id })
