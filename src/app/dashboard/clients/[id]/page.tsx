@@ -23,9 +23,10 @@ const CRITERES_PAR_DOC: Record<string, string[]> = {
   'INFO-ACTIVITES': ['2.1.2'],
   'PROC-HANDICAP': ['2.1.3'],
   'ATTEST-LIVRAISONS': ['2.2.1', '2.3.2', '2.3.3', '2.3.4'],
-  'ATTEST-MAINTENANCE': ['2.4.1', '2.4.3'],
+  'ATTEST-MAINTENANCE': ['2.4.3', '3.4.6'],
+  'ATTEST-ENTRE-USAGERS': ['3.4.8'],
   'ATTEST-REPRISES': ['2.5.1', '2.5.2'],
-  'PROC-DESINFECTION': ['3.2.1', '3.3.2'],
+  'PROC-DESINFECTION': ['3.2.1', '3.3.2', '3.4.8'],
 }
 
 

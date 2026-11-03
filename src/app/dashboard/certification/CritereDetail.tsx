@@ -216,7 +216,7 @@ const CRITERES_CONFIG: Record<string, {
     contexte: "Certaines activités imposent des suivis réguliers — oxygène, nutrition, VNI par exemple. L'auditeur vérifie que ces suivis sont réalisés et tracés.",
     conseil: "MediTrack trace vos maintenances et suivis — c'est votre registre de preuve.",
     preuves: [
-      { code: 'ATTEST-MAINTENANCE', label: "Attestation de traçabilité des suivis", description: "Confirme que vos suivis sont tracés dans MediTrack conformément à la réglementation.", type: 'generer' },
+      { label: "Planning ou registre des visites de suivi", description: "Extrait de votre planning (ou registre) montrant les visites de suivi réalisées et tracées.", type: 'upload' },
     ],
     questions: [
       { id: 'q1', label: "Réalisez-vous des visites de suivi régulières pour vos patients ?", type: 'oui_non', requis: true },
@@ -493,7 +493,7 @@ const CRITERES_CONFIG: Record<string, {
     contexte: "Vous devez pouvoir retracer l'historique de chaque dispositif medical.",
     conseil: "MediTrack est votre systeme de gestion des dispositifs medicaux.",
     preuves: [
-      { code: 'ATTEST-MAINTENANCE', label: "Attestation de tracabilite MediTrack", description: "MediTrack trace le circuit complet de chaque dispositif medical.", type: 'generer' as const },
+      { label: "Fiche de traçabilité d'un dispositif", description: "Exemple d'historique complet d'un dispositif : livraison, maintenances, reprise, désinfection.", type: 'upload' as const },
     ],
     questions: [
       { id: 'q1', label: "Utilisez-vous un logiciel pour gerer votre parc de dispositifs medicaux ?", type: 'oui_non' as const, requis: true },
@@ -590,7 +590,8 @@ const CRITERES_CONFIG: Record<string, {
     contexte: "Un materiel en location doit etre verifie et desinfecte entre chaque patient.",
     conseil: "MediTrack trace la reprise et la remise en service.",
     preuves: [
-      { code: 'ATTEST-MAINTENANCE', label: "Attestation de verification entre patients", description: "Atteste que chaque materiel en location est verifie avant reattribution.", type: 'generer' as const },
+      { code: 'ATTEST-ENTRE-USAGERS', label: "Attestation de contrôle technique entre deux usagers", description: "Atteste que chaque matériel repris est contrôlé techniquement avant d'être réattribué.", type: 'generer' as const },
+      { code: 'PROC-DESINFECTION', label: "Procédure de nettoyage et désinfection", description: "Étape distincte du contrôle technique : la désinfection a sa propre procédure.", type: 'generer' as const },
     ],
     questions: [
       { id: 'q1', label: "Realisez-vous une verification technique du materiel apres chaque reprise ?", type: 'oui_non' as const, requis: true },

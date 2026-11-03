@@ -751,7 +751,7 @@ Chaque maintenance est enregistree avec :
 
 Responsable SAV : {{sav_maintenance}}
 
-Cette traçabilite est conforme au critere 2.4.3 du referentiel HAS PSDM (juin 2024).`,
+Cette traçabilite repond aux criteres 2.4.3 et 3.4.6 du referentiel HAS PSDM (juin 2024).`,
         aide: "Precisez la frequence de vos maintenances preventives."
       },
       {
@@ -766,7 +766,40 @@ Contact SAV : {{telephone}}`,
       },
       {
         id: 's4', titre: "Engagement", modifiable: true,
-        contenu: `La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critere 2.4.3).`,
+        contenu: `La presente attestation est etablie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (criteres 2.4.3 et 3.4.6).`,
+        aide: ""
+      },
+    ]
+  },
+  'ATTEST-ENTRE-USAGERS': {
+    titre: "Attestation de contrôle technique entre deux usagers",
+    description: "Atteste que chaque matériel repris est contrôlé techniquement, puis désinfecté, avant d'être réattribué (critère 3.4.8).",
+    sections: [
+      {
+        id: 's1', titre: "Identité du signataire", modifiable: true,
+        contenu: `Je soussigné(e), {{responsable_etablissement}}, agissant en qualité de responsable au sein de {{raison_sociale}},`,
+        aide: "Vérifiez que le responsable est bien désigné."
+      },
+      {
+        id: 's2', titre: "Contrôle technique entre deux usagers", modifiable: true,
+        contenu: `atteste qu'après chaque reprise, tout matériel destiné à être réattribué fait l'objet d'un contrôle technique tracé :
+- vérification du bon fonctionnement selon les consignes du fabricant ;
+- vérification de l'intégrité du matériel et de la présence de tous ses accessoires ;
+- enregistrement de la date du contrôle, de son résultat et de la personne qui l'a réalisé.
+
+Un matériel non conforme ou incomplet n'est pas remis en stock : il est réparé, complété ou retiré du service.`,
+        aide: "Précisez les points de contrôle propres à vos matériels."
+      },
+      {
+        id: 's3', titre: "Nettoyage et désinfection (étape distincte)", modifiable: true,
+        contenu: `Le nettoyage et la désinfection constituent une étape distincte du contrôle technique. Ils sont réalisés selon la procédure de nettoyage et de désinfection de {{raison_sociale}} et tracés séparément.
+
+Le matériel n'est remis à disposition qu'une fois le contrôle technique conforme ET la désinfection réalisée.`,
+        aide: "Renvoyez à votre procédure de désinfection."
+      },
+      {
+        id: 's4', titre: "Engagement", modifiable: true,
+        contenu: `La présente attestation est établie pour valoir ce que de droit dans le cadre de la certification HAS PSDM de {{raison_sociale}} (critère 3.4.8).`,
         aide: ""
       },
     ]
