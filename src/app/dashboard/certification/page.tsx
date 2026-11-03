@@ -8,6 +8,7 @@ import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './Accue
 import ListeChapitre from './ListeChapitre'
 import { CONTENU_CHAPITRES } from '@/lib/chapitres-contenu'
 import { critereApplicable, raisonNonApplicable } from '@/lib/applicabilite'
+import { statutAffiche } from '@/lib/etat-critere'
 
 // Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
 const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
@@ -22,6 +23,8 @@ const CHAPITRES: Record<string, ChapitreInfo> = Object.fromEntries(
 
 const STATUTS = [
   { key: 'non_analyse', label: 'Non analysé', color: '#6B7280', bg: '#F9FAFB', dot: '#D1D5DB' },
+  // Affichage seul (R3) : réponse enregistrée, analyse du consultant pas encore faite
+  { key: 'reponse_saisie', label: 'Réponse saisie, à analyser', color: '#B45309', bg: '#FFFBEB', dot: '#F59E0B' },
   { key: 'non_applicable', label: 'Non applicable', color: '#9CA3AF', bg: '#F3F4F6', dot: '#D1D5DB' },
   { key: 'information_manquante', label: 'Info manquante', color: '#6E56CF', bg: '#F0EEFF', dot: '#8B7BE0' },
   { key: 'preuve_manquante', label: 'Preuve manquante', color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
@@ -306,8 +309,7 @@ function Certification() {
   const criteresFiltres = criteresApplicables.filter(c => {
     if (filterChap !== 'tous' && c.chapitre !== filterChap) return false
     if (filterStatut !== 'tous') {
-      const statut = reponses[c.id]?.statut || 'non_analyse'
-      if (statut !== filterStatut) return false
+      if (statutAffiche(reponses[c.id]) !== filterStatut) return false
     }
     return true
   })
@@ -317,7 +319,8 @@ function Certification() {
   const prets = criteresApplicables.filter(c => reponses[c.id]?.statut === 'pret_audit').length
   const aValider = criteresApplicables.filter(c => reponses[c.id]?.statut === 'procedure_a_valider').length
   const actionsCorrectifs = criteresApplicables.filter(c => reponses[c.id]?.statut === 'action_corrective').length
-  const nonAnalyses = criteresApplicables.filter(c => !reponses[c.id] || reponses[c.id]?.statut === 'non_analyse').length
+  const nonAnalyses = criteresApplicables.filter(c => statutAffiche(reponses[c.id]) === 'non_analyse').length
+  const aAnalyser = criteresApplicables.filter(c => statutAffiche(reponses[c.id]) === 'reponse_saisie').length
   const score = total > 0 ? Math.round((prets / total) * 100) : 0
   const part = (n: number) => (total > 0 ? (n / total) * 100 : 0)
 
@@ -344,7 +347,7 @@ function Certification() {
   try { if (selectedEtabId) dernierCode = localStorage.getItem(cleDernierCritere(selectedEtabId)) } catch {}
   const dernier = dernierCode ? criteresApplicables.find(c => c.code === dernierCode) : null
 
-  const getStatut = (critereId: string) => reponses[critereId]?.statut || 'non_analyse'
+  const getStatut = (critereId: string) => statutAffiche(reponses[critereId])
   const getStatutStyle = (statut: string) => STATUTS.find(s => s.key === statut) || STATUTS[0]
 
   // Précédent / suivant : dans le chapitre du critère, sans tenir compte du filtre de statut
@@ -497,6 +500,7 @@ function Certification() {
                 { label: 'Prêts pour audit', value: prets, color: '#10B981', bg: '#D1FAE5' },
                 { label: 'À valider', value: aValider, color: '#2563EB', bg: '#EFF6FF' },
                 { label: 'Action corrective', value: actionsCorrectifs, color: '#DC2626', bg: '#FEF2F2' },
+                { label: 'Réponses à analyser', value: aAnalyser, color: '#B45309', bg: '#FFFBEB' },
                 { label: 'Non analysés', value: nonAnalyses, color: '#9CA3AF', bg: '#F3F4F6' },
               ].map(s => (
                 <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: s.bg, borderRadius: '20px' }}>

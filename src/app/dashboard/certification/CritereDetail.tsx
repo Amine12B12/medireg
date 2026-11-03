@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import DocumentEditor from './DocumentEditor'
 import MeditrackWidget from './MeditrackWidget'
 import { createClient } from '@/lib/supabase'
+import { PLAN, etapesCritere, planActions, plansManquants, questionsNegatives, type ActionCorrective } from '@/lib/etat-critere'
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG CRITÈRES — Ce que l'auditeur cherche + preuves + questions
@@ -1383,6 +1384,42 @@ export default function CritereDetail({
               </div>
             ))}
           </div>
+          {questionsNegatives(reponseQuestions).length > 0 && (
+            <section aria-label="Plan d'action" style={{ marginTop: '16px', padding: '12px', border: '1px solid #FECACA', borderRadius: '8px', background: '#FEF2F2' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#991B1B', marginBottom: '8px' }}>Plan d&apos;action pour les réponses « Non » ou « Partiel »</div>
+              {questionsNegatives(reponseQuestions).map(qid => {
+                const plan: ActionCorrective = planActions(reponseQuestions)[qid] ?? { action: '', responsable: '', echeance: '' }
+                const maj = (champ: keyof ActionCorrective, v: string) =>
+                  setReponseQuestions(p => ({ ...p, [PLAN]: { ...planActions(p), [qid]: { ...plan, [champ]: v } } }))
+                const libelle = config?.questions?.find((q: { id: string; label: string }) => q.id === qid)?.label ?? qid
+                return (
+                  <div key={qid} style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '12px', color: '#374151', marginBottom: '4px' }}>{libelle}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px' }}>
+                      <input aria-label={`Action corrective : ${libelle}`} placeholder="Action corrective" value={plan.action} onChange={e => maj('action', e.target.value)} style={{ padding: '7px', border: '1px solid #E5E7EB', borderRadius: '6px', fontSize: '13px' }} />
+                      <input aria-label={`Responsable : ${libelle}`} placeholder="Responsable" value={plan.responsable} onChange={e => maj('responsable', e.target.value)} style={{ padding: '7px', border: '1px solid #E5E7EB', borderRadius: '6px', fontSize: '13px' }} />
+                      <input aria-label={`Échéance : ${libelle}`} type="date" value={plan.echeance} onChange={e => maj('echeance', e.target.value)} style={{ padding: '7px', border: '1px solid #E5E7EB', borderRadius: '6px', fontSize: '13px' }} />
+                    </div>
+                  </div>
+                )
+              })}
+              {plansManquants(reponseQuestions).length > 0 && (
+                <div role="status" style={{ fontSize: '12px', color: '#991B1B' }}>
+                  {plansManquants(reponseQuestions).length} plan(s) incomplet(s) : action, responsable et échéance sont attendus.
+                </div>
+              )}
+            </section>
+          )}
+          <ol aria-label="Étapes du critère" style={{ display: 'flex', gap: '12px', listStyle: 'none', padding: 0, margin: '12px 0 0', fontSize: '12px', color: '#4B5563' }}>
+            {(() => {
+              const e = etapesCritere(reponse ? { ...reponse, reponses_questions: reponseQuestions } : { reponses_questions: reponseQuestions })
+              return [
+                ['Réponse saisie', e.reponse],
+                ['Analysée par le consultant', e.analyse],
+                ['Validée (prêt pour audit)', e.validation],
+              ].map(([l, ok]) => <li key={String(l)}>{ok ? '✓' : '○'} {l}</li>)
+            })()}
+          </ol>
           <button onClick={saveQuestions} disabled={savingQuestions}
             style={{ marginTop: '16px', padding: '9px 20px', background: savedQuestions ? '#10B981' : '#6E56CF', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <i className={`ti ${savedQuestions ? 'ti-check' : 'ti-device-floppy'}`} style={{ fontSize: '14px' }} />
