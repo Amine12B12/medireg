@@ -27,3 +27,15 @@ export function critereApplicable(champApplication: string | null | undefined, a
   const exercees = new Set(activites.flatMap(a => activitesCitees(sansAccents(a))))
   return citees.some(c => exercees.has(c))
 }
+
+const LIBELLES_ACTIVITES: Record<string, string> = {
+  oxygene: 'oxygénothérapie', vph: 'fauteuils roulants (VPH)', nutrition: 'nutrition', stomie: 'stomie',
+  continence: 'continence', diabete: 'diabète', mad: 'maintien à domicile',
+}
+
+// Mémo du 22 octobre : un critère écarté doit l'être visiblement, avec sa justification.
+export function raisonNonApplicable(champApplication: string | null | undefined, activites: string[]): string | null {
+  if (critereApplicable(champApplication, activites)) return null
+  const citees = activitesCitees(sansAccents(champApplication ?? '')).map(c => LIBELLES_ACTIVITES[c] ?? c)
+  return `Ne concerne que : ${citees.join(', ')}. Activité non déclarée par l'établissement.`
+}

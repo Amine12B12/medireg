@@ -7,7 +7,7 @@ import CritereDetail from './CritereDetail'
 import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './AccueilChapitres'
 import ListeChapitre from './ListeChapitre'
 import { CONTENU_CHAPITRES } from '@/lib/chapitres-contenu'
-import { critereApplicable } from '@/lib/applicabilite'
+import { critereApplicable, raisonNonApplicable } from '@/lib/applicabilite'
 
 // Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
 const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
@@ -301,6 +301,7 @@ function Certification() {
 
   // Critères qui s'appliquent à l'établissement (selon ses activités), indépendamment des filtres d'affichage
   const criteresApplicables = criteres.filter(c => critereApplicable(c.champ_application, activites))
+  const criteresNonApplicables = criteres.filter(c => !critereApplicable(c.champ_application, activites))
 
   const criteresFiltres = criteresApplicables.filter(c => {
     if (filterChap !== 'tous' && c.chapitre !== filterChap) return false
@@ -516,6 +517,21 @@ function Certification() {
           </div>
         </div>
       </div>
+
+      <details aria-label="Critères du référentiel" style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+        <summary style={{ cursor: 'pointer' }}>
+          {criteres.length} critères au référentiel : {total} applicables à votre établissement, {criteresNonApplicables.length} non applicable{criteresNonApplicables.length > 1 ? 's' : ''}
+        </summary>
+        {criteresNonApplicables.length > 0 && (
+          <ul style={{ margin: '8px 0 0', paddingLeft: '18px' }}>
+            {criteresNonApplicables.map(c => (
+              <li key={c.id} style={{ marginBottom: '4px' }}>
+                <strong>{c.code}</strong> {c.titre} — {raisonNonApplicable(c.champ_application, activites)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </details>
 
       {filterChap === 'tous' ? (
         <AccueilChapitres

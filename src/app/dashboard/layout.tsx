@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation'
 const pageTitles: Record<string, { title: string; sub: string }> = {
   '/dashboard': { title: 'Tableau de bord', sub: 'Vue globale de votre certification' },
   '/dashboard/clients': { title: 'Clients', sub: 'Etablissements accompagnes' },
-  '/dashboard/certification': { title: 'Certification', sub: '60 criteres HAS PSDM' },
+  '/dashboard/certification': { title: 'Certification', sub: 'Référentiel HAS PSDM' },
   '/dashboard/documents': { title: 'Documents', sub: 'Vos documents qualite' },
   '/dashboard/onboarding': { title: 'Configuration', sub: 'Mise en place de votre profil' },
   '/dashboard/profil': { title: 'Mon profil', sub: 'Informations etablissement' },
