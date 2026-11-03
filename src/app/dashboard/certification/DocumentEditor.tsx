@@ -1220,6 +1220,9 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
   const [saved, setSaved] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [docId, setDocId] = useState<string | null>(null)
+  // Mémo du 22 octobre (R4) : un modèle qui contient encore « [EXEMPLE : … ] » ne se signe pas.
+  // PRESTA-DOC-01 est une illustration volontairement remplie d'exemples fictifs : exemptée.
+  const sectionsACompleter = templateCode === 'PRESTA-DOC-01' ? [] : sections.filter(x => x.contenu.includes('[EXEMPLE')).map(x => x.titre)
   
 
   useEffect(() => {
@@ -1321,6 +1324,7 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
   }
 
   async function saveDoc(statut = 'brouillon') {
+    if (statut === 'signe' && sectionsACompleter.length > 0) return
     setSaving(true)
     console.log('saveDoc — statut:', statut, 'etabId:', etabId, 'docId:', docId, 'signePar:', signePar)
     console.log('saveDoc appelé — statut:', statut, 'docId:', docId, 'etabId:', etabId, 'signePar:', signePar)
@@ -1487,12 +1491,17 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
                 <i className="ti ti-info-circle" style={{ fontSize: '13px', marginRight: '5px', color: '#9CA3AF' }} />
                 En signant électroniquement ce document, vous attestez sur l'honneur de l'exactitude des informations qu'il contient. Date : {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}.
               </div>
+              {sectionsACompleter.length > 0 && (
+                <div role="alert" style={{ marginBottom: '12px', padding: '10px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', fontSize: '12px', color: '#991B1B' }}>
+                  Modèle encore à compléter : remplacez les exemples entre crochets avant de signer ({sectionsACompleter.join(', ')}).
+                </div>
+              )}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => setShowSignature(false)}
                   style={{ flex: 1, padding: '11px', background: '#F3F4F6', border: 'none', borderRadius: '9px', color: '#6B7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font)' }}>
                   Annuler
                 </button>
-                <button onClick={() => saveDoc('signe')} disabled={!signePar.trim() || signing}
+                <button onClick={() => saveDoc('signe')} disabled={!signePar.trim() || signing || sectionsACompleter.length > 0}
                   style={{ flex: 2, padding: '11px', background: !signePar.trim() ? 'rgba(110,86,207,0.3)' : 'linear-gradient(135deg, #6E56CF, var(--accent))', border: 'none', borderRadius: '9px', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: !signePar.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <i className="ti ti-signature" style={{ fontSize: '14px' }} />
                   Signer et valider

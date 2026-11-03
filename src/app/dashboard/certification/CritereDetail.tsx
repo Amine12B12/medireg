@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import DocumentEditor from './DocumentEditor'
 import MeditrackWidget from './MeditrackWidget'
 import { createClient } from '@/lib/supabase'
-import { PLAN, etapesCritere, planActions, plansManquants, questionsNegatives, type ActionCorrective } from '@/lib/etat-critere'
+import { JUSTIFICATION, PLAN, etapesCritere, planActions, plansManquants, questionsNegatives, type ActionCorrective } from '@/lib/etat-critere'
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG CRITÈRES — Ce que l'auditeur cherche + preuves + questions
@@ -1410,6 +1410,12 @@ export default function CritereDetail({
               )}
             </section>
           )}
+          <label style={{ display: 'block', marginTop: '16px', fontSize: '12px', color: '#4B5563' }}>
+            Justification si une preuve attendue n&apos;est pas fournie (retenue pour l&apos;audit)
+            <textarea aria-label="Justification des preuves" rows={2} value={String(reponseQuestions[JUSTIFICATION] ?? '')}
+              onChange={e => setReponseQuestions(p => ({ ...p, [JUSTIFICATION]: e.target.value }))}
+              style={{ width: '100%', marginTop: '4px', padding: '8px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+          </label>
           <ol aria-label="Étapes du critère" style={{ display: 'flex', gap: '12px', listStyle: 'none', padding: 0, margin: '12px 0 0', fontSize: '12px', color: '#4B5563' }}>
             {(() => {
               const e = etapesCritere(reponse ? { ...reponse, reponses_questions: reponseQuestions } : { reponses_questions: reponseQuestions })

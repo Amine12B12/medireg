@@ -8,7 +8,7 @@ import AccueilChapitres, { type ChapitreInfo, type StatsChapitre } from './Accue
 import ListeChapitre from './ListeChapitre'
 import { CONTENU_CHAPITRES } from '@/lib/chapitres-contenu'
 import { critereApplicable, raisonNonApplicable } from '@/lib/applicabilite'
-import { statutAffiche } from '@/lib/etat-critere'
+import { refusPretAudit, statutAffiche } from '@/lib/etat-critere'
 
 // Couleurs et icônes ; les textes viennent de src/lib/chapitres-contenu.ts
 const STYLES_CHAPITRES: Record<string, { color: string; bg: string; border: string; icon: string }> = {
@@ -193,6 +193,11 @@ function Certification() {
 
   async function updateStatut(critereId: string, statut: string) {
     if (!selectedEtabId) return
+    if (statut === 'pret_audit') {
+      const code = criteres.find(c => c.id === critereId)?.code ?? ''
+      const refus = refusPretAudit(DOCS_PAR_CRITERE[code] || [], docsGeneres, reponses[critereId]?.reponses_questions)
+      if (refus) { setErreur(refus); return }
+    }
     setSavingId(critereId)
     const existing = reponses[critereId]
     if (existing) {

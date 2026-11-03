@@ -11,11 +11,11 @@ const estNegative = (v: unknown) =>
 
 /** Questions auxquelles l'établissement a répondu « Non » ou « Partiel ». */
 export function questionsNegatives(rq: Record<string, unknown> | null | undefined): string[] {
-  return Object.entries(rq ?? {}).filter(([k, v]) => k !== PLAN && estNegative(v)).map(([k]) => k)
+  return Object.entries(rq ?? {}).filter(([k, v]) => k !== PLAN && k !== '__justification_preuves' && estNegative(v)).map(([k]) => k)
 }
 
 export function aDesReponses(rq: Record<string, unknown> | null | undefined): boolean {
-  return Object.entries(rq ?? {}).some(([k, v]) => k !== PLAN && v !== null && v !== undefined && v !== '')
+  return Object.entries(rq ?? {}).some(([k, v]) => k !== PLAN && k !== '__justification_preuves' && v !== null && v !== undefined && v !== '')
 }
 
 /** Statut affiché : « réponse saisie, à analyser » plutôt que « non analysé » dès qu'une réponse existe. */
@@ -38,4 +38,22 @@ export function planActions(rq: Record<string, unknown> | null | undefined): Rec
 export function plansManquants(rq: Record<string, unknown> | null | undefined): string[] {
   const plans = planActions(rq)
   return questionsNegatives(rq).filter(q => !plans[q]?.action?.trim() || !plans[q]?.responsable?.trim() || !plans[q]?.echeance)
+}
+
+// R4 : « prêt pour audit » seulement si chaque preuve attendue est présente, ou si une justification est enregistrée.
+export const JUSTIFICATION = '__justification_preuves'
+
+export function preuvesManquantes(attendus: { code: string; nom: string }[], docs: Record<string, unknown[] | undefined>): string[] {
+  return attendus.filter(d => !(docs[d.code]?.length)).map(d => d.nom)
+}
+
+export function refusPretAudit(
+  attendus: { code: string; nom: string }[],
+  docs: Record<string, unknown[] | undefined>,
+  rq: Record<string, unknown> | null | undefined,
+): string | null {
+  const manquantes = preuvesManquantes(attendus, docs)
+  const justification = String((rq ?? {})[JUSTIFICATION] ?? '').trim()
+  if (manquantes.length === 0 || justification) return null
+  return `Pas encore prêt pour audit : preuve(s) manquante(s) (${manquantes.join(', ')}). Ajoutez-les, ou enregistrez une justification dans le critère.`
 }
