@@ -1220,6 +1220,8 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
   const [saved, setSaved] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [docId, setDocId] = useState<string | null>(null)
+  const [statutCharge, setStatutCharge] = useState<string | null>(null)
+  const [versions, setVersions] = useState<{ id: string; signe_par: string | null; signe_le: string | null }[]>([])
   // Mémo du 22 octobre (R4) : un modèle qui contient encore « [EXEMPLE : … ] » ne se signe pas.
   // PRESTA-DOC-01 est une illustration volontairement remplie d'exemples fictifs : exemptée.
   const sectionsACompleter = templateCode === 'PRESTA-DOC-01' ? [] : sections.filter(x => x.contenu.includes('[EXEMPLE')).map(x => x.titre)
@@ -1311,15 +1313,18 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
   }
 
   async function loadExisting(defaultSections: any[]) {
+    // Mémo du 22 octobre (R4) : chaque version signée est conservée ; on édite la plus récente.
     const { data } = await supabase.from('documents_editables')
       .select('*')
       .eq('etablissement_id', etabId)
       .eq('template_code', templateCode)
-      .limit(1)
+      .order('updated_at', { ascending: false })
     if (data && data.length > 0) {
       setDocId(data[0].id)
+      setStatutCharge(data[0].statut)
       setSections(data[0].contenu || defaultSections)
       setSignePar(data[0].signe_par || '')
+      setVersions(data.filter((d: { statut: string }) => d.statut === 'signe'))
     }
   }
 
@@ -1338,13 +1343,15 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
       signe_le: statut === 'signe' ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     }
-    if (docId) {
+    // Un document signé n'est jamais écrasé : sa modification crée une nouvelle version.
+    if (docId && statutCharge !== 'signe') {
       const { error: upErr } = await supabase.from('documents_editables').update(payload).eq('id', docId)
+      if (!upErr) setStatutCharge(statut)
       console.log('update result — error:', upErr?.message || 'OK')
     } else {
       const { data, error: insErr } = await supabase.from('documents_editables').insert([payload]).select('id').single()
       console.log('insert result — data:', data, 'error:', insErr?.message || 'OK')
-      if (data) setDocId(data.id)
+      if (data) { setDocId(data.id); setStatutCharge(statut) }
     }
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -1408,6 +1415,14 @@ export default function DocumentEditor({ templateCode, societe, etabId, onClose,
 
           {/* Sections */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+{versions.length > 0 && (
+  <div aria-label="Versions signées" style={{ marginBottom: '12px', fontSize: '12px', color: '#4B5563' }}>
+    <strong>Versions signées conservées ({versions.length})</strong> — modifier ce document crée une nouvelle version, les précédentes restent consultables.
+    <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
+      {versions.map((v, n) => <li key={v.id}>Version {versions.length - n} — signée {v.signe_le ? `le ${new Date(v.signe_le).toLocaleDateString('fr-FR')}` : ''}{v.signe_par ? ` par ${v.signe_par}` : ''}</li>)}
+    </ul>
+  </div>
+)}
             {sections.map((section, i) => (
               <div key={section.id}>
                 <div style={{ fontSize: '14px', fontWeight: '700', color: '#111827', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
